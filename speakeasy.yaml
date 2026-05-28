@@ -1,0 +1,210 @@
+## Speakeasy - Edit the settings below.
+substitutions:
+  name: speakeasy
+  friendly_name: Speakeasy
+
+  # WiFi transmit power in dBm. Lower = less heat and RF self-interference on compact PCB antenna.
+  # 8.5 confirmed stable for Sendspin time sync on ESP32-S3 Supermini. Range: 8.5–20.5
+  wifi_output_power: "8.5"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  min_version: 2026.5.0
+  name_add_mac_suffix: true
+  project:
+    name: w_floyd.speakeasy
+    version: "2026.5.0"
+  includes:
+    - <esp_wifi.h>
+  on_boot:
+    priority: -100
+    then:
+      - delay: 30s
+      - lambda: id(wifi_ramp_armed) = true;
+
+globals:
+  - id: wifi_ramp_armed
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+esp32:
+  variant: esp32s3
+  framework:
+    type: esp-idf
+    sdkconfig_options:
+      CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
+      CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
+      CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB: "y"
+      CONFIG_BT_ALLOCATION_FROM_SPIRAM_FIRST: "y"
+      CONFIG_BT_BLE_DYNAMIC_ENV_MEMORY: "y"
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
+
+logger:
+  level: info
+
+api:
+
+ota:
+  - platform: esphome
+
+wifi:
+  id: wifi_component
+  power_save_mode: none
+  output_power: ${wifi_output_power}
+  ap:
+  on_connect:
+    - lambda: |-
+        char ip_buf[esphome::network::IP_ADDRESS_BUFFER_SIZE];
+        id(wifi_component).get_ip_addresses()[0].str_to(ip_buf);
+        ESP_LOGW("speakeasy", "IP: %s, RSSI: %d dBm", ip_buf, id(wifi_component).wifi_rssi());
+  on_disconnect:
+    - lambda: |-
+        float current = id(wifi_tx_power).state;
+        if (current < 8.5f) {
+          float next = std::min(current + 0.25f, 8.5f);
+          auto call = id(wifi_tx_power).make_call();
+          call.set_value(next);
+          call.perform();
+          ESP_LOGW("speakeasy", "WiFi dropped — TX power stepped %.2f → %.2f dBm", current, next);
+        }
+
+network:
+  enable_ipv6: true
+
+improv_serial:
+
+esp32_improv:
+  authorizer: none
+
+psram:
+  mode: quad
+  speed: 80MHz
+
+captive_portal:
+
+sendspin:
+  id: sendspin_hub
+  task_stack_in_psram: false
+
+i2s_audio:
+  - id: i2s_audio_bus
+    i2s_lrclk_pin: GPIO6
+    i2s_bclk_pin: GPIO5
+
+speaker:
+  - platform: i2s_audio
+    id: box_speaker
+    i2s_audio_id: i2s_audio_bus
+    i2s_dout_pin: GPIO4
+    dac_type: external
+    channel: mono
+
+  - platform: mixer
+    id: mixing_speaker
+    output_speaker: box_speaker
+    num_channels: 2
+    task_stack_in_psram: true
+    source_speakers:
+      - id: announcement_mixing_input
+        timeout: never
+      - id: media_mixing_input
+        timeout: never
+
+  - platform: resampler
+    id: announcement_resampling_speaker
+    output_speaker: announcement_mixing_input
+    sample_rate: 48000
+    bits_per_sample: 16
+
+  - platform: resampler
+    id: media_resampling_speaker
+    output_speaker: media_mixing_input
+    sample_rate: 48000
+    bits_per_sample: 16
+
+media_source:
+  - platform: audio_http
+    id: http_announcement_source
+    buffer_size: 250000
+  - platform: sendspin
+    id: sendspin_media_source
+
+media_player:
+  - platform: sendspin
+    id: sendspin_group_media_player
+    name: Sendspin Group Media Player
+
+  - platform: speaker_source
+    id: external_media_player
+    name: Media Player
+
+    announcement_pipeline:
+      format: FLAC
+      num_channels: 1
+      sample_rate: 48000
+      speaker: announcement_resampling_speaker
+      sources:
+        - http_announcement_source
+
+    media_pipeline:
+      format: FLAC
+      num_channels: 2
+      sample_rate: 48000
+      speaker: media_resampling_speaker
+      sources:
+        - sendspin_media_source
+    volume_increment: 0.05
+    volume_min: 0.4
+    volume_max: 0.9
+    on_announcement:
+      - mixer_speaker.apply_ducking:
+          id: media_mixing_input
+          decibel_reduction: 20
+          duration: 0.0s
+    on_state:
+      if:
+        condition:
+          and:
+            - not:
+                media_player.is_announcing: external_media_player
+        then:
+          - mixer_speaker.apply_ducking:
+              id: media_mixing_input
+              decibel_reduction: 0
+              duration: 1.0s
+
+number:
+  - platform: template
+    name: WiFi TX Power
+    id: wifi_tx_power
+    icon: mdi:wifi-strength-2
+    entity_category: config
+    unit_of_measurement: dBm
+    min_value: 2.0
+    max_value: 20.5
+    step: 0.25
+    optimistic: true
+    restore_value: true
+    initial_value: ${wifi_output_power}
+    set_action:
+      - lambda: |-
+          esp_wifi_set_max_tx_power((int8_t)(x * 4));
+          ESP_LOGW("speakeasy", "WiFi TX power set to %.2f dBm", x);
+
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          if (id(wifi_ramp_armed) && !id(wifi_component).is_connected()) {
+            float current = id(wifi_tx_power).state;
+            if (current < 8.5f) {
+              float next = std::min(current + 0.25f, 8.5f);
+              auto call = id(wifi_tx_power).make_call();
+              call.set_value(next);
+              call.perform();
+              ESP_LOGW("speakeasy", "WiFi still down — TX power stepped %.2f → %.2f dBm", current, next);
+            }
+          }
