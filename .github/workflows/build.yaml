@@ -1,0 +1,76 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        yaml-file:
+          - speakeasy-sendspin.yaml
+          - speakeasy-sendspin-stereo.yaml
+          - speakeasy-snapcast.yaml
+          - speakeasy-snapcast-stereo.yaml
+          - speakeasy-snapcast-mdns.yaml
+          - speakeasy-snapcast-stereo-mdns.yaml
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build ${{ matrix.yaml-file }}
+        id: build
+        uses: esphome/build-action@v6
+        with:
+          yaml-file: ${{ matrix.yaml-file }}
+          complete-manifest: true
+
+      - name: Stage firmware
+        run: |
+          stem="${{ matrix.yaml-file }}"
+          stem="${stem%.yaml}"
+          mkdir -p "output/${stem}"
+          cp -r "${{ steps.build.outputs.name }}/." "output/${stem}/"
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: firmware-${{ matrix.yaml-file }}
+          path: output/
+          retention-days: 90
+
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all firmware
+        uses: actions/download-artifact@v4
+        with:
+          path: public/
+          pattern: firmware-*
+          merge-multiple: true
+
+      - name: Copy flash page
+        run: cp .github/pages/index.html public/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public/
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4

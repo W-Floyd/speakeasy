@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Speakeasy Firmware</title>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
+  <style>
+    body { font-family: sans-serif; max-width: 640px; margin: 3rem auto; padding: 0 1rem; }
+    h1 { margin-bottom: 0.25rem; }
+    p.subtitle { color: #666; margin-top: 0; }
+    h2 { margin-top: 2rem; margin-bottom: 0.25rem; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.05em; color: #888; }
+    .variant { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid #eee; }
+    .variant:last-child { border-bottom: none; }
+    .label { font-weight: 500; }
+    .desc { font-size: 0.875rem; color: #666; margin-top: 0.125rem; }
+    button { cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>Speakeasy</h1>
+  <p class="subtitle">ESP32-S3 multi-room audio firmware — plug in via USB and flash below. Requires Chrome or Edge.</p>
+
+  <h2>Sendspin (Music Assistant)</h2>
+
+  <div class="variant">
+    <div>
+      <div class="label">Sendspin</div>
+      <div class="desc">Single speaker, Music Assistant via Sendspin</div>
+    </div>
+    <esp-web-install-button manifest="speakeasy-sendspin/manifest.json">
+      <button slot="activate">Flash</button>
+      <span slot="unsupported">Use Chrome or Edge</span>
+      <span slot="not-allowed">Requires HTTPS</span>
+    </esp-web-install-button>
+  </div>
+
+  <div class="variant">
+    <div>
+      <div class="label">Sendspin Stereo</div>
+      <div class="desc">Dual I2S output, Music Assistant via Sendspin</div>
+    </div>
+    <esp-web-install-button manifest="speakeasy-sendspin-stereo/manifest.json">
+      <button slot="activate">Flash</button>
+      <span slot="unsupported">Use Chrome or Edge</span>
+      <span slot="not-allowed">Requires HTTPS</span>
+    </esp-web-install-button>
+  </div>
+
+  <h2>Snapcast</h2>
+
+  <div class="variant">
+    <div>
+      <div class="label">Snapcast</div>
+      <div class="desc">Single speaker, Snapcast with server IP</div>
+    </div>
+    <esp-web-install-button manifest="speakeasy-snapcast/manifest.json">
+      <button slot="activate">Flash</button>
+      <span slot="unsupported">Use Chrome or Edge</span>
+      <span slot="not-allowed">Requires HTTPS</span>
+    </esp-web-install-button>
+  </div>
+
+  <div class="variant">
+    <div>
+      <div class="label">Snapcast mDNS</div>
+      <div class="desc">Single speaker, Snapcast with mDNS discovery</div>
+    </div>
+    <esp-web-install-button manifest="speakeasy-snapcast-mdns/manifest.json">
+      <button slot="activate">Flash</button>
+      <span slot="unsupported">Use Chrome or Edge</span>
+      <span slot="not-allowed">Requires HTTPS</span>
+    </esp-web-install-button>
+  </div>
+
+  <div class="variant">
+    <div>
+      <div class="label">Snapcast Stereo</div>
+      <div class="desc">Dual I2S output, Snapcast with server IP</div>
+    </div>
+    <esp-web-install-button manifest="speakeasy-snapcast-stereo/manifest.json">
+      <button slot="activate">Flash</button>
+      <span slot="unsupported">Use Chrome or Edge</span>
+      <span slot="not-allowed">Requires HTTPS</span>
+    </esp-web-install-button>
+  </div>
+
+  <div class="variant">
+    <div>
+      <div class="label">Snapcast Stereo mDNS</div>
+      <div class="desc">Dual I2S output, Snapcast with mDNS discovery</div>
+    </div>
+    <esp-web-install-button manifest="speakeasy-snapcast-stereo-mdns/manifest.json">
+      <button slot="activate">Flash</button>
+      <span slot="unsupported">Use Chrome or Edge</span>
+      <span slot="not-allowed">Requires HTTPS</span>
+    </esp-web-install-button>
+  </div>
+
+  <p style="margin-top:2rem;font-size:0.8rem;color:#aaa;"><a href="https://github.com/W-Floyd/speakeasy">Source on GitHub</a>.</p>
+</body>
+</html>
