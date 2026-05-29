@@ -1,4 +1,4 @@
 # Variants to build in CI (GitHub Actions)
 ci:
-  - ss-mdns-ipv6
-  - sc-mdns-ipv6
+  - ss-mdns-6
+  - sc-mdns-6

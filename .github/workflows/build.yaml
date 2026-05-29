@@ -14,8 +14,8 @@ jobs:
       fail-fast: false
       matrix:
         yaml-file:
-          - speakeasy-ss-mdns-ipv6.yaml
-          - speakeasy-sc-mdns-ipv6.yaml
+          - speakeasy-ss-mdns-6.yaml
+          - speakeasy-sc-mdns-6.yaml
 
     steps:
       - uses: actions/checkout@v4

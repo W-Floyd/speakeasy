@@ -1,0 +1,22 @@
+## Speakeasy Snapcast Bluetooth IPv6 - Edit the settings below.
+substitutions:
+  name: sc-bt-6
+  friendly_name: Speakeasy Snapcast Bluetooth IPv6
+
+  # Snapcast server address and port
+  snapcast_server_ip: "192.168.1.1"
+  snapcast_server_port: "1704"
+
+packages:
+  - !include common/base.yaml
+  - !include common/improv.yaml
+  - !include common/snapcast-audio.yaml
+  - !include common/ipv6.yaml
+
+dashboard_import:
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-sc-bt-6.yaml@main
+  import_full_config: false
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}

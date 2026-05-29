@@ -65,12 +65,12 @@
     <div class="question-label">Bluetooth</div>
     <div class="options">
       <div class="option">
-        <input type="radio" name="nobt" id="nobt-off" value="off" checked>
-        <label for="nobt-off">Enabled<small>WiFi setup via BLE</small></label>
+        <input type="radio" name="bt" id="bt-off" value="off" checked>
+        <label for="bt-off">Disabled<small>saves memory</small></label>
       </div>
       <div class="option">
-        <input type="radio" name="nobt" id="nobt-on" value="on">
-        <label for="nobt-on">Disabled<small>saves memory</small></label>
+        <input type="radio" name="bt" id="bt-on" value="on">
+        <label for="bt-on">Enabled<small>WiFi setup via BLE</small></label>
       </div>
     </div>
   </div>
@@ -97,16 +97,16 @@
         <label for="wifi-wstock">Stock<small>ESP-IDF default</small></label>
       </div>
       <div class="option">
-        <input type="radio" name="wifi" id="wifi-w85" value="w85">
-        <label for="wifi-w85">8.5 dBm<small>fixed, no control</small></label>
+        <input type="radio" name="wifi" id="wifi-w9" value="w9">
+        <label for="wifi-w9">9 dBm<small>fixed, no control</small></label>
       </div>
       <div class="option">
-        <input type="radio" name="wifi" id="wifi-wramp" value="wramp">
-        <label for="wifi-wramp">Stock + Ramp<small>user control</small></label>
+        <input type="radio" name="wifi" id="wifi-wr" value="wr">
+        <label for="wifi-wr">Stock + Ramp<small>user control</small></label>
       </div>
       <div class="option">
-        <input type="radio" name="wifi" id="wifi-w85ramp" value="w85ramp">
-        <label for="wifi-w85ramp">8.5 dBm + Ramp<small>user control</small></label>
+        <input type="radio" name="wifi" id="wifi-w9r" value="w9r">
+        <label for="wifi-w9r">9 dBm + Ramp<small>user control</small></label>
       </div>
     </div>
   </div>
@@ -149,25 +149,25 @@
       let name = 'speakeasy-' + s.proto;
       if (s.twoch === 'on') name += '-2ch';
       if (mdns) name += '-mdns';
-      if (s.nobt === 'on') name += '-nobt';
-      if (s.ipv6 === 'on') name += '-ipv6';
+      if (s.bt === 'on') name += '-bt';
+      if (s.ipv6 === 'on') name += '-6';
       if (s.wifi !== 'wstock') name += '-' + s.wifi;
       return name + '/manifest.json';
     }
 
     function readSelections() {
       const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
-      return { proto: get('proto'), server: get('server'), nobt: get('nobt'),
+      return { proto: get('proto'), server: get('server'), bt: get('bt'),
                ipv6: get('ipv6'), wifi: get('wifi'), twoch: get('twoch') };
     }
 
     // questions in evaluation order; server is handled specially (only for snapcast)
     const QUESTIONS = [
-      { name: 'proto',   el: 'q-proto',  opts: ['sendspin', 'snapcast'] },
+      { name: 'proto',   el: 'q-proto',  opts: ['ss', 'sc'] },
       { name: 'server',  el: 'q-server', opts: ['static', 'mdns'], onlyFor: { proto: 'sc' } },
-      { name: 'nobt',    el: 'q-nobt',   opts: ['off', 'on'] },
-      { name: 'ipv6',    el: 'q-ipv6',   opts: ['off', 'on'] },
-      { name: 'wifi',    el: 'q-wifi',   opts: ['wstock', 'w85', 'wramp', 'w85ramp'] },
+      { name: 'bt',      el: 'q-nobt',   opts: ['off', 'on'] },
+      { name: 'ipv6',  el: 'q-ipv6', opts: ['off', 'on'] },
+      { name: 'wifi',    el: 'q-wifi',   opts: ['wstock', 'w9', 'wr', 'w9r'] },
       { name: 'twoch',   el: 'q-twoch',  opts: ['off', 'on'] },
     ];
 

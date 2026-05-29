@@ -1,0 +1,22 @@
+## Speakeasy Snapcast 2ch Bluetooth - Edit the settings below.
+substitutions:
+  name: sc-2ch-bt
+  friendly_name: Speakeasy Snapcast 2ch Bluetooth
+
+  # Snapcast server address and port
+  snapcast_server_ip: "192.168.1.1"
+  snapcast_server_port: "1704"
+
+packages:
+  - !include common/base.yaml
+  - !include common/improv.yaml
+  - !include common/snapcast-audio.yaml
+  - !include common/second-speaker.yaml
+
+dashboard_import:
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-sc-2ch-bt.yaml@main
+  import_full_config: false
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}

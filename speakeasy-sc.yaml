@@ -9,7 +9,6 @@ substitutions:
 
 packages:
   - !include common/base.yaml
-  - !include common/improv.yaml
   - !include common/snapcast-audio.yaml
 
 dashboard_import:

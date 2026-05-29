@@ -58,9 +58,9 @@ func buildKnown() map[string]firmware {
 				if !mdns && p.desc == "" {
 					continue
 				}
-				for _, nobt := range []bool{false, true} {
+				for _, bt := range []bool{false, true} {
 					for _, ipv6 := range []bool{false, true} {
-						for _, wifi := range []string{"", "w85", "wramp", "w85ramp"} {
+						for _, wifi := range []string{"", "w9", "wr", "w9r"} {
 							key := "speakeasy-" + p.id
 							label := p.label
 							desc := p.desc
@@ -76,24 +76,24 @@ func buildKnown() map[string]firmware {
 								key += "-mdns"
 								label += " mDNS"
 							}
-							if nobt {
-								key += "-nobt"
-								label += " No Bluetooth"
+							if bt {
+								key += "-bt"
+								label += " Bluetooth"
 							}
 							if ipv6 {
-								key += "-ipv6"
+								key += "-6"
 								label += " IPv6"
 							}
 							if wifi != "" {
 								key += "-" + wifi
 							}
 							switch wifi {
-							case "w85":
-								label += " WiFi 8.5dBm"
-							case "wramp":
-								label += " WiFi Ramp"
-							case "w85ramp":
-								label += " WiFi 8.5dBm Ramp"
+							case "w9":
+								label += " WiFi 9dBm"
+							case "wr":
+								label += " WiFi Stock Ramp"
+							case "w9r":
+								label += " WiFi 9dBm Ramp"
 							}
 							m[key] = firmware{Label: label, Desc: desc}
 						}
@@ -123,16 +123,16 @@ func derive(dir string) firmware {
 			parts[i] = "Snapcast"
 		case "mdns":
 			parts[i] = "mDNS"
-		case "nobt":
-			parts[i] = "No BT"
-		case "ipv6":
+		case "bt":
+			parts[i] = "BT"
+		case "6":
 			parts[i] = "IPv6"
-		case "w85":
-			parts[i] = "WiFi 8.5dBm"
-		case "wramp":
-			parts[i] = "WiFi Ramp"
-		case "w85ramp":
-			parts[i] = "WiFi 8.5dBm Ramp"
+		case "w9":
+			parts[i] = "WiFi 9dBm"
+		case "wr":
+			parts[i] = "WiFi Stock Ramp"
+		case "w9r":
+			parts[i] = "WiFi 9dBm Ramp"
 		default:
 			parts[i] = strings.ToUpper(p[:1]) + p[1:]
 		}

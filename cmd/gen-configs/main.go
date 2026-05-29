@@ -12,9 +12,9 @@ type variant struct {
 	Proto      string
 	TwoChannel bool
 	MDNS       bool
-	NoBT       bool
+	BT         bool
 	IPv6       bool
-	WiFi       string // "wstock" | "w85" | "wramp" | "w85ramp" (default, no suffix)
+	WiFi       string // "wstock" | "w9" | "wr" | "w9r" (default, no suffix)
 }
 
 func (v variant) filename() string {
@@ -39,11 +39,11 @@ func (v variant) deviceName() string {
 	if v.MDNS {
 		name += "-mdns"
 	}
-	if v.NoBT {
-		name += "-nobt"
+	if v.BT {
+		name += "-bt"
 	}
 	if v.IPv6 {
-		name += "-ipv6"
+		name += "-6"
 	}
 	if v.WiFi != "wstock" {
 		name += "-" + v.WiFi
@@ -65,27 +65,27 @@ func (v variant) friendlyName() string {
 	if v.MDNS {
 		parts = append(parts, "mDNS")
 	}
-	if v.NoBT {
-		parts = append(parts, "No Bluetooth")
+	if v.BT {
+		parts = append(parts, "Bluetooth")
 	}
 	if v.IPv6 {
 		parts = append(parts, "IPv6")
 	}
 	switch v.WiFi {
 	// wstock is the default, no label addition
-	case "w85":
-		parts = append(parts, "WiFi 8.5dBm")
-	case "wramp":
-		parts = append(parts, "WiFi Ramp")
-	case "w85ramp":
-		parts = append(parts, "WiFi 8.5dBm Ramp")
+	case "w9":
+		parts = append(parts, "WiFi 9dBm")
+	case "wr":
+		parts = append(parts, "WiFi Stock Ramp")
+	case "w9r":
+		parts = append(parts, "WiFi 9dBm Ramp")
 	}
 	return strings.Join(parts, " ")
 }
 
 func (v variant) packages() []string {
 	pkgs := []string{"common/base.yaml"}
-	if !v.NoBT {
+	if v.BT {
 		pkgs = append(pkgs, "common/improv.yaml")
 	}
 	switch v.Proto {
@@ -101,12 +101,12 @@ func (v variant) packages() []string {
 		pkgs = append(pkgs, "common/ipv6.yaml")
 	}
 	switch v.WiFi {
-	case "w85":
-		pkgs = append(pkgs, "common/wifi-85.yaml")
-	case "wramp":
+	case "w9":
+		pkgs = append(pkgs, "common/wifi-9.yaml")
+	case "wr":
 		pkgs = append(pkgs, "common/wifi-ramp.yaml")
-	case "w85ramp":
-		pkgs = append(pkgs, "common/wifi-85ramp.yaml")
+	case "w9r":
+		pkgs = append(pkgs, "common/wifi-9ramp.yaml")
 	// wstock: no extra package
 	}
 	return pkgs
@@ -158,14 +158,14 @@ func allVariants() []variant {
 				if proto == "sendspin" && !mdns {
 					continue
 				}
-				for _, nobt := range []bool{false, true} {
+				for _, bt := range []bool{false, true} {
 					for _, ipv6 := range []bool{false, true} {
-						for _, wifi := range []string{"wstock", "w85", "wramp", "w85ramp"} {
+						for _, wifi := range []string{"wstock", "w9", "wr", "w9r"} {
 							variants = append(variants, variant{
 								Proto:      proto,
 								TwoChannel: twoChannel,
 								MDNS:       mdns,
-								NoBT:       nobt,
+								BT:         bt,
 								IPv6:       ipv6,
 								WiFi:       wifi,
 							})
