@@ -26,13 +26,61 @@ type group struct {
 
 var groupOrder = []string{"Sendspin", "Snapcast"}
 
-var known = map[string]firmware{
-	"speakeasy-sendspin":          {Label: "Sendspin", Desc: "Music Assistant via Sendspin"},
-	"speakeasy-sendspin-2ch":      {Label: "Sendspin 2ch", Desc: "Dual I2S output, Music Assistant via Sendspin"},
-	"speakeasy-snapcast":          {Label: "Snapcast", Desc: "Snapcast client (server IP)"},
-	"speakeasy-snapcast-m":        {Label: "Snapcast mDNS", Desc: "Snapcast client (mDNS discovery)"},
-	"speakeasy-snapcast-2ch":      {Label: "Snapcast 2ch", Desc: "Dual I2S output, Snapcast client (server IP)"},
-	"speakeasy-snapcast-2ch-m":    {Label: "Snapcast 2ch mDNS", Desc: "Dual I2S output, Snapcast client (mDNS discovery)"},
+var known = buildKnown()
+
+func buildKnown() map[string]firmware {
+	type protoSpec struct {
+		id       string
+		label    string
+		desc     string
+		mdnsDesc string
+	}
+	protos := []protoSpec{
+		{
+			id:    "sendspin",
+			label: "Sendspin",
+			desc:  "Music Assistant via Sendspin",
+		},
+		{
+			id:       "snapcast",
+			label:    "Snapcast",
+			desc:     "Snapcast client (server IP)",
+			mdnsDesc: "Snapcast client (mDNS discovery)",
+		},
+	}
+	m := map[string]firmware{}
+	for _, p := range protos {
+		for _, twoChannel := range []bool{false, true} {
+			for _, mdns := range []bool{false, true} {
+				if mdns && p.mdnsDesc == "" {
+					continue
+				}
+				for _, nobt := range []bool{false, true} {
+					key := "speakeasy-" + p.id
+					label := p.label
+					desc := p.desc
+					if mdns {
+						desc = p.mdnsDesc
+					}
+					if twoChannel {
+						key += "-2ch"
+						label += " 2ch"
+						desc = "Dual I2S output, " + desc
+					}
+					if mdns {
+						key += "-mdns"
+						label += " mDNS"
+					}
+					if nobt {
+						key += "-nobt"
+						label += " No Bluetooth"
+					}
+					m[key] = firmware{Label: label, Desc: desc}
+				}
+			}
+		}
+	}
+	return m
 }
 
 func groupOf(dir string) string {
@@ -49,6 +97,8 @@ func derive(dir string) firmware {
 		switch p {
 		case "mdns":
 			parts[i] = "mDNS"
+		case "nobt":
+			parts[i] = "No BT"
 		default:
 			parts[i] = strings.ToUpper(p[:1]) + p[1:]
 		}
