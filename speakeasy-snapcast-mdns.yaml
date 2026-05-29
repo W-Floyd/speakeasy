@@ -1,6 +1,6 @@
 ## Speakeasy (Snapcast mDNS) - Edit the settings below.
 substitutions:
-  name: speakeasy-snapcast-m
+  name: snapcast-mdns
   friendly_name: Speakeasy Snapcast mDNS
 
 packages:

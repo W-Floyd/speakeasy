@@ -1,0 +1,12 @@
+external_components:
+  - source: github://pr#14389
+    components: [ snapclient ]
+    refresh: 24h
+
+media_player:
+  - platform: snapclient
+    id: snapclient_media_player
+    name: ${friendly_name}
+    hostname: ${snapcast_server_ip}
+    port: ${snapcast_server_port}
+    i2s_dout_pin: ${i2s_dout_pin}

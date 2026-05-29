@@ -1,6 +1,6 @@
 ## Speakeasy 2ch (Snapcast mDNS) - Edit the settings below.
 substitutions:
-  name: speakeasy-snapcast-2ch-m
+  name: snapcast-2ch-mdns
   friendly_name: Speakeasy Snapcast 2ch mDNS
 
 packages:

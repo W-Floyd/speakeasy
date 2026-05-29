@@ -1,6 +1,6 @@
 ## Speakeasy (Snapcast) - Edit the settings below.
 substitutions:
-  name: speakeasy-snapcast
+  name: snapcast
   friendly_name: Speakeasy Snapcast
 
   # Snapcast server address and port
@@ -9,24 +9,13 @@ substitutions:
 
 packages:
   - !include common/base.yaml
+  - !include common/improv.yaml
+  - !include common/snapcast-audio.yaml
 
 dashboard_import:
   package_import_url: github://W-Floyd/speakeasy/speakeasy-snapcast.yaml@main
   import_full_config: false
 
-external_components:
-  - source: github://pr#14389
-    components: [ snapclient ]
-    refresh: 24h
-
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
-
-media_player:
-  - platform: snapclient
-    id: snapclient_media_player
-    name: ${friendly_name}
-    hostname: ${snapcast_server_ip}
-    port: ${snapcast_server_port}
-    i2s_dout_pin: ${i2s_dout_pin}

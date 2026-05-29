@@ -1,6 +1,6 @@
 ## Speakeasy 2ch (Sendspin) - Edit the settings below.
 substitutions:
-  name: speakeasy-sendspin-2ch
+  name: sendspin-2ch
   friendly_name: Speakeasy Sendspin 2ch
 
 packages:

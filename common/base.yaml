@@ -71,16 +71,13 @@ wifi:
 network:
   enable_ipv6: true
 
-improv_serial:
-
-esp32_improv:
-  authorizer: none
-
 psram:
   mode: quad
   speed: 80MHz
 
 captive_portal:
+
+improv_serial:
 
 i2s_audio:
   - id: i2s_audio_bus
