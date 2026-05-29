@@ -204,7 +204,30 @@
       unavailableMsg.textContent = exists ? '' : 'Not available as a pre-built binary.';
     }
 
+    // Parse a manifest path back into selections so we can seed radios from a
+    // known-available state before the first update() call. Without this, the
+    // default HTML selections (e.g. ipv6=off) may not match any available
+    // firmware, causing the viability check to hide all options incorrectly.
+    function seedFromAvailable() {
+      if (!available.size) return;
+      const stem = [...available][0].replace('speakeasy-', '').replace('/manifest.json', '');
+      const parts = stem.split('-');
+      let i = 0;
+      const s = { proto: null, server: 'static', bt: 'off', ipv6: 'off', wifi: 'wstock', twoch: 'off' };
+      s.proto = parts[i++];
+      if (parts[i] === '2ch') { s.twoch = 'on'; i++; }
+      if (parts[i] === 'mdns') { s.server = 'mdns'; i++; }
+      if (parts[i] === 'bt')   { s.bt = 'on'; i++; }
+      if (parts[i] === '6')    { s.ipv6 = 'on'; i++; }
+      if (i < parts.length)    { s.wifi = parts[i]; }
+      for (const [name, value] of Object.entries(s)) {
+        const r = document.querySelector(`input[name="${name}"][value="${value}"]`);
+        if (r) r.checked = true;
+      }
+    }
+
     document.querySelectorAll('input[type=radio]').forEach(r => r.addEventListener('change', update));
+    seedFromAvailable();
     update();
   </script>
 </body>
