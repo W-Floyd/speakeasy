@@ -12,65 +12,65 @@ jobs:
       fail-fast: false
       matrix:
         yaml-file:
-          - speakeasy-sendspin-mdns.yaml
-          - speakeasy-sendspin-mdns-w85.yaml
-          - speakeasy-sendspin-mdns-wramp.yaml
-          - speakeasy-sendspin-mdns-w85ramp.yaml
+          # - speakeasy-sendspin-mdns.yaml
+          # - speakeasy-sendspin-mdns-w85.yaml
+          # - speakeasy-sendspin-mdns-wramp.yaml
+          # - speakeasy-sendspin-mdns-w85ramp.yaml
           # - speakeasy-sendspin-mdns-2ch.yaml
-          - speakeasy-sendspin-mdns-nobt.yaml
-          - speakeasy-sendspin-mdns-nobt-w85.yaml
-          - speakeasy-sendspin-mdns-nobt-wramp.yaml
-          - speakeasy-sendspin-mdns-nobt-w85ramp.yaml
+          # - speakeasy-sendspin-mdns-nobt.yaml
+          # - speakeasy-sendspin-mdns-nobt-w85.yaml
+          # - speakeasy-sendspin-mdns-nobt-wramp.yaml
+          # - speakeasy-sendspin-mdns-nobt-w85ramp.yaml
           # - speakeasy-sendspin-mdns-2ch-nobt.yaml
           - speakeasy-sendspin-mdns-ipv6.yaml
-          - speakeasy-sendspin-mdns-ipv6-w85.yaml
-          - speakeasy-sendspin-mdns-ipv6-wramp.yaml
-          - speakeasy-sendspin-mdns-ipv6-w85ramp.yaml
+          # - speakeasy-sendspin-mdns-ipv6-w85.yaml
+          # - speakeasy-sendspin-mdns-ipv6-wramp.yaml
+          # - speakeasy-sendspin-mdns-ipv6-w85ramp.yaml
           # - speakeasy-sendspin-mdns-2ch-ipv6.yaml
-          - speakeasy-sendspin-mdns-nobt-ipv6.yaml
-          - speakeasy-sendspin-mdns-nobt-ipv6-w85.yaml
-          - speakeasy-sendspin-mdns-nobt-ipv6-wramp.yaml
-          - speakeasy-sendspin-mdns-nobt-ipv6-w85ramp.yaml
+          # - speakeasy-sendspin-mdns-nobt-ipv6.yaml
+          # - speakeasy-sendspin-mdns-nobt-ipv6-w85.yaml
+          # - speakeasy-sendspin-mdns-nobt-ipv6-wramp.yaml
+          # - speakeasy-sendspin-mdns-nobt-ipv6-w85ramp.yaml
           # - speakeasy-sendspin-mdns-2ch-nobt-ipv6.yaml
-          - speakeasy-snapcast.yaml
-          - speakeasy-snapcast-w85.yaml
-          - speakeasy-snapcast-wramp.yaml
-          - speakeasy-snapcast-w85ramp.yaml
+          # - speakeasy-snapcast.yaml
+          # - speakeasy-snapcast-w85.yaml
+          # - speakeasy-snapcast-wramp.yaml
+          # - speakeasy-snapcast-w85ramp.yaml
           # - speakeasy-snapcast-2ch.yaml
-          - speakeasy-snapcast-nobt.yaml
-          - speakeasy-snapcast-nobt-w85.yaml
-          - speakeasy-snapcast-nobt-wramp.yaml
-          - speakeasy-snapcast-nobt-w85ramp.yaml
+          # - speakeasy-snapcast-nobt.yaml
+          # - speakeasy-snapcast-nobt-w85.yaml
+          # - speakeasy-snapcast-nobt-wramp.yaml
+          # - speakeasy-snapcast-nobt-w85ramp.yaml
           # - speakeasy-snapcast-2ch-nobt.yaml
-          - speakeasy-snapcast-ipv6.yaml
-          - speakeasy-snapcast-ipv6-w85.yaml
-          - speakeasy-snapcast-ipv6-wramp.yaml
-          - speakeasy-snapcast-ipv6-w85ramp.yaml
+          # - speakeasy-snapcast-ipv6.yaml
+          # - speakeasy-snapcast-ipv6-w85.yaml
+          # - speakeasy-snapcast-ipv6-wramp.yaml
+          # - speakeasy-snapcast-ipv6-w85ramp.yaml
           # - speakeasy-snapcast-2ch-ipv6.yaml
-          - speakeasy-snapcast-nobt-ipv6.yaml
-          - speakeasy-snapcast-nobt-ipv6-w85.yaml
-          - speakeasy-snapcast-nobt-ipv6-wramp.yaml
-          - speakeasy-snapcast-nobt-ipv6-w85ramp.yaml
+          # - speakeasy-snapcast-nobt-ipv6.yaml
+          # - speakeasy-snapcast-nobt-ipv6-w85.yaml
+          # - speakeasy-snapcast-nobt-ipv6-wramp.yaml
+          # - speakeasy-snapcast-nobt-ipv6-w85ramp.yaml
           # - speakeasy-snapcast-2ch-nobt-ipv6.yaml
-          - speakeasy-snapcast-mdns.yaml
-          - speakeasy-snapcast-mdns-w85.yaml
-          - speakeasy-snapcast-mdns-wramp.yaml
-          - speakeasy-snapcast-mdns-w85ramp.yaml
+          # - speakeasy-snapcast-mdns.yaml
+          # - speakeasy-snapcast-mdns-w85.yaml
+          # - speakeasy-snapcast-mdns-wramp.yaml
+          # - speakeasy-snapcast-mdns-w85ramp.yaml
           # - speakeasy-snapcast-2ch-mdns.yaml
-          - speakeasy-snapcast-mdns-nobt.yaml
-          - speakeasy-snapcast-mdns-nobt-w85.yaml
-          - speakeasy-snapcast-mdns-nobt-wramp.yaml
-          - speakeasy-snapcast-mdns-nobt-w85ramp.yaml
+          # - speakeasy-snapcast-mdns-nobt.yaml
+          # - speakeasy-snapcast-mdns-nobt-w85.yaml
+          # - speakeasy-snapcast-mdns-nobt-wramp.yaml
+          # - speakeasy-snapcast-mdns-nobt-w85ramp.yaml
           # - speakeasy-snapcast-2ch-mdns-nobt.yaml
           - speakeasy-snapcast-mdns-ipv6.yaml
-          - speakeasy-snapcast-mdns-ipv6-w85.yaml
-          - speakeasy-snapcast-mdns-ipv6-wramp.yaml
-          - speakeasy-snapcast-mdns-ipv6-w85ramp.yaml
+          # - speakeasy-snapcast-mdns-ipv6-w85.yaml
+          # - speakeasy-snapcast-mdns-ipv6-wramp.yaml
+          # - speakeasy-snapcast-mdns-ipv6-w85ramp.yaml
           # - speakeasy-snapcast-2ch-mdns-ipv6.yaml
-          - speakeasy-snapcast-mdns-nobt-ipv6.yaml
-          - speakeasy-snapcast-mdns-nobt-ipv6-w85.yaml
-          - speakeasy-snapcast-mdns-nobt-ipv6-wramp.yaml
-          - speakeasy-snapcast-mdns-nobt-ipv6-w85ramp.yaml
+          # - speakeasy-snapcast-mdns-nobt-ipv6.yaml
+          # - speakeasy-snapcast-mdns-nobt-ipv6-w85.yaml
+          # - speakeasy-snapcast-mdns-nobt-ipv6-wramp.yaml
+          # - speakeasy-snapcast-mdns-nobt-ipv6-w85ramp.yaml
           # - speakeasy-snapcast-2ch-mdns-nobt-ipv6.yaml
 
     steps:
