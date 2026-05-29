@@ -92,6 +92,28 @@
   </div>
 
   <div class="question">
+    <div class="question-label">WiFi TX Power</div>
+    <div class="options">
+      <div class="option">
+        <input type="radio" name="wifi" id="wifi-wstock" value="wstock" checked>
+        <label for="wifi-wstock">Stock<small>ESP-IDF default</small></label>
+      </div>
+      <div class="option">
+        <input type="radio" name="wifi" id="wifi-w85" value="w85">
+        <label for="wifi-w85">8.5 dBm<small>fixed, no control</small></label>
+      </div>
+      <div class="option">
+        <input type="radio" name="wifi" id="wifi-wramp" value="wramp">
+        <label for="wifi-wramp">Stock + Ramp<small>user control</small></label>
+      </div>
+      <div class="option">
+        <input type="radio" name="wifi" id="wifi-w85ramp" value="w85ramp">
+        <label for="wifi-w85ramp">8.5 dBm + Ramp<small>user control</small></label>
+      </div>
+    </div>
+  </div>
+
+  <div class="question">
     <div class="question-label">Output</div>
     <div class="options">
       <div class="option">
@@ -131,12 +153,14 @@
       const twoch = document.querySelector('input[name=twoch]:checked').value === 'on';
       const nobt = document.querySelector('input[name=nobt]:checked').value === 'on';
       const ipv6 = document.querySelector('input[name=ipv6]:checked').value === 'on';
+      const wifi = document.querySelector('input[name=wifi]:checked').value;
 
       let name = 'speakeasy-' + proto;
       if (twoch) name += '-2ch';
       if (mdns) name += '-mdns';
       if (nobt) name += '-nobt';
       if (ipv6) name += '-ipv6';
+      if (wifi !== 'wstock') name += '-' + wifi;
       return name + '/manifest.json';
     }
 

@@ -60,30 +60,43 @@ func buildKnown() map[string]firmware {
 				}
 				for _, nobt := range []bool{false, true} {
 					for _, ipv6 := range []bool{false, true} {
-						key := "speakeasy-" + p.id
-						label := p.label
-						desc := p.desc
-						if mdns {
-							desc = p.mdnsDesc
+						for _, wifi := range []string{"", "w85", "wramp", "w85ramp"} {
+							key := "speakeasy-" + p.id
+							label := p.label
+							desc := p.desc
+							if mdns {
+								desc = p.mdnsDesc
+							}
+							if twoChannel {
+								key += "-2ch"
+								label += " 2ch"
+								desc = "Dual I2S output, " + desc
+							}
+							if mdns {
+								key += "-mdns"
+								label += " mDNS"
+							}
+							if nobt {
+								key += "-nobt"
+								label += " No Bluetooth"
+							}
+							if ipv6 {
+								key += "-ipv6"
+								label += " IPv6"
+							}
+							if wifi != "" {
+								key += "-" + wifi
+							}
+							switch wifi {
+							case "w85":
+								label += " WiFi 8.5dBm"
+							case "wramp":
+								label += " WiFi Ramp"
+							case "w85ramp":
+								label += " WiFi 8.5dBm Ramp"
+							}
+							m[key] = firmware{Label: label, Desc: desc}
 						}
-						if twoChannel {
-							key += "-2ch"
-							label += " 2ch"
-							desc = "Dual I2S output, " + desc
-						}
-						if mdns {
-							key += "-mdns"
-							label += " mDNS"
-						}
-						if nobt {
-							key += "-nobt"
-							label += " No Bluetooth"
-						}
-						if ipv6 {
-							key += "-ipv6"
-							label += " IPv6"
-						}
-						m[key] = firmware{Label: label, Desc: desc}
 					}
 				}
 			}
@@ -110,6 +123,12 @@ func derive(dir string) firmware {
 			parts[i] = "No BT"
 		case "ipv6":
 			parts[i] = "IPv6"
+		case "w85":
+			parts[i] = "WiFi 8.5dBm"
+		case "wramp":
+			parts[i] = "WiFi Ramp"
+		case "w85ramp":
+			parts[i] = "WiFi 8.5dBm Ramp"
 		default:
 			parts[i] = strings.ToUpper(p[:1]) + p[1:]
 		}
