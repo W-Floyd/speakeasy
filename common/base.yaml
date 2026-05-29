@@ -69,7 +69,7 @@ wifi:
         }
 
 network:
-  enable_ipv6: true
+  enable_ipv6: false
 
 psram:
   mode: quad
