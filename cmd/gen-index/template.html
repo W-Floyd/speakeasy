@@ -142,7 +142,7 @@
 
     function update() {
       const proto = document.querySelector('input[name=proto]:checked').value;
-      qServer.style.display = proto === 'snapcast' ? '' : 'none';
+      qServer.style.display = proto === 'snapcast' ? 'block' : 'none';
 
       const manifest = buildManifest();
       const stem = manifest.replace('/manifest.json', '');
