@@ -87,6 +87,10 @@ i2s_audio:
     i2s_lrclk_pin: ${i2s_lrclk_pin}
     i2s_bclk_pin: ${i2s_bclk_pin}
 
+sensor:
+  - platform: internal_temperature
+    name: Internal Temperature
+
 number:
   - platform: template
     name: WiFi TX Power
