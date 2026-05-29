@@ -151,19 +151,21 @@ func generate(v variant) string {
 
 func allVariants() []variant {
 	var variants []variant
-	for _, proto := range []string{"sendspin", "snapcast"} {
-		for _, twoChannel := range []bool{false, true} {
-			if twoChannel {
-				continue
-			}
-			for _, mdns := range []bool{false, true} {
-				// Sendspin is always mDNS; skip the non-mDNS case
-				if proto == "sendspin" && !mdns {
-					continue
-				}
-				for _, bt := range []bool{false, true} {
-					for _, ipv6 := range []bool{false, true} {
-						for _, wifi := range []string{"wstock", "w9", "wr", "w9r"} {
+	// Outer loops are by component set so sequential Docker stages maximise
+	// ccache hits: wifi mode (ramp lambdas are expensive) then bt (BLE stack),
+	// then proto/mdns/ipv6 which don't add new C++ components per group.
+	for _, wifi := range []string{"wstock", "w9", "wr", "w9r"} {
+		for _, bt := range []bool{false, true} {
+			for _, proto := range []string{"sendspin", "snapcast"} {
+				for _, twoChannel := range []bool{false, true} {
+					if twoChannel {
+						continue
+					}
+					for _, mdns := range []bool{false, true} {
+						if proto == "sendspin" && !mdns {
+							continue
+						}
+						for _, ipv6 := range []bool{false, true} {
 							variants = append(variants, variant{
 								Proto:      proto,
 								TwoChannel: twoChannel,
@@ -183,14 +185,18 @@ func allVariants() []variant {
 
 func main() {
 	dir := flag.String("dir", ".", "directory to write firmware config files")
+	dryRun := flag.Bool("dry-run", false, "print filenames in generation order without writing")
 	flag.Parse()
 
 	for _, v := range allVariants() {
+		fmt.Println(v.filename())
+		if *dryRun {
+			continue
+		}
 		path := filepath.Join(*dir, v.filename())
 		if err := os.WriteFile(path, []byte(generate(v)), 0644); err != nil {
 			fmt.Fprintf(os.Stderr, "error writing %s: %v\n", path, err)
 			os.Exit(1)
 		}
-		fmt.Println(v.filename())
 	}
 }

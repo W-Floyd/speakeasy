@@ -4,8 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"path/filepath"
-	"sort"
+	"os/exec"
 	"strings"
 	"text/template"
 )
@@ -237,12 +236,18 @@ func main() {
 	}
 	fmt.Printf("wrote %s (%d CI variants)\n", *outFile, len(cfg.CI))
 
-	yamls, err := filepath.Glob("speakeasy-*.yaml")
+	// Run gen-configs to get variants in their component-optimised order.
+	out, err := exec.Command("go", "run", "./cmd/gen-configs", "--dry-run").Output()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "error globbing yaml files: %v\n", err)
+		fmt.Fprintf(os.Stderr, "error running gen-configs: %v\n", err)
 		os.Exit(1)
 	}
-	sort.Strings(yamls)
+	var yamls []string
+	for _, line := range strings.Split(strings.TrimSpace(string(out)), "\n") {
+		if line != "" {
+			yamls = append(yamls, line)
+		}
+	}
 
 	if err := os.WriteFile(*dockerFile, []byte(generateDockerfile(yamls)), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", *dockerFile, err)
