@@ -187,9 +187,10 @@
       for (const q of QUESTIONS) {
         const el = document.getElementById(q.el);
 
-        // grey out questions that don't apply to the current selection
-        const inapplicable = q.onlyFor && sel[Object.keys(q.onlyFor)[0]] !== Object.values(q.onlyFor)[0];
+        // fade questions that don't apply to the current selection
+        const inapplicable = !!(q.onlyFor && sel[Object.keys(q.onlyFor)[0]] !== Object.values(q.onlyFor)[0]);
         el.classList.toggle('inapplicable', inapplicable);
+        if (inapplicable) continue;
 
         const viable = q.opts.filter(opt => available.has(manifestFrom({...sel, [q.name]: opt})));
 
