@@ -149,15 +149,23 @@ COPY speakeasy-*.yaml ./
 
 `)
 
-	for _, yaml := range variants {
+	// First variant builds from base, priming ~/.platformio into the image layer.
+	// All subsequent variants inherit from it so the toolchain is already present.
+	primerStage := "firmware-" + strings.TrimPrefix(strings.TrimSuffix(variants[0], ".yaml"), "speakeasy-")
+
+	for i, yaml := range variants {
 		stem := strings.TrimSuffix(yaml, ".yaml")
 		short := strings.TrimPrefix(stem, "speakeasy-")
 		stage := "firmware-" + short
 
+		parent := "base"
+		if i > 0 {
+			parent = primerStage
+		}
+
 		fmt.Fprintf(&sb, "# ── %s\n", stem)
-		fmt.Fprintf(&sb, "FROM base AS %s\n", stage)
-		fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/root/.platformio,sharing=locked \\\n")
-		fmt.Fprintf(&sb, "    --mount=type=cache,target=/config/.esphome,id=%s \\\n", short)
+		fmt.Fprintf(&sb, "FROM %s AS %s\n", parent, stage)
+		fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/config/.esphome,id=esphome-%s \\\n", short)
 		fmt.Fprintf(&sb, "    python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest %s && \\\n", yaml)
 		fmt.Fprintf(&sb, "    name=$(yq '.substitutions.name' %s) && \\\n", yaml)
 		fmt.Fprintf(&sb, "    build_dir=$(find . -maxdepth 1 -type d -name \"${name}-*\" | head -1) && \\\n")
