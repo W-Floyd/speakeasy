@@ -13,11 +13,11 @@ jobs:
       matrix:
         yaml-file:
           - speakeasy-sendspin.yaml
-          # - speakeasy-sendspin-stereo.yaml
+          # - speakeasy-sendspin-2ch.yaml
           - speakeasy-snapcast.yaml
-          # - speakeasy-snapcast-stereo.yaml
+          # - speakeasy-snapcast-2ch.yaml
           - speakeasy-snapcast-mdns.yaml
-          # - speakeasy-snapcast-stereo-mdns.yaml
+          # - speakeasy-snapcast-2ch-mdns.yaml
 
     steps:
       - uses: actions/checkout@v4

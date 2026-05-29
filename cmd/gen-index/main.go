@@ -27,12 +27,12 @@ type group struct {
 var groupOrder = []string{"Sendspin", "Snapcast"}
 
 var known = map[string]firmware{
-	"speakeasy-sendspin":            {Label: "Sendspin", Desc: "Music Assistant via Sendspin"},
-	"speakeasy-sendspin-stereo":     {Label: "Sendspin Stereo", Desc: "Dual I2S output, Music Assistant via Sendspin"},
-	"speakeasy-snapcast":            {Label: "Snapcast", Desc: "Snapcast client (server IP)"},
-	"speakeasy-snapcast-mdns":       {Label: "Snapcast mDNS", Desc: "Snapcast client (mDNS discovery)"},
-	"speakeasy-snapcast-stereo":     {Label: "Snapcast Stereo", Desc: "Dual I2S output, Snapcast client (server IP)"},
-	"speakeasy-snapcast-stereo-mdns": {Label: "Snapcast Stereo mDNS", Desc: "Dual I2S output, Snapcast client (mDNS discovery)"},
+	"speakeasy-sendspin":          {Label: "Sendspin", Desc: "Music Assistant via Sendspin"},
+	"speakeasy-sendspin-2ch":      {Label: "Sendspin 2ch", Desc: "Dual I2S output, Music Assistant via Sendspin"},
+	"speakeasy-snapcast":          {Label: "Snapcast", Desc: "Snapcast client (server IP)"},
+	"speakeasy-snapcast-m":        {Label: "Snapcast mDNS", Desc: "Snapcast client (mDNS discovery)"},
+	"speakeasy-snapcast-2ch":      {Label: "Snapcast 2ch", Desc: "Dual I2S output, Snapcast client (server IP)"},
+	"speakeasy-snapcast-2ch-m":    {Label: "Snapcast 2ch mDNS", Desc: "Dual I2S output, Snapcast client (mDNS discovery)"},
 }
 
 func groupOf(dir string) string {

@@ -1,7 +1,7 @@
 ## Speakeasy (Snapcast) - Edit the settings below.
 substitutions:
-  name: speakeasy
-  friendly_name: Speakeasy
+  name: speakeasy-snapcast
+  friendly_name: Speakeasy Snapcast
 
   # Snapcast server address and port
   snapcast_server_ip: "192.168.1.1"

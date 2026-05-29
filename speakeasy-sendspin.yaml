@@ -1,7 +1,7 @@
 ## Speakeasy (Sendspin) - Edit the settings below.
 substitutions:
-  name: speakeasy
-  friendly_name: Speakeasy
+  name: speakeasy-sendspin
+  friendly_name: Speakeasy Sendspin
 
 packages:
   - !include common/base.yaml
