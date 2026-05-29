@@ -1,12 +1,18 @@
-## Speakeasy 2ch (Sendspin, No Bluetooth, IPv6) - Edit the settings below.
+## Speakeasy Sendspin 2ch No Bluetooth IPv6 - Edit the settings below.
 substitutions:
   name: sendspin-2ch-nobt-ipv6
-  friendly_name: Speakeasy Sendspin 2ch
+  friendly_name: Speakeasy Sendspin 2ch No Bluetooth IPv6
 
 packages:
-  - !include speakeasy-sendspin-2ch-nobt.yaml
+  - !include common/base.yaml
+  - !include common/sendspin-audio.yaml
+  - !include common/second-speaker.yaml
   - !include common/ipv6.yaml
 
 dashboard_import:
   package_import_url: github://W-Floyd/speakeasy/speakeasy-sendspin-2ch-nobt-ipv6.yaml@main
   import_full_config: false
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}

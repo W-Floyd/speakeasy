@@ -1,12 +1,24 @@
-## Speakeasy 2ch (Snapcast mDNS, IPv6) - Edit the settings below.
+## Speakeasy Snapcast 2ch mDNS IPv6 - Edit the settings below.
 substitutions:
   name: snapcast-2ch-mdns-ipv6
-  friendly_name: Speakeasy Snapcast 2ch mDNS
+  friendly_name: Speakeasy Snapcast 2ch mDNS IPv6
 
 packages:
-  - !include speakeasy-snapcast-2ch-mdns.yaml
+  - !include common/base.yaml
+  - !include common/improv.yaml
+  - !include common/snapcast-audio.yaml
+  - !include common/second-speaker.yaml
   - !include common/ipv6.yaml
 
 dashboard_import:
   package_import_url: github://W-Floyd/speakeasy/speakeasy-snapcast-2ch-mdns-ipv6.yaml@main
   import_full_config: false
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+media_player:
+  - id: !extend snapclient_media_player
+    hostname: !remove
+    port: !remove

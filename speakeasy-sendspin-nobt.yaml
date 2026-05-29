@@ -1,7 +1,7 @@
-## Speakeasy (Sendspin, No Bluetooth) - Edit the settings below.
+## Speakeasy Sendspin No Bluetooth - Edit the settings below.
 substitutions:
   name: sendspin-nobt
-  friendly_name: Speakeasy Sendspin
+  friendly_name: Speakeasy Sendspin No Bluetooth
 
 packages:
   - !include common/base.yaml
