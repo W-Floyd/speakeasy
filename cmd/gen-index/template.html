@@ -11,7 +11,8 @@
     p.subtitle { color: #666; margin-top: 0; margin-bottom: 2rem; }
 
     .question { margin-bottom: 1.25rem; }
-    .question-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin-bottom: 0.5rem; }
+    .question-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin-bottom: 0.25rem; }
+    .question-desc { font-size: 0.82rem; color: #aaa; margin: 0 0 0.5rem; }
     .options { display: flex; gap: 0.5rem; flex-wrap: wrap; }
     .option input[type=radio] { position: absolute; opacity: 0; width: 0; height: 0; }
     .option label {
@@ -35,6 +36,7 @@
 
   <div class="question" id="q-proto">
     <div class="question-label">Protocol</div>
+    <p class="question-desc">The audio streaming protocol. Sendspin integrates natively with Music Assistant for synchronized multi-room audio. Snapcast is a generic audio client that can be driven by Music Assistant or any Snapcast-compatible source.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="proto" id="proto-ss" value="ss" checked>
@@ -42,31 +44,33 @@
       </div>
       <div class="option">
         <input type="radio" name="proto" id="proto-sc" value="sc">
-        <label for="proto-sc">Snapcast</label>
+        <label for="proto-sc">Snapcast<small>Snapcast server</small></label>
       </div>
     </div>
   </div>
 
   <div class="question" id="q-server">
     <div class="question-label">Snapcast Server</div>
+    <p class="question-desc">How the device locates the Snapcast server. Static IP requires the server address to be set in the config file before flashing. mDNS discovers it automatically on the local network.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="server" id="server-static" value="static" checked>
-        <label for="server-static">Static IP</label>
+        <label for="server-static">Static IP<small>address in config</small></label>
       </div>
       <div class="option">
         <input type="radio" name="server" id="server-mdns" value="mdns">
-        <label for="server-mdns">mDNS Discovery</label>
+        <label for="server-mdns">mDNS<small>auto-discovery</small></label>
       </div>
     </div>
   </div>
 
   <div class="question" id="q-nobt">
     <div class="question-label">Bluetooth</div>
+    <p class="question-desc">BLE is used for WiFi provisioning via Improv — configure WiFi credentials from a phone without USB. Disabling it frees ~100 KB of RAM and is recommended once the device is set up.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="bt" id="bt-off" value="off" checked>
-        <label for="bt-off">Disabled<small>saves memory</small></label>
+        <label for="bt-off">Disabled<small>more free RAM</small></label>
       </div>
       <div class="option">
         <input type="radio" name="bt" id="bt-on" value="on">
@@ -77,50 +81,53 @@
 
   <div class="question" id="q-ipv6">
     <div class="question-label">IPv6</div>
+    <p class="question-desc">Enable if your network uses IPv6 addressing or your Home Assistant instance is IPv6-only. Has no effect on IPv4-only networks.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="ipv6" id="ipv6-off" value="off" checked>
-        <label for="ipv6-off">Disabled</label>
+        <label for="ipv6-off">Disabled<small>IPv4 only</small></label>
       </div>
       <div class="option">
         <input type="radio" name="ipv6" id="ipv6-on" value="on">
-        <label for="ipv6-on">Enabled</label>
+        <label for="ipv6-on">Enabled<small>dual-stack</small></label>
       </div>
     </div>
   </div>
 
   <div class="question" id="q-wifi">
     <div class="question-label">WiFi TX Power</div>
+    <p class="question-desc">The compact PCB antenna can self-interfere at high TX power, causing Sendspin timing failures. 9 dBm is a safe fixed limit. Ramp variants expose a Home Assistant control and automatically step power up when WiFi drops.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="wifi" id="wifi-wstock" value="wstock" checked>
-        <label for="wifi-wstock">Stock<small>ESP-IDF default</small></label>
+        <label for="wifi-wstock">Stock<small>ESP-IDF default (~20 dBm)</small></label>
       </div>
       <div class="option">
         <input type="radio" name="wifi" id="wifi-w9" value="w9">
-        <label for="wifi-w9">9 dBm<small>fixed, no control</small></label>
+        <label for="wifi-w9">9 dBm<small>fixed limit, no HA control</small></label>
       </div>
       <div class="option">
         <input type="radio" name="wifi" id="wifi-wr" value="wr">
-        <label for="wifi-wr">Stock + Ramp<small>user control</small></label>
+        <label for="wifi-wr">Stock + Ramp<small>HA control, ramps up on drop</small></label>
       </div>
       <div class="option">
         <input type="radio" name="wifi" id="wifi-w9r" value="w9r">
-        <label for="wifi-w9r">9 dBm + Ramp<small>user control</small></label>
+        <label for="wifi-w9r">9 dBm + Ramp<small>9 dBm limit + HA control</small></label>
       </div>
     </div>
   </div>
 
   <div class="question" id="q-twoch">
     <div class="question-label">Output</div>
+    <p class="question-desc">Single drives one I2S DAC. Dual simultaneously outputs to two separate I2S DACs wired to different GPIO pins.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="twoch" id="twoch-off" value="off" checked>
-        <label for="twoch-off">Single</label>
+        <label for="twoch-off">Single<small>one I2S DAC</small></label>
       </div>
       <div class="option">
         <input type="radio" name="twoch" id="twoch-on" value="on">
-        <label for="twoch-on">Dual (2ch)</label>
+        <label for="twoch-on">Dual (2ch)<small>two I2S DACs</small></label>
       </div>
     </div>
   </div>
