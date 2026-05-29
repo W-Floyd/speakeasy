@@ -37,12 +37,12 @@ func buildKnown() map[string]firmware {
 	}
 	protos := []protoSpec{
 		{
-			id:       "sendspin",
+			id:       "ss",
 			label:    "Sendspin",
 			mdnsDesc: "Music Assistant via Sendspin",
 		},
 		{
-			id:       "snapcast",
+			id:       "sc",
 			label:    "Snapcast",
 			desc:     "Snapcast client (server IP)",
 			mdnsDesc: "Snapcast client (mDNS discovery)",
@@ -106,7 +106,7 @@ func buildKnown() map[string]firmware {
 }
 
 func groupOf(dir string) string {
-	if strings.Contains(dir, "snapcast") {
+	if strings.HasPrefix(dir, "speakeasy-sc") {
 		return "Snapcast"
 	}
 	return "Sendspin"
@@ -117,6 +117,10 @@ func derive(dir string) firmware {
 	parts := strings.Split(name, "-")
 	for i, p := range parts {
 		switch p {
+		case "ss":
+			parts[i] = "Sendspin"
+		case "sc":
+			parts[i] = "Snapcast"
 		case "mdns":
 			parts[i] = "mDNS"
 		case "nobt":

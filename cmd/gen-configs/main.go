@@ -21,8 +21,18 @@ func (v variant) filename() string {
 	return "speakeasy-" + v.deviceName() + ".yaml"
 }
 
+func (v variant) protoShort() string {
+	switch v.Proto {
+	case "sendspin":
+		return "ss"
+	case "snapcast":
+		return "sc"
+	}
+	return v.Proto
+}
+
 func (v variant) deviceName() string {
-	name := v.Proto
+	name := v.protoShort()
 	if v.TwoChannel {
 		name += "-2ch"
 	}

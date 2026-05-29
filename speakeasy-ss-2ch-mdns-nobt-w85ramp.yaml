@@ -1,0 +1,18 @@
+## Speakeasy Sendspin 2ch mDNS No Bluetooth WiFi 8.5dBm Ramp - Edit the settings below.
+substitutions:
+  name: ss-2ch-mdns-nobt-w85ramp
+  friendly_name: Speakeasy Sendspin 2ch mDNS No Bluetooth WiFi 8.5dBm Ramp
+
+packages:
+  - !include common/base.yaml
+  - !include common/sendspin-audio.yaml
+  - !include common/second-speaker.yaml
+  - !include common/wifi-85ramp.yaml
+
+dashboard_import:
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-ss-2ch-mdns-nobt-w85ramp.yaml@main
+  import_full_config: false
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}

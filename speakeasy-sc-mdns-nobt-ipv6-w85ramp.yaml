@@ -1,0 +1,23 @@
+## Speakeasy Snapcast mDNS No Bluetooth IPv6 WiFi 8.5dBm Ramp - Edit the settings below.
+substitutions:
+  name: sc-mdns-nobt-ipv6-w85ramp
+  friendly_name: Speakeasy Snapcast mDNS No Bluetooth IPv6 WiFi 8.5dBm Ramp
+
+packages:
+  - !include common/base.yaml
+  - !include common/snapcast-audio.yaml
+  - !include common/ipv6.yaml
+  - !include common/wifi-85ramp.yaml
+
+dashboard_import:
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-sc-mdns-nobt-ipv6-w85ramp.yaml@main
+  import_full_config: false
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+
+media_player:
+  - id: !extend snapclient_media_player
+    hostname: !remove
+    port: !remove

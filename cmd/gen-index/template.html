@@ -24,8 +24,6 @@
     .option input[type=radio]:checked + label small { color: #60a5fa; }
     .option label:hover { border-color: #999; }
 
-    #q-server { display: none; }
-
     .flash-area { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee; display: flex; align-items: center; gap: 1rem; }
     #variant-name { font-family: monospace; font-size: 0.82rem; color: #666; }
     #unavailable-msg { font-size: 0.85rem; color: #b91c1c; }
@@ -35,16 +33,16 @@
   <h1>Speakeasy</h1>
   <p class="subtitle">ESP32-S3 multi-room audio firmware. Plug in via USB and flash below. Requires Chrome or Edge.</p>
 
-  <div class="question">
+  <div class="question" id="q-proto">
     <div class="question-label">Protocol</div>
     <div class="options">
       <div class="option">
-        <input type="radio" name="proto" id="proto-sendspin" value="sendspin" checked>
-        <label for="proto-sendspin">Sendspin<small>Music Assistant</small></label>
+        <input type="radio" name="proto" id="proto-ss" value="ss" checked>
+        <label for="proto-ss">Sendspin<small>Music Assistant</small></label>
       </div>
       <div class="option">
-        <input type="radio" name="proto" id="proto-snapcast" value="snapcast">
-        <label for="proto-snapcast">Snapcast</label>
+        <input type="radio" name="proto" id="proto-sc" value="sc">
+        <label for="proto-sc">Snapcast</label>
       </div>
     </div>
   </div>
@@ -63,7 +61,7 @@
     </div>
   </div>
 
-  <div class="question">
+  <div class="question" id="q-nobt">
     <div class="question-label">Bluetooth</div>
     <div class="options">
       <div class="option">
@@ -77,7 +75,7 @@
     </div>
   </div>
 
-  <div class="question">
+  <div class="question" id="q-ipv6">
     <div class="question-label">IPv6</div>
     <div class="options">
       <div class="option">
@@ -91,7 +89,7 @@
     </div>
   </div>
 
-  <div class="question">
+  <div class="question" id="q-wifi">
     <div class="question-label">WiFi TX Power</div>
     <div class="options">
       <div class="option">
@@ -113,7 +111,7 @@
     </div>
   </div>
 
-  <div class="question">
+  <div class="question" id="q-twoch">
     <div class="question-label">Output</div>
     <div class="options">
       <div class="option">
@@ -145,35 +143,63 @@
     const installBtn = document.getElementById('install-btn');
     const variantName = document.getElementById('variant-name');
     const unavailableMsg = document.getElementById('unavailable-msg');
-    const qServer = document.getElementById('q-server');
 
-    function buildManifest() {
-      const proto = document.querySelector('input[name=proto]:checked').value;
-      const mdns = proto === 'sendspin' || document.querySelector('input[name=server]:checked').value === 'mdns';
-      const twoch = document.querySelector('input[name=twoch]:checked').value === 'on';
-      const nobt = document.querySelector('input[name=nobt]:checked').value === 'on';
-      const ipv6 = document.querySelector('input[name=ipv6]:checked').value === 'on';
-      const wifi = document.querySelector('input[name=wifi]:checked').value;
-
-      let name = 'speakeasy-' + proto;
-      if (twoch) name += '-2ch';
+    function manifestFrom(s) {
+      const mdns = s.proto === 'ss' || s.server === 'mdns';
+      let name = 'speakeasy-' + s.proto;
+      if (s.twoch === 'on') name += '-2ch';
       if (mdns) name += '-mdns';
-      if (nobt) name += '-nobt';
-      if (ipv6) name += '-ipv6';
-      if (wifi !== 'wstock') name += '-' + wifi;
+      if (s.nobt === 'on') name += '-nobt';
+      if (s.ipv6 === 'on') name += '-ipv6';
+      if (s.wifi !== 'wstock') name += '-' + s.wifi;
       return name + '/manifest.json';
     }
 
+    function readSelections() {
+      const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
+      return { proto: get('proto'), server: get('server'), nobt: get('nobt'),
+               ipv6: get('ipv6'), wifi: get('wifi'), twoch: get('twoch') };
+    }
+
+    // questions in evaluation order; server is handled specially (only for snapcast)
+    const QUESTIONS = [
+      { name: 'proto',   el: 'q-proto',  opts: ['sendspin', 'snapcast'] },
+      { name: 'server',  el: 'q-server', opts: ['static', 'mdns'], onlyFor: { proto: 'sc' } },
+      { name: 'nobt',    el: 'q-nobt',   opts: ['off', 'on'] },
+      { name: 'ipv6',    el: 'q-ipv6',   opts: ['off', 'on'] },
+      { name: 'wifi',    el: 'q-wifi',   opts: ['wstock', 'w85', 'wramp', 'w85ramp'] },
+      { name: 'twoch',   el: 'q-twoch',  opts: ['off', 'on'] },
+    ];
+
     function update() {
-      const proto = document.querySelector('input[name=proto]:checked').value;
-      qServer.style.display = proto === 'snapcast' ? 'block' : 'none';
+      const sel = readSelections();
 
-      const manifest = buildManifest();
-      const stem = manifest.replace('/manifest.json', '');
+      for (const q of QUESTIONS) {
+        const el = document.getElementById(q.el);
+
+        // hide questions gated on another dimension that doesn't match
+        if (q.onlyFor) {
+          const [k, v] = Object.entries(q.onlyFor)[0];
+          if (sel[k] !== v) { el.style.display = 'none'; continue; }
+        }
+
+        const viable = q.opts.filter(opt => available.has(manifestFrom({...sel, [q.name]: opt})));
+
+        if (viable.length <= 1) {
+          el.style.display = 'none';
+          if (viable.length === 1 && sel[q.name] !== viable[0]) {
+            document.querySelector(`input[name="${q.name}"][value="${viable[0]}"]`).checked = true;
+            sel[q.name] = viable[0];
+          }
+        } else {
+          el.style.display = 'block';
+        }
+      }
+
+      const manifest = manifestFrom(sel);
       const exists = available.has(manifest);
-
       installBtn.setAttribute('manifest', manifest);
-      variantName.textContent = stem;
+      variantName.textContent = manifest.replace('/manifest.json', '');
       installBtn.style.display = exists ? '' : 'none';
       unavailableMsg.textContent = exists ? '' : 'Not available as a pre-built binary.';
     }
