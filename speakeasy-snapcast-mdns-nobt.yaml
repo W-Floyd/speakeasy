@@ -1,0 +1,16 @@
+## Speakeasy (Snapcast mDNS, No Bluetooth) - Edit the settings below.
+substitutions:
+  name: snapcast-mdns-nobt
+  friendly_name: Speakeasy Snapcast mDNS
+
+packages:
+  - !include speakeasy-snapcast-nobt.yaml
+
+dashboard_import:
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-snapcast-mdns-nobt.yaml@main
+  import_full_config: false
+
+media_player:
+  - id: !extend snapclient_media_player
+    hostname: !remove
+    port: !remove
