@@ -14,10 +14,16 @@ jobs:
         yaml-file:
           - speakeasy-sendspin.yaml
           # - speakeasy-sendspin-2ch.yaml
+          - speakeasy-sendspin-nobt.yaml
+          # - speakeasy-sendspin-2ch-nobt.yaml
           - speakeasy-snapcast.yaml
           # - speakeasy-snapcast-2ch.yaml
+          - speakeasy-snapcast-nobt.yaml
+          # - speakeasy-snapcast-2ch-nobt.yaml
           - speakeasy-snapcast-mdns.yaml
           # - speakeasy-snapcast-2ch-mdns.yaml
+          - speakeasy-snapcast-mdns-nobt.yaml
+          # - speakeasy-snapcast-2ch-mdns-nobt.yaml
 
     steps:
       - uses: actions/checkout@v4

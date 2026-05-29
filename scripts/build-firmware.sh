@@ -27,7 +27,6 @@ for yaml in "${CONFIGS[@]}"; do
     mkdir -p "${OUTPUT}/${stem}"
     cp -r "${build_dir}/." "${OUTPUT}/${stem}/"
     rm -rf "${build_dir}"
-    yq -i '.new_install_prompt_erase = true' "${OUTPUT}/${stem}/manifest.json"
 
     echo "    -> ${OUTPUT}/${stem}/"
 done
