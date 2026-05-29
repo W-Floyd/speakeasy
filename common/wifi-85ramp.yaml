@@ -1,0 +1,62 @@
+wifi:
+  output_power: 8.5
+
+esphome:
+  includes:
+    - <esp_wifi.h>
+  on_boot:
+    priority: -100
+    then:
+      - delay: 30s
+      - lambda: id(wifi_ramp_armed) = true;
+
+globals:
+  - id: wifi_ramp_armed
+    type: bool
+    restore_value: false
+    initial_value: 'false'
+
+wifi:
+  on_disconnect:
+    - lambda: |-
+        float current = id(wifi_tx_power).state;
+        if (current < 8.5f) {
+          float next = std::min(current + 0.25f, 8.5f);
+          auto call = id(wifi_tx_power).make_call();
+          call.set_value(next);
+          call.perform();
+          ESP_LOGW("speakeasy", "WiFi dropped — TX power stepped %.2f → %.2f dBm", current, next);
+        }
+
+number:
+  - platform: template
+    name: WiFi TX Power
+    id: wifi_tx_power
+    icon: mdi:wifi-strength-2
+    entity_category: config
+    unit_of_measurement: dBm
+    min_value: 2.0
+    max_value: 20.5
+    step: 0.25
+    optimistic: true
+    restore_value: true
+    initial_value: 8.5
+    set_action:
+      - lambda: |-
+          esp_wifi_set_max_tx_power((int8_t)(x * 4));
+          ESP_LOGW("speakeasy", "WiFi TX power set to %.2f dBm", x);
+
+interval:
+  - interval: 30s
+    then:
+      - lambda: |-
+          if (id(wifi_ramp_armed) && !id(wifi_component).is_connected()) {
+            float current = id(wifi_tx_power).state;
+            if (current < 8.5f) {
+              float next = std::min(current + 0.25f, 8.5f);
+              auto call = id(wifi_tx_power).make_call();
+              call.set_value(next);
+              call.perform();
+              ESP_LOGW("speakeasy", "WiFi still down — TX power stepped %.2f → %.2f dBm", current, next);
+            }
+          }

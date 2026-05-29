@@ -14,6 +14,7 @@ type variant struct {
 	MDNS       bool
 	NoBT       bool
 	IPv6       bool
+	WiFi       string // "wstock" | "w85" | "wramp" | "w85ramp" (default, no suffix)
 }
 
 func (v variant) filename() string {
@@ -33,6 +34,9 @@ func (v variant) deviceName() string {
 	}
 	if v.IPv6 {
 		name += "-ipv6"
+	}
+	if v.WiFi != "wstock" {
+		name += "-" + v.WiFi
 	}
 	return name
 }
@@ -57,6 +61,15 @@ func (v variant) friendlyName() string {
 	if v.IPv6 {
 		parts = append(parts, "IPv6")
 	}
+	switch v.WiFi {
+	// wstock is the default, no label addition
+	case "w85":
+		parts = append(parts, "WiFi 8.5dBm")
+	case "wramp":
+		parts = append(parts, "WiFi Ramp")
+	case "w85ramp":
+		parts = append(parts, "WiFi 8.5dBm Ramp")
+	}
 	return strings.Join(parts, " ")
 }
 
@@ -76,6 +89,15 @@ func (v variant) packages() []string {
 	}
 	if v.IPv6 {
 		pkgs = append(pkgs, "common/ipv6.yaml")
+	}
+	switch v.WiFi {
+	case "w85":
+		pkgs = append(pkgs, "common/wifi-85.yaml")
+	case "wramp":
+		pkgs = append(pkgs, "common/wifi-ramp.yaml")
+	case "w85ramp":
+		pkgs = append(pkgs, "common/wifi-85ramp.yaml")
+	// wstock: no extra package
 	}
 	return pkgs
 }
@@ -128,13 +150,16 @@ func allVariants() []variant {
 				}
 				for _, nobt := range []bool{false, true} {
 					for _, ipv6 := range []bool{false, true} {
-						variants = append(variants, variant{
-							Proto:      proto,
-							TwoChannel: twoChannel,
-							MDNS:       mdns,
-							NoBT:       nobt,
-							IPv6:       ipv6,
-						})
+						for _, wifi := range []string{"wstock", "w85", "wramp", "w85ramp"} {
+							variants = append(variants, variant{
+								Proto:      proto,
+								TwoChannel: twoChannel,
+								MDNS:       mdns,
+								NoBT:       nobt,
+								IPv6:       ipv6,
+								WiFi:       wifi,
+							})
+						}
 					}
 				}
 			}

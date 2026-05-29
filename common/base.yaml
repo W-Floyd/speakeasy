@@ -1,6 +1,4 @@
 substitutions:
-  wifi_output_power: "8.5"
-
   i2s_lrclk_pin: GPIO6
   i2s_bclk_pin: GPIO5
   i2s_dout_pin: GPIO4
@@ -11,19 +9,6 @@ esphome:
   project:
     name: w_floyd.speakeasy
     version: "2026.5.0"
-  includes:
-    - <esp_wifi.h>
-  on_boot:
-    priority: -100
-    then:
-      - delay: 30s
-      - lambda: id(wifi_ramp_armed) = true;
-
-globals:
-  - id: wifi_ramp_armed
-    type: bool
-    restore_value: false
-    initial_value: 'false'
 
 esp32:
   variant: esp32s3
@@ -49,7 +34,6 @@ ota:
 wifi:
   id: wifi_component
   power_save_mode: none
-  output_power: ${wifi_output_power}
   post_connect_roaming: false
   ap:
   on_connect:
@@ -57,16 +41,6 @@ wifi:
         char ip_buf[esphome::network::IP_ADDRESS_BUFFER_SIZE];
         id(wifi_component).get_ip_addresses()[0].str_to(ip_buf);
         ESP_LOGW("speakeasy", "IP: %s, RSSI: %d dBm", ip_buf, id(wifi_component).wifi_rssi());
-  on_disconnect:
-    - lambda: |-
-        float current = id(wifi_tx_power).state;
-        if (current < 8.5f) {
-          float next = std::min(current + 0.25f, 8.5f);
-          auto call = id(wifi_tx_power).make_call();
-          call.set_value(next);
-          call.perform();
-          ESP_LOGW("speakeasy", "WiFi dropped — TX power stepped %.2f → %.2f dBm", current, next);
-        }
 
 network:
   enable_ipv6: false
@@ -87,36 +61,3 @@ i2s_audio:
 sensor:
   - platform: internal_temperature
     name: Internal Temperature
-
-number:
-  - platform: template
-    name: WiFi TX Power
-    id: wifi_tx_power
-    icon: mdi:wifi-strength-2
-    entity_category: config
-    unit_of_measurement: dBm
-    min_value: 2.0
-    max_value: 20.5
-    step: 0.25
-    optimistic: true
-    restore_value: true
-    initial_value: ${wifi_output_power}
-    set_action:
-      - lambda: |-
-          esp_wifi_set_max_tx_power((int8_t)(x * 4));
-          ESP_LOGW("speakeasy", "WiFi TX power set to %.2f dBm", x);
-
-interval:
-  - interval: 30s
-    then:
-      - lambda: |-
-          if (id(wifi_ramp_armed) && !id(wifi_component).is_connected()) {
-            float current = id(wifi_tx_power).state;
-            if (current < 8.5f) {
-              float next = std::min(current + 0.25f, 8.5f);
-              auto call = id(wifi_tx_power).make_call();
-              call.set_value(next);
-              call.perform();
-              ESP_LOGW("speakeasy", "WiFi still down — TX power stepped %.2f → %.2f dBm", current, next);
-            }
-          }

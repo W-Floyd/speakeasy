@@ -1,0 +1,21 @@
+## Speakeasy Snapcast No Bluetooth WiFi Ramp - Edit the settings below.
+substitutions:
+  name: snapcast-nobt-wramp
+  friendly_name: Speakeasy Snapcast No Bluetooth WiFi Ramp
+
+  # Snapcast server address and port
+  snapcast_server_ip: "192.168.1.1"
+  snapcast_server_port: "1704"
+
+packages:
+  - !include common/base.yaml
+  - !include common/snapcast-audio.yaml
+  - !include common/wifi-ramp.yaml
+
+dashboard_import:
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-snapcast-nobt-wramp.yaml@main
+  import_full_config: false
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
