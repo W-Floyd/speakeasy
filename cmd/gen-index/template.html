@@ -24,6 +24,9 @@
     .option input[type=radio]:checked + label { border-color: #2563eb; background: #eff6ff; color: #1d4ed8; }
     .option input[type=radio]:checked + label small { color: #60a5fa; }
     .option label:hover { border-color: #999; }
+    .option.unavailable label { opacity: 0.35; cursor: default; }
+    .option.unavailable label:hover { border-color: #ddd; }
+    .question.inapplicable { opacity: 0.15; pointer-events: none; }
 
     .flash-area { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee; display: flex; align-items: center; gap: 1rem; }
     #variant-name { font-family: monospace; font-size: 0.82rem; color: #666; }
@@ -184,22 +187,22 @@
       for (const q of QUESTIONS) {
         const el = document.getElementById(q.el);
 
-        // hide questions gated on another dimension that doesn't match
-        if (q.onlyFor) {
-          const [k, v] = Object.entries(q.onlyFor)[0];
-          if (sel[k] !== v) { el.style.display = 'none'; continue; }
-        }
+        // grey out questions that don't apply to the current selection
+        const inapplicable = q.onlyFor && sel[Object.keys(q.onlyFor)[0]] !== Object.values(q.onlyFor)[0];
+        el.classList.toggle('inapplicable', inapplicable);
 
         const viable = q.opts.filter(opt => available.has(manifestFrom({...sel, [q.name]: opt})));
 
-        if (viable.length <= 1) {
-          el.style.display = 'none';
-          if (viable.length === 1 && sel[q.name] !== viable[0]) {
-            document.querySelector(`input[name="${q.name}"][value="${viable[0]}"]`).checked = true;
-            sel[q.name] = viable[0];
-          }
-        } else {
-          el.style.display = 'block';
+        for (const opt of q.opts) {
+          const radio = document.querySelector(`input[name="${q.name}"][value="${opt}"]`);
+          const isViable = viable.includes(opt);
+          radio.disabled = !isViable;
+          radio.closest('.option').classList.toggle('unavailable', !isViable);
+        }
+
+        if (viable.length === 1 && sel[q.name] !== viable[0]) {
+          document.querySelector(`input[name="${q.name}"][value="${viable[0]}"]`).checked = true;
+          sel[q.name] = viable[0];
         }
       }
 
