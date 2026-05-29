@@ -149,23 +149,20 @@ COPY speakeasy-*.yaml ./
 
 `)
 
-	// First variant builds from base, priming ~/.platformio into the image layer.
-	// All subsequent variants inherit from it so the toolchain is already present.
-	primerStage := "firmware-" + strings.TrimPrefix(strings.TrimSuffix(variants[0], ".yaml"), "speakeasy-")
+	// Stages are sequential: each inherits from the previous so ~/.platformio
+	// accumulates through the chain without re-downloading. .esphome stays a
+	// separate cache mount per stage to avoid bloating image layers.
+	prevStage := "base"
 
-	for i, yaml := range variants {
+	for _, yaml := range variants {
 		stem := strings.TrimSuffix(yaml, ".yaml")
 		short := strings.TrimPrefix(stem, "speakeasy-")
 		stage := "firmware-" + short
 
-		parent := "base"
-		if i > 0 {
-			parent = primerStage
-		}
-
 		fmt.Fprintf(&sb, "# ── %s\n", stem)
-		fmt.Fprintf(&sb, "FROM %s AS %s\n", parent, stage)
+		fmt.Fprintf(&sb, "FROM %s AS %s\n", prevStage, stage)
 		fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/config/.esphome,id=esphome-%s \\\n", short)
+		prevStage = stage
 		fmt.Fprintf(&sb, "    python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest %s && \\\n", yaml)
 		fmt.Fprintf(&sb, "    name=$(yq '.substitutions.name' %s) && \\\n", yaml)
 		fmt.Fprintf(&sb, "    build_dir=$(find . -maxdepth 1 -type d -name \"${name}-*\" | head -1) && \\\n")
@@ -174,13 +171,11 @@ COPY speakeasy-*.yaml ./
 		fmt.Fprintf(&sb, "    rm -rf \"${build_dir}\"\n\n")
 	}
 
+	// All firmware outputs have accumulated into the final stage.
+	lastStage := "firmware-" + strings.TrimPrefix(strings.TrimSuffix(variants[len(variants)-1], ".yaml"), "speakeasy-")
 	sb.WriteString("# ── Collect ──────────────────────────────────────────────────────────────────\n")
 	sb.WriteString("FROM alpine AS collect\n")
-	for _, yaml := range variants {
-		stem := strings.TrimSuffix(yaml, ".yaml")
-		short := strings.TrimPrefix(stem, "speakeasy-")
-		fmt.Fprintf(&sb, "COPY --from=firmware-%s /output /output\n", short)
-	}
+	fmt.Fprintf(&sb, "COPY --from=%s /output /output\n", lastStage)
 
 	sb.WriteString(`
 # ── Web page ──────────────────────────────────────────────────────────────────
