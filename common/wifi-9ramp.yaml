@@ -1,5 +1,15 @@
 wifi:
   output_power: 9.0
+  on_disconnect:
+    - lambda: |-
+        float current = id(wifi_tx_power).state;
+        if (current < 9.0f) {
+          float next = std::min(current + 0.25f, 9.0f);
+          auto call = id(wifi_tx_power).make_call();
+          call.set_value(next);
+          call.perform();
+          ESP_LOGW("speakeasy", "WiFi dropped — TX power stepped %.2f → %.2f dBm", current, next);
+        }
 
 esphome:
   includes:
@@ -15,18 +25,6 @@ globals:
     type: bool
     restore_value: false
     initial_value: 'false'
-
-wifi:
-  on_disconnect:
-    - lambda: |-
-        float current = id(wifi_tx_power).state;
-        if (current < 9.0f) {
-          float next = std::min(current + 0.25f, 9.0f);
-          auto call = id(wifi_tx_power).make_call();
-          call.set_value(next);
-          call.perform();
-          ESP_LOGW("speakeasy", "WiFi dropped — TX power stepped %.2f → %.2f dBm", current, next);
-        }
 
 number:
   - platform: template
