@@ -56,26 +56,32 @@ func buildKnown() map[string]firmware {
 					continue
 				}
 				for _, nobt := range []bool{false, true} {
-					key := "speakeasy-" + p.id
-					label := p.label
-					desc := p.desc
-					if mdns {
-						desc = p.mdnsDesc
+					for _, ipv6 := range []bool{false, true} {
+						key := "speakeasy-" + p.id
+						label := p.label
+						desc := p.desc
+						if mdns {
+							desc = p.mdnsDesc
+						}
+						if twoChannel {
+							key += "-2ch"
+							label += " 2ch"
+							desc = "Dual I2S output, " + desc
+						}
+						if mdns {
+							key += "-mdns"
+							label += " mDNS"
+						}
+						if nobt {
+							key += "-nobt"
+							label += " No Bluetooth"
+						}
+						if ipv6 {
+							key += "-ipv6"
+							label += " IPv6"
+						}
+						m[key] = firmware{Label: label, Desc: desc}
 					}
-					if twoChannel {
-						key += "-2ch"
-						label += " 2ch"
-						desc = "Dual I2S output, " + desc
-					}
-					if mdns {
-						key += "-mdns"
-						label += " mDNS"
-					}
-					if nobt {
-						key += "-nobt"
-						label += " No Bluetooth"
-					}
-					m[key] = firmware{Label: label, Desc: desc}
 				}
 			}
 		}
@@ -99,6 +105,8 @@ func derive(dir string) firmware {
 			parts[i] = "mDNS"
 		case "nobt":
 			parts[i] = "No BT"
+		case "ipv6":
+			parts[i] = "IPv6"
 		default:
 			parts[i] = strings.ToUpper(p[:1]) + p[1:]
 		}
