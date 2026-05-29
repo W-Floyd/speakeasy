@@ -37,9 +37,9 @@ func buildKnown() map[string]firmware {
 	}
 	protos := []protoSpec{
 		{
-			id:    "sendspin",
-			label: "Sendspin",
-			desc:  "Music Assistant via Sendspin",
+			id:       "sendspin",
+			label:    "Sendspin",
+			mdnsDesc: "Music Assistant via Sendspin",
 		},
 		{
 			id:       "snapcast",
@@ -53,6 +53,9 @@ func buildKnown() map[string]firmware {
 		for _, twoChannel := range []bool{false, true} {
 			for _, mdns := range []bool{false, true} {
 				if mdns && p.mdnsDesc == "" {
+					continue
+				}
+				if !mdns && p.desc == "" {
 					continue
 				}
 				for _, nobt := range []bool{false, true} {

@@ -1,7 +1,7 @@
-## Speakeasy Sendspin 2ch - Edit the settings below.
+## Speakeasy Sendspin 2ch mDNS - Edit the settings below.
 substitutions:
-  name: sendspin-2ch
-  friendly_name: Speakeasy Sendspin 2ch
+  name: sendspin-2ch-mdns
+  friendly_name: Speakeasy Sendspin 2ch mDNS
 
 packages:
   - !include common/base.yaml
@@ -10,7 +10,7 @@ packages:
   - !include common/second-speaker.yaml
 
 dashboard_import:
-  package_import_url: github://W-Floyd/speakeasy/speakeasy-sendspin-2ch.yaml@main
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-sendspin-2ch-mdns.yaml@main
   import_full_config: false
 
 esphome:

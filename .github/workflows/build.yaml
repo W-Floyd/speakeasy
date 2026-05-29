@@ -12,14 +12,14 @@ jobs:
       fail-fast: false
       matrix:
         yaml-file:
-          - speakeasy-sendspin.yaml
-          # - speakeasy-sendspin-2ch.yaml
-          - speakeasy-sendspin-nobt.yaml
-          # - speakeasy-sendspin-2ch-nobt.yaml
-          - speakeasy-sendspin-ipv6.yaml
-          # - speakeasy-sendspin-2ch-ipv6.yaml
-          - speakeasy-sendspin-nobt-ipv6.yaml
-          # - speakeasy-sendspin-2ch-nobt-ipv6.yaml
+          - speakeasy-sendspin-mdns.yaml
+          # - speakeasy-sendspin-mdns-2ch.yaml
+          - speakeasy-sendspin-mdns-nobt.yaml
+          # - speakeasy-sendspin-mdns-2ch-nobt.yaml
+          - speakeasy-sendspin-mdns-ipv6.yaml
+          # - speakeasy-sendspin-mdns-2ch-ipv6.yaml
+          - speakeasy-sendspin-mdns-nobt-ipv6.yaml
+          # - speakeasy-sendspin-mdns-2ch-nobt-ipv6.yaml
           - speakeasy-snapcast.yaml
           # - speakeasy-snapcast-2ch.yaml
           - speakeasy-snapcast-nobt.yaml

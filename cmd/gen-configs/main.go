@@ -122,7 +122,8 @@ func allVariants() []variant {
 	for _, proto := range []string{"sendspin", "snapcast"} {
 		for _, twoChannel := range []bool{false, true} {
 			for _, mdns := range []bool{false, true} {
-				if mdns && proto != "snapcast" {
+				// Sendspin is always mDNS; skip the non-mDNS case
+				if proto == "sendspin" && !mdns {
 					continue
 				}
 				for _, nobt := range []bool{false, true} {

@@ -1,7 +1,7 @@
-## Speakeasy Sendspin - Edit the settings below.
+## Speakeasy Sendspin mDNS - Edit the settings below.
 substitutions:
-  name: sendspin
-  friendly_name: Speakeasy Sendspin
+  name: sendspin-mdns
+  friendly_name: Speakeasy Sendspin mDNS
 
 packages:
   - !include common/base.yaml
@@ -9,7 +9,7 @@ packages:
   - !include common/sendspin-audio.yaml
 
 dashboard_import:
-  package_import_url: github://W-Floyd/speakeasy/speakeasy-sendspin.yaml@main
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-sendspin-mdns.yaml@main
   import_full_config: false
 
 esphome:
