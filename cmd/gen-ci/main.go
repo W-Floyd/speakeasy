@@ -4,6 +4,8 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 	"text/template"
 )
@@ -124,9 +126,81 @@ func loadConfig(path string) (config, error) {
 	return cfg, nil
 }
 
+func generateDockerfile(variants []string) string {
+	var sb strings.Builder
+
+	sb.WriteString("# syntax=docker/dockerfile:1\n")
+	sb.WriteString("# Generated from speakeasy-*.yaml — do not edit directly.\n")
+	sb.WriteString("# Run: go run ./cmd/gen-ci\n")
+
+	sb.WriteString(`
+# ── Setup ─────────────────────────────────────────────────────────────────────
+FROM ghcr.io/esphome/esphome:latest AS base
+
+RUN arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/;s/armv7l/arm/') && \
+    curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${arch}" \
+    -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq && \
+    curl -fsSL "https://raw.githubusercontent.com/esphome/build-action/refs/heads/main/entrypoint.py" \
+    -o /usr/local/lib/esphome-entrypoint.py
+
+WORKDIR /config
+COPY common/ common/
+COPY speakeasy-*.yaml ./
+
+`)
+
+	for _, yaml := range variants {
+		stem := strings.TrimSuffix(yaml, ".yaml")
+		short := strings.TrimPrefix(stem, "speakeasy-")
+		stage := "firmware-" + short
+
+		fmt.Fprintf(&sb, "# ── %s\n", stem)
+		fmt.Fprintf(&sb, "FROM base AS %s\n", stage)
+		fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/root/.platformio,sharing=locked \\\n")
+		fmt.Fprintf(&sb, "    --mount=type=cache,target=/config/.esphome,id=%s \\\n", short)
+		fmt.Fprintf(&sb, "    python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest %s && \\\n", yaml)
+		fmt.Fprintf(&sb, "    name=$(yq '.substitutions.name' %s) && \\\n", yaml)
+		fmt.Fprintf(&sb, "    build_dir=$(find . -maxdepth 1 -type d -name \"${name}-*\" | head -1) && \\\n")
+		fmt.Fprintf(&sb, "    mkdir -p /output/%s && \\\n", stem)
+		fmt.Fprintf(&sb, "    cp -r \"${build_dir}/.\" /output/%s/ && \\\n", stem)
+		fmt.Fprintf(&sb, "    rm -rf \"${build_dir}\"\n\n")
+	}
+
+	sb.WriteString("# ── Collect ──────────────────────────────────────────────────────────────────\n")
+	sb.WriteString("FROM alpine AS collect\n")
+	for _, yaml := range variants {
+		stem := strings.TrimSuffix(yaml, ".yaml")
+		short := strings.TrimPrefix(stem, "speakeasy-")
+		fmt.Fprintf(&sb, "COPY --from=firmware-%s /output /output\n", short)
+	}
+
+	sb.WriteString(`
+# ── Web page ──────────────────────────────────────────────────────────────────
+FROM golang:1.22-alpine AS web
+
+WORKDIR /src
+COPY go.mod ./
+COPY cmd/ cmd/
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -o /gen-index ./cmd/gen-index
+
+COPY --from=collect /output /output
+RUN /gen-index -dir /output -out /output/index.html
+
+# ── Server ────────────────────────────────────────────────────────────────────
+FROM caddy:alpine
+
+COPY --from=web /output /srv
+COPY Caddyfile /etc/caddy/Caddyfile
+`)
+
+	return sb.String()
+}
+
 func main() {
 	variantsFile := flag.String("variants", "variants.yaml", "path to variants.yaml")
 	outFile := flag.String("out", ".github/workflows/build.yaml", "output workflow file")
+	dockerFile := flag.String("dockerfile", "Dockerfile", "output Dockerfile")
 	flag.Parse()
 
 	cfg, err := loadConfig(*variantsFile)
@@ -136,17 +210,28 @@ func main() {
 	}
 
 	tmpl := template.Must(template.New("workflow").Delims("[[", "]]").Parse(workflowTmpl))
-
 	f, err := os.Create(*outFile)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "error creating %s: %v\n", *outFile, err)
 		os.Exit(1)
 	}
 	defer f.Close()
-
 	if err := tmpl.Execute(f, cfg); err != nil {
 		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", *outFile, err)
 		os.Exit(1)
 	}
 	fmt.Printf("wrote %s (%d CI variants)\n", *outFile, len(cfg.CI))
+
+	yamls, err := filepath.Glob("speakeasy-*.yaml")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "error globbing yaml files: %v\n", err)
+		os.Exit(1)
+	}
+	sort.Strings(yamls)
+
+	if err := os.WriteFile(*dockerFile, []byte(generateDockerfile(yamls)), 0644); err != nil {
+		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", *dockerFile, err)
+		os.Exit(1)
+	}
+	fmt.Printf("wrote %s (%d firmware stages)\n", *dockerFile, len(yamls))
 }

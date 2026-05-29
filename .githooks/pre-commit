@@ -2,4 +2,4 @@
 set -e
 go run ./cmd/gen-configs
 go run ./cmd/gen-ci
-git add speakeasy-*.yaml .github/workflows/build.yaml
+git add speakeasy-*.yaml .github/workflows/build.yaml Dockerfile
