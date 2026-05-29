@@ -141,10 +141,21 @@ RUN arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/;s/armv7l/arm/') && \
     curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${arch}" \
     -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq && \
     curl -fsSL "https://raw.githubusercontent.com/esphome/build-action/refs/heads/main/entrypoint.py" \
-    -o /usr/local/lib/esphome-entrypoint.py
+    -o /usr/local/lib/esphome-entrypoint.py && \
+    apt-get update -qq && apt-get install -y --no-install-recommends ccache
 
 WORKDIR /config
 COPY common/ common/
+COPY primer.yaml ./
+
+# ── Primed: downloads ESP-IDF toolchain independently of variant config changes ─
+FROM base AS primed
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-primer \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest primer.yaml
+
+# ── Variants base: variant yamls copied after toolchain is primed ─────────────
+FROM primed AS variants
 COPY speakeasy-*.yaml ./
 
 `)
@@ -152,7 +163,7 @@ COPY speakeasy-*.yaml ./
 	// Stages are sequential: each inherits from the previous so ~/.platformio
 	// accumulates through the chain without re-downloading. .esphome stays a
 	// separate cache mount per stage to avoid bloating image layers.
-	prevStage := "base"
+	prevStage := "variants"
 
 	for _, yaml := range variants {
 		stem := strings.TrimSuffix(yaml, ".yaml")
@@ -161,9 +172,10 @@ COPY speakeasy-*.yaml ./
 
 		fmt.Fprintf(&sb, "# ── %s\n", stem)
 		fmt.Fprintf(&sb, "FROM %s AS %s\n", prevStage, stage)
-		fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/config/.esphome,id=esphome-%s \\\n", short)
+		fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/root/.ccache,id=ccache \\\n")
+		fmt.Fprintf(&sb, "    --mount=type=cache,target=/config/.esphome,id=esphome-%s \\\n", short)
 		prevStage = stage
-		fmt.Fprintf(&sb, "    python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest %s && \\\n", yaml)
+		fmt.Fprintf(&sb, "    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest %s && \\\n", yaml)
 		fmt.Fprintf(&sb, "    name=$(yq '.substitutions.name' %s) && \\\n", yaml)
 		fmt.Fprintf(&sb, "    build_dir=$(find . -maxdepth 1 -type d -name \"${name}-*\" | head -1) && \\\n")
 		fmt.Fprintf(&sb, "    mkdir -p /output/%s && \\\n", stem)
