@@ -2,7 +2,6 @@
 set -euo pipefail
 
 REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel 2>/dev/null || realpath "$(dirname "$0")/..")"
-WORKFLOW="${REPO_ROOT}/.github/workflows/build.yaml"
 
 ENTRYPOINT="/usr/local/lib/esphome-entrypoint.py"
 if [[ ! -f "$ENTRYPOINT" ]]; then
@@ -12,7 +11,7 @@ if [[ ! -f "$ENTRYPOINT" ]]; then
         -o "$ENTRYPOINT"
 fi
 
-mapfile -t CONFIGS < <(yq '.jobs.build.strategy.matrix."yaml-file"[]' "$WORKFLOW")
+mapfile -t CONFIGS < <(find . -maxdepth 1 -name 'speakeasy-*.yaml' | sort)
 
 OUTPUT="${1:-/output}"
 mkdir -p "$OUTPUT"

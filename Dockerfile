@@ -10,7 +10,6 @@ RUN arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/;s/armv7l/arm/') && \
     -o /usr/local/lib/esphome-entrypoint.py
 
 WORKDIR /config
-COPY .github/workflows/build.yaml .github/workflows/build.yaml
 COPY common/ common/
 COPY speakeasy-*.yaml ./
 COPY scripts/build-firmware.sh scripts/

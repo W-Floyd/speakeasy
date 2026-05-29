@@ -1,0 +1,4 @@
+# Variants to build in CI (GitHub Actions)
+ci:
+  - sendspin-mdns-ipv6
+  - snapcast-mdns-ipv6

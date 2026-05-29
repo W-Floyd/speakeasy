@@ -1,4 +1,5 @@
 #!/bin/sh
 set -e
 go run ./cmd/gen-configs
-git add speakeasy-*.yaml
+go run ./cmd/gen-ci
+git add speakeasy-*.yaml .github/workflows/build.yaml
