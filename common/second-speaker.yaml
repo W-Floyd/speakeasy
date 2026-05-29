@@ -1,0 +1,18 @@
+# Second I2S output — fill in pin substitutions before use.
+substitutions:
+  i2s2_dout_pin: GPIO9
+  i2s2_bclk_pin: GPIO10
+  i2s2_lrclk_pin: GPIO11
+
+i2s_audio:
+  - id: i2s_audio_bus_2
+    i2s_lrclk_pin: ${i2s2_lrclk_pin}
+    i2s_bclk_pin: ${i2s2_bclk_pin}
+
+speaker:
+  - platform: i2s_audio
+    id: box_speaker_2
+    i2s_audio_id: i2s_audio_bus_2
+    i2s_dout_pin: ${i2s2_dout_pin}
+    dac_type: external
+    channel: mono
