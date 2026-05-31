@@ -27,6 +27,8 @@ esp32:
       CONFIG_FREERTOS_PLACE_FUNCTIONS_INTO_FLASH: "n"
       CONFIG_ESPTOOLPY_FLASHMODE_QIO: "y"
       CONFIG_ESPTOOLPY_FLASHFREQ_80M: "y"
+      CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
+      CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "64"
 
 logger:
   level: info
@@ -49,7 +51,7 @@ wifi:
 
 network:
   enable_ipv6: false
-  enable_high_performance: false
+  enable_high_performance: true
 
 psram:
   mode: quad
