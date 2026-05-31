@@ -135,6 +135,9 @@ func generate(v variant) string {
 	fmt.Fprintf(&sb, "  package_import_url: github://W-Floyd/speakeasy/%s@main\n", v.filename())
 	sb.WriteString("  import_full_config: false\n")
 
+	sb.WriteString("\nesp32:\n")
+	sb.WriteString("  variant: esp32s3\n")
+
 	sb.WriteString("\nesphome:\n")
 	sb.WriteString("  name: ${name}\n")
 	sb.WriteString("  friendly_name: ${friendly_name}\n")
