@@ -29,8 +29,8 @@ import urllib.request
 from pathlib import Path
 
 from bom import (
-    BomLine, assembly_summary, bom_cost_per_board, fetch_component_prices,
-    load_bom, load_bom_from_csv, print_bom_breakdown,
+    BomLine, assembly_summary, bom_cost_per_board, compute_assembly_cost,
+    fetch_component_prices, load_bom, load_bom_from_csv, print_bom_breakdown,
 )
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
@@ -313,6 +313,8 @@ def main():
                     help="destination postcode for shipping estimate")
     ap.add_argument("--city",     default=None, metavar="CITY",
                     help="destination city for shipping estimate")
+    ap.add_argument("--html",     type=Path, default=None, metavar="FILE",
+                    help="write HTML report to FILE (e.g. report.html)")
     args = ap.parse_args()
 
     variants   = [(v, *parse_variant(v)) for v in args.variants]
@@ -431,8 +433,44 @@ def main():
         for v, cols, rows in variants:
             known = [(e["qty"], e["price"]) for e in fab_quotes.get(v, [])]
             models[v] = _fit_fab_model(known)
-            a, b = models[v]
-            src  = f"{len(known)} known point(s)" if known else "no data — model only"
+
+        # For variants with no data (0,0), interpolate from neighbours by boards-per-panel
+        fitted = {v: models[v] for v, *_ in variants if models[v] != (0.0, 0.0)}
+        if fitted:
+            for v, cols, rows in variants:
+                if models[v] == (0.0, 0.0):
+                    bpp    = cols * rows
+                    # Find closest neighbour below and above by boards-per-panel
+                    below  = [(parse_variant(fv)[0]*parse_variant(fv)[1], fa, fb)
+                               for fv, (fa, fb) in fitted.items()
+                               if parse_variant(fv)[0]*parse_variant(fv)[1] <= bpp]
+                    above  = [(parse_variant(fv)[0]*parse_variant(fv)[1], fa, fb)
+                               for fv, (fa, fb) in fitted.items()
+                               if parse_variant(fv)[0]*parse_variant(fv)[1] >= bpp]
+                    if below and above:
+                        lo_bpp, lo_a, lo_b = max(below, key=lambda x: x[0])
+                        hi_bpp, hi_a, hi_b = min(above, key=lambda x: x[0])
+                        if lo_bpp == hi_bpp:
+                            interp_a, interp_b = lo_a, lo_b
+                        else:
+                            t = (bpp - lo_bpp) / (hi_bpp - lo_bpp)
+                            interp_a = lo_a + t * (hi_a - lo_a)
+                            interp_b = lo_b + t * (hi_b - lo_b)
+                        models[v] = (interp_a, interp_b)
+                    elif below:
+                        # Extrapolate upward: scale marginal by bpp ratio
+                        lo_bpp, lo_a, lo_b = max(below, key=lambda x: x[0])
+                        ratio = bpp / lo_bpp if lo_bpp else 1
+                        models[v] = (lo_a, lo_b * ratio)
+                    elif above:
+                        hi_bpp, hi_a, hi_b = min(above, key=lambda x: x[0])
+                        ratio = bpp / hi_bpp if hi_bpp else 1
+                        models[v] = (hi_a, hi_b * ratio)
+
+        for v, cols, rows in variants:
+            a, b  = models[v]
+            n_pts = len([e for e in fab_quotes.get(v, [])])
+            src   = f"{n_pts} known point(s)" if n_pts else "~interpolated from neighbours"
             print(f"  PCBA {v}: setup_fee=${a:.2f}  marginal=${b:.2f}/panel  ({src})")
 
         # ── BOM-only mode ─────────────────────────────────────────────────────
@@ -465,7 +503,10 @@ def main():
                     print(f"\n--- {v} × {qty} panels ({total_boards} boards) ---")
                     print_bom_breakdown(bom, total_boards, api_tiers,
                                         extended_part_fee, standard_base_fee, pcb_total,
-                                        pcba_total, import_duty_rate, ship_cost)
+                                        pcba_total, import_duty_rate, ship_cost,
+                                        asm_cfg=asm_cfg,
+                                        pcb_w_mm=pcb_w,
+                                        pcb_l_mm=pcb_l)
             return
 
         # ── Shipping methods from data file ───────────────────────────────────
@@ -513,7 +554,7 @@ def main():
                     pcb_price = (eng + mat * qty) if (eng or mat) else None
                     pcb_results[qty][v] = (pcb_price, True)
 
-                bom_cpu, _ = bom_cost_per_board(bom, actual_boards, api_tiers) if bom else (None, [])
+                bom_cpu, _ = bom_cost_per_board(bom, actual_boards, api_tiers, asm_cfg) if bom else (None, [])
                 bom_results[qty][v] = bom_cpu
 
                 if ship_methods and pcb_w:
@@ -679,6 +720,93 @@ def main():
                       f"  =  {marker}${lt:.2f} landed"
                       f"  ({marker}${lt/actual:.2f}/board, {actual} boards)")
         print(f"  ~ = estimated from model")
+
+        # ── HTML report ───────────────────────────────────────────────────────
+        if args.html:
+            from report import generate_report
+
+            # Build per-(qty,variant) BOM breakdown for the report
+            bom_breakdown: dict = {}
+            for qty in quantities:
+                bom_breakdown[qty] = {}
+                for v, cols, rows in variants:
+                    total_boards = qty * cols * rows
+                    eng, mat     = pcb_models[v]
+                    pcb_tot      = eng + mat * qty
+                    known_map    = {e["qty"]: e["price"] for e in fab_quotes.get(v, [])}
+                    if qty in known_map:
+                        pcba_tot, est_pcba = known_map[qty], False
+                    else:
+                        a, b = models[v]
+                        pcba_tot = _estimate_fab(a, b, qty) if (a or b) else None
+                        est_pcba = True
+                    _sc_cfg   = data.get("shipping", {})
+                    _sc_meths = _sc_cfg.get("methods", [])
+                    _pref     = _sc_cfg.get("preferred_method")
+                    if _sc_meths and pcb_w:
+                        _opts  = _shipping_cost(_sc_meths, _panel_weight_g(pcb_w, pcb_l, qty, cols, rows), _pref)
+                        s_cost = next((s["cost"] for s in _opts if s["display"] == _pref and s["cost"] is not None), None) \
+                                 or next((s["cost"] for s in _opts if s["cost"] is not None), None)
+                    else:
+                        s_cost = None
+                    comp_cpu, line_items_raw = bom_cost_per_board(bom, total_boards, api_tiers, asm_cfg) if bom else (None, [])
+                    pcb_pb      = pcb_tot / total_boards if total_boards else 0.0
+                    asm_detail  = compute_assembly_cost(bom, total_boards, pcb_w, pcb_l, asm_cfg) if (bom and pcb_w and pcb_l) else None
+                    asm_pb      = (asm_detail["total"] / total_boards) if asm_detail else 0.0
+                    bottom_up   = (comp_cpu or 0.0) + pcb_pb + asm_pb
+                    asm_residual = (pcba_tot / total_boards - bottom_up) if pcba_tot else None
+                    landed_pb   = (pcba_tot / total_boards * (1 + import_duty_rate) + (s_cost or 0.0) / total_boards) if pcba_tot else None
+                    bom_breakdown[qty][v] = {
+                        "total_boards":              total_boards,
+                        "pcb_cost_total":            pcb_tot,
+                        "pcba_price_total":          pcba_tot,
+                        "pcba_estimated":            est_pcba,
+                        "ship_cost":                 s_cost,
+                        "component_cost_per_board":  comp_cpu,
+                        "pcb_per_board":             pcb_pb,
+                        "assembly_cost_detail":      asm_detail,
+                        "assembly_cost_per_board":   asm_pb,
+                        "assembly_residual_per_board": asm_residual,
+                        "landed_per_board":          landed_pb,
+                        "line_items": [
+                            {
+                                "lcsc":          lcsc,
+                                "desc":          desc,
+                                "qty_per_board": qpb,
+                                "unit_price":    up,
+                                "line_total":    lt,
+                                "lib_type":      next((l.lib_type for l in bom if l.lcsc == lcsc), "Basic"),
+                                "standard_only": next((l.standard_only for l in bom if l.lcsc == lcsc), False),
+                            }
+                            for lcsc, desc, qpb, up, lt, _ in line_items_raw
+                        ],
+                    }
+
+            asm_meta = assembly_summary(bom) if bom else {"forced_type": "Economy", "n_extended": 0, "standard_only": []}
+            report_data = {
+                "meta": {
+                    "pcb_w":            pcb_w or 0,
+                    "pcb_l":            pcb_l or 0,
+                    "assembly_type":    asm_cfg.get("type", asm_meta["forced_type"]),
+                    "n_extended":       asm_meta["n_extended"],
+                    "standard_only":    [l.lcsc for l in asm_meta["standard_only"]],
+                    "import_duty_rate": import_duty_rate,
+                    "preferred_ship":   data.get("shipping", {}).get("preferred_method", ""),
+                    "bm_per_board":     BM_PER_BOARD,
+                    "eng_fee":          ENG_FEE,
+                },
+                "variants":      [v for v, *_ in variants],
+                "quantities":    quantities,
+                "fab_results":   {qty: {v: fab_results[qty][v] for v, *_ in variants} for qty in quantities},
+                "pcb_results":   {qty: {v: pcb_results[qty][v] for v, *_ in variants} for qty in quantities},
+                "ship_results":  {qty: {v: ship_results[qty][v] for v, *_ in variants} for qty in quantities},
+                "bom_breakdown": bom_breakdown,
+                "preferred_ship": data.get("shipping", {}).get("preferred_method", ""),
+            }
+            html_path = args.html if args.html.is_absolute() else SCRIPT_DIR / args.html
+            generate_report(report_data, html_path)
+            print(f"\nHTML report written: {html_path}")
+
         return
 
     # ── LIVE MODE ─────────────────────────────────────────────────────────────

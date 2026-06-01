@@ -47,6 +47,10 @@
   "bom_overrides": {
     "C6909495": {
       "lib_type": "Extended",
+      "solder_joints": 13,
+      "xray_required": true,
+      "_xray_note": "QFN-12 — all pads hidden underneath, X-ray required",
+      "full_reel_qty": 5000,
       "price_tiers": [
         {"min_qty": 1,    "unit_price": 1.8298},
         {"min_qty": 50,   "unit_price": 1.8169},
@@ -58,6 +62,10 @@
     },
     "C910544": {
       "lib_type": "Extended",
+      "solder_joints": 17,
+      "xray_required": true,
+      "_xray_note": "TQFN-16 — thermal pad hidden underneath, X-ray required",
+      "full_reel_qty": 2500,
       "price_tiers": [
         {"min_qty": 1,    "unit_price": 1.3259},
         {"min_qty": 10,   "unit_price": 1.1630},
@@ -70,6 +78,10 @@
     "C22356044": {
       "lib_type": "Extended",
       "standard_only": true,
+      "solder_joints": 56,
+      "xray_required": true,
+      "_xray_note": "LGA bottom (not castellated) — all pads hidden after soldering, X-ray required",
+      "full_reel_qty": 650,
       "price_tiers": [
         {"min_qty": 1,    "unit_price": 4.6421},
         {"min_qty": 10,   "unit_price": 4.1114},
@@ -80,6 +92,10 @@
       ]
     },
     "C720477": {
+      "solder_joints": 4,
+      "attrition_qty": 4,
+      "min_assembly_qty": 5,
+      "full_reel_qty": 4000,
       "price_tiers": [
         {"min_qty": 1,    "unit_price": 0.0563},
         {"min_qty": 100,  "unit_price": 0.0459},
@@ -90,6 +106,10 @@
       ]
     },
     "C25741": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 10000,
       "price_tiers": [
         {"min_qty": 1,     "unit_price": 0.0009},
         {"min_qty": 1000,  "unit_price": 0.0007},
@@ -97,6 +117,10 @@
       ]
     },
     "C11702": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 10000,
       "price_tiers": [
         {"min_qty": 1,     "unit_price": 0.0011},
         {"min_qty": 1000,  "unit_price": 0.0009},
@@ -105,6 +129,10 @@
       ]
     },
     "C25744": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 10000,
       "price_tiers": [
         {"min_qty": 1,     "unit_price": 0.0013},
         {"min_qty": 1000,  "unit_price": 0.0011},
@@ -113,6 +141,10 @@
       ]
     },
     "C25905": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 10000,
       "price_tiers": [
         {"min_qty": 1,    "unit_price": 0.0009},
         {"min_qty": 1000, "unit_price": 0.0007},
@@ -121,6 +153,8 @@
     },
     "C20608465": {
       "lib_type": "Extended",
+      "solder_joints": 2,
+      "full_reel_qty": 50,
       "price_tiers": [
         {"min_qty": 1,   "unit_price": 1.4339},
         {"min_qty": 10,  "unit_price": 1.1920},
@@ -132,6 +166,8 @@
     },
     "C64659": {
       "lib_type": "Extended",
+      "solder_joints": 6,
+      "full_reel_qty": 36,
       "price_tiers": [
         {"min_qty": 1,    "unit_price": 0.0962},
         {"min_qty": 60,   "unit_price": 0.0760},
@@ -142,6 +178,10 @@
       ]
     },
     "C52923": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 10000,
       "price_tiers": [
         {"min_qty": 1,     "unit_price": 0.0053},
         {"min_qty": 1000,  "unit_price": 0.0044},
@@ -151,6 +191,10 @@
       ]
     },
     "C1525": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 10000,
       "price_tiers": [
         {"min_qty": 1,     "unit_price": 0.0017},
         {"min_qty": 1000,  "unit_price": 0.0014},
@@ -159,6 +203,10 @@
       ]
     },
     "C15525": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 10000,
       "price_tiers": [
         {"min_qty": 1,      "unit_price": 0.0175},
         {"min_qty": 1000,   "unit_price": 0.0149},
@@ -169,6 +217,10 @@
       ]
     },
     "C19702": {
+      "solder_joints": 2,
+      "attrition_qty": 10,
+      "min_assembly_qty": 20,
+      "full_reel_qty": 4000,
       "price_tiers": [
         {"min_qty": 1,     "unit_price": 0.0138},
         {"min_qty": 200,   "unit_price": 0.0116},
@@ -181,12 +233,37 @@
   },
   "assembly": {
     "type": "Standard",
-    "_type_note": "Standard required — U1 (ESP32, C22356044) is Standard Only (0201 package / thermal limits).",
-    "extended_part_fee": 3.00,
-    "_extended_note": "One-time per-order fee per unique Extended part. This design has 5 Extended parts = $15/order.",
-    "standard_base_fee": 25.00,
-    "_base_note": "$25 per assembly side for Standard PCBA (one-time per order, not per board).",
-    "assembly_sides": 1
+    "_type_note": "Standard required — C22356044 (ESP32) is Standard Only.",
+    "setup_fee": 25.00,
+    "stencil_fee": 7.86,
+    "assembly_sides": 1,
+    "panel_fee_per_jlc_panel": 7.81,
+    "jlc_panel_size_mm": [300, 300],
+    "smt_assembly_per_joint_tiers": [
+      {"max_joints": 50000,  "cost": 0.0016},
+      {"max_joints": 100000, "cost": 0.0013},
+      {"max_joints": 999999, "cost": 0.0011}
+    ],
+    "manual_assembly_per_joint_tiers": [
+      {"max_joints": 50000,  "cost": 0.0157},
+      {"max_joints": 100000, "cost": 0.0141},
+      {"max_joints": 999999, "cost": 0.011}
+    ],
+    "hand_solder_fee": 3.50,
+    "feeder_fee_per_unique_part": 1.50,
+    "xray_tiers": [
+      {"max_pcs": 10,    "cost_per_pcs": 1.57},
+      {"max_pcs": 50,    "cost_per_pcs": 0.79},
+      {"max_pcs": 200,   "cost_per_pcs": 0.47},
+      {"max_pcs": 500,   "cost_per_pcs": 0.31},
+      {"max_pcs": 1000,  "cost_per_pcs": 0.24},
+      {"max_pcs": 3000,  "cost_per_pcs": 0.16},
+      {"max_pcs": 99999, "cost_per_pcs": 0.08}
+    ],
+    "packing_fee_per_cm2": 0.0000315,
+    "extended_part_fee": 0.0,
+    "_extended_note": "Standard PCBA uses feeder_fee_per_unique_part for all parts. extended_part_fee=0 here — that $3 fee is for Economy only.",
+    "_attrition_note": "Set attrition_qty and min_assembly_qty per component in bom_overrides (check each part's JLCPCB page)."
   },
   "import_duty_rate": 0.35,
   "_import_duty_note": "Exactly 35% per JLCPCB tax detail on SMT026060161104-Y45. Applied to post-discount taxable value ($146.77 × 35% = $51.37). Since we don't model the one-time promo, apply to full merchandise total.",

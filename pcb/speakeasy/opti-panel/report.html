@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speakeasy PCB Cost Report</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-size: 15px; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #0d1117;
+    color: #e2e8f0;
+    line-height: 1.55;
+    padding: 0 0 60px;
+  }
+
+  /* ── Typography ── */
+  h1, h2, h3 { font-weight: 600; letter-spacing: -0.01em; }
+  h2 { font-size: 1.1rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 14px; }
+  h3 { font-size: 0.95rem; color: #64748b; letter-spacing: 0.04em; }
+  a { color: #60a5fa; }
+
+  /* ── Layout ── */
+  .page { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+  /* ── Header ── */
+  .header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid #1e3a5f;
+    padding: 36px 24px 28px;
+    margin-bottom: 36px;
+  }
+  .header-inner { max-width: 1100px; margin: 0 auto; }
+  .header h1 {
+    font-size: 1.85rem;
+    color: #f1f5f9;
+    margin-bottom: 10px;
+  }
+  .header h1 span { color: #60a5fa; }
+  .meta-row {
+    display: flex; flex-wrap: wrap; gap: 20px;
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #64748b;
+  }
+  .meta-item { display: flex; gap: 6px; }
+  .meta-label { color: #94a3b8; }
+  .meta-value { color: #cbd5e1; font-weight: 500; }
+
+  /* ── Summary cards ── */
+  .cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 36px; }
+  @media (max-width: 700px) { .cards { grid-template-columns: 1fr; } }
+  .card {
+    background: #161f2e;
+    border: 1px solid #1e3a5f;
+    border-radius: 10px;
+    padding: 20px 22px;
+  }
+  .card-label { font-size: 0.78rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 6px; }
+  .card-value { font-size: 2rem; font-weight: 700; color: #f1f5f9; font-variant-numeric: tabular-nums; }
+  .card-sub { font-size: 0.78rem; color: #475569; margin-top: 4px; }
+  .card-accent-green .card-value { color: #34d399; }
+  .card-accent-blue  .card-value { color: #60a5fa; }
+  .card-accent-amber .card-value { color: #fbbf24; }
+
+  /* ── Section wrapper ── */
+  .section { margin-bottom: 40px; }
+
+  /* ── Tables ── */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #1e293b; }
+  table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+  thead th {
+    background: #1e293b;
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 10px 14px;
+    text-align: right;
+    white-space: nowrap;
+  }
+  thead th:first-child { text-align: left; }
+  tbody tr { border-bottom: 1px solid #1a2535; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #131c29; }
+  td {
+    padding: 9px 14px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  td:first-child { text-align: left; }
+  .col-qty { color: #64748b; font-weight: 500; }
+  .cell-best { color: #34d399; font-weight: 700; }
+  .cell-est  { color: #94a3b8; }
+  .cell-missing { color: #374151; }
+  .num  { text-align: right; }
+  .mono { font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: 0.83rem; }
+
+  /* ── BOM table variants ── */
+  .bom-extended { background: #1a1400; }
+  .bom-extended:hover { background: #211900; }
+  .badge-ext  { background: #78350f; color: #fcd34d; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }
+  .badge-basic{ background: #1e293b; color: #64748b;  border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }
+  .badge-warn { background: #7c2d12; color: #fca5a5; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }
+
+  /* ── Chart containers ── */
+  .chart-wrap {
+    background: #0f1923;
+    border: 1px solid #1e293b;
+    border-radius: 10px;
+    padding: 24px;
+  }
+  .chart-canvas-wrap { position: relative; }
+
+  /* ── Controls ── */
+  .chart-controls { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .qty-selector {
+    background: #1e293b;
+    border: 1px solid #334155;
+    color: #e2e8f0;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+  }
+  .qty-selector:focus { outline: 2px solid #3b82f6; outline-offset: 2px; }
+  .control-label { font-size: 0.82rem; color: #64748b; }
+
+  /* ── Note / legend ── */
+  .table-note { font-size: 0.75rem; color: #475569; margin-top: 8px; padding: 0 2px; }
+  .legend-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* ── Collapsible details ── */
+  details { border: 1px solid #1e293b; border-radius: 8px; overflow: hidden; margin-bottom: 16px; }
+  summary {
+    background: #161f2e;
+    padding: 12px 18px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #94a3b8;
+    list-style: none;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  summary::before { content: "▶"; font-size: 0.65rem; transition: transform 0.15s; }
+  details[open] summary::before { transform: rotate(90deg); }
+  summary::-webkit-details-marker { display: none; }
+  details .table-wrap { border-radius: 0; border: none; border-top: 1px solid #1e293b; }
+
+  /* ── Divider ── */
+  .divider { height: 1px; background: #1e293b; margin: 32px 0; }
+
+  /* ── Pill/tag ── */
+  .pill { display: inline-block; border-radius: 999px; padding: 2px 10px; font-size: 0.75rem; font-weight: 600; }
+  .pill-blue  { background: #1e3a5f; color: #60a5fa; }
+  .pill-green { background: #14432a; color: #34d399; }
+  .pill-amber { background: #422006; color: #fbbf24; }
+
+  /* ── Tooltip legend ── */
+  .chart-legend { display: flex; flex-wrap: wrap; gap: 10px 18px; margin-top: 14px; font-size: 0.78rem; color: #94a3b8; }
+  .chart-legend-item { display: flex; align-items: center; gap: 5px; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HEADER ═══════════════════ -->
+<div class="header">
+  <div class="header-inner">
+    <h1><span>Speakeasy</span> PCB Cost Report</h1>
+    <div class="meta-row">
+      <div class="meta-item"><span class="meta-label">PCB size</span><span class="meta-value">21.086 × 31.5 mm</span></div>
+      <div class="meta-item"><span class="meta-label">Assembly</span><span class="meta-value">Standard</span></div>
+      <div class="meta-item"><span class="meta-label">Extended parts</span><span class="meta-value">5</span></div>
+      <div class="meta-item"><span class="meta-label">Import duty</span><span class="meta-value">35.0%</span></div>
+      <div class="meta-item"><span class="meta-label">Shipping</span><span class="meta-value">DHL Express (DDP)</span></div>
+      <div class="meta-item"><span class="meta-label">Standard-only parts</span><span class="meta-value">C22356044</span></div>
+      <div class="meta-item"><span class="meta-label">Generated</span><span class="meta-value">June 01, 2026</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="page">
+
+<!-- ═══════════════════ SUMMARY CARDS ═══════════════════ -->
+<div class="section">
+  <h2>Summary</h2>
+  <div class="cards">
+    <div class="card card-accent-green">
+      <div class="card-label">Best Landed Cost / Board</div>
+      <div class="card-value">$13.27</div>
+      <div class="card-sub">25 panels × 2x2</div>
+    </div>
+    <div class="card card-accent-blue">
+      <div class="card-label">Best PCBA Merch Cost / Board</div>
+      <div class="card-value">$9.12</div>
+      <div class="card-sub">25 panels × 2x2</div>
+    </div>
+    <div class="card card-accent-amber">
+      <div class="card-label">Dominant Cost Bucket</div>
+      <div class="card-value" style="font-size:1.25rem; padding-top:8px">Components</div>
+      <div class="card-sub">25 panels × 2x2</div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════ LANDED COST TABLE ═══════════════════ -->
+<div class="section">
+  <h2>Landed Cost per Board ($/board)</h2>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Panels</th><th>1x1</th><th>2x2</th><th>2x3</th><th>3x3</th></tr></thead>
+      <tbody id="landed-tbody">
+<tr><td class='col-qty'>5</td><td class="cell-est">~$36.97</td><td class="">$30.79</td><td class="cell-est">~$27.54</td><td class="cell-best">$22.96</td></tr>
+<tr><td class='col-qty'>10</td><td class="">$27.14</td><td class="">$23.75</td><td class="cell-est">~$20.53</td><td class="cell-best">$20.50</td></tr>
+<tr><td class='col-qty'>15</td><td class="cell-est">~$23.87</td><td class="cell-best">~$17.02</td><td class="cell-est">~$18.50</td><td class="cell-est">~$19.63</td></tr>
+<tr><td class='col-qty'>20</td><td class="cell-est">~$22.23</td><td class="cell-best">$14.22</td><td class="cell-est">~$17.25</td><td class="cell-est">~$19.09</td></tr>
+<tr><td class='col-qty'>25</td><td class="cell-est">~$21.25</td><td class="cell-best">~$13.27</td><td class="cell-est">~$16.64</td><td class="cell-est">~$18.76</td></tr>
+
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">
+    <span style="color:#34d399">Green</span> = lowest in row &nbsp;|&nbsp;
+    <span style="color:#94a3b8">Grey</span> = estimated from model &nbsp;|&nbsp;
+    — = no data &nbsp;|&nbsp;
+    ~ prefix = estimated
+  </p>
+</div>
+
+<!-- ═══════════════════ LINE CHART ═══════════════════ -->
+<div class="section">
+  <h2>Landed Cost per Board vs Panels Ordered</h2>
+  <div class="chart-wrap">
+    <div class="chart-canvas-wrap" style="height:320px">
+      <canvas id="lineChart"></canvas>
+    </div>
+    <div class="chart-legend" id="lineChartLegend"></div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ STACKED BAR + PIE (shared qty selector) ═══════════════════ -->
+<div class="section">
+  <div class="chart-controls">
+    <span class="control-label">Quantity:</span>
+    <select class="qty-selector" id="qtySelector">
+      <option value="5">5 panels</option><option value="10">10 panels</option><option value="15" selected>15 panels</option><option value="20">20 panels</option><option value="25">25 panels</option>
+    </select>
+    <span class="control-label" style="color:#475569">Affects breakdown charts and BOM table below</span>
+  </div>
+
+  <h2>Cost Breakdown per Board (Stacked)</h2>
+  <div class="chart-wrap" style="margin-bottom:24px">
+    <div class="chart-canvas-wrap" style="height:360px">
+      <canvas id="stackedBar"></canvas>
+    </div>
+  </div>
+
+  <h2>Component Cost Breakdown (BOM Pie)</h2>
+  <div class="chart-wrap">
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center;">
+      <div>
+        <div class="chart-controls" style="margin-bottom:8px">
+          <span class="control-label">Variant:</span>
+          <select class="qty-selector" id="variantSelectorPie">
+            <!-- populated by JS -->
+          </select>
+        </div>
+        <div class="chart-canvas-wrap" style="height:300px">
+          <canvas id="pieChart"></canvas>
+        </div>
+      </div>
+      <div id="pieLegend" style="font-size:0.8rem; color:#94a3b8; line-height:1.8"></div>
+    </div>
+  </div>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ BOM TABLE ═══════════════════ -->
+<div class="section">
+  <h2>Bill of Materials</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th style="text-align:left">LCSC</th>
+          <th style="text-align:left">Description</th>
+          <th>Qty/bd</th>
+          <th style="text-align:left">Lib Type</th>
+          <th>Unit Price</th>
+          <th>$/board</th>
+        </tr>
+      </thead>
+      <tbody id="bom-tbody">
+<tr class=''><td class='mono'>C19702</td><td>10uF</td><td class='num'>1</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0138</td><td class='num mono'>$0.0138</td></tr>
+<tr class=''><td class='mono'>C15525</td><td>10uF</td><td class='num'>1</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0175</td><td class='num mono'>$0.0175</td></tr>
+<tr class=''><td class='mono'>C1525</td><td>100nF</td><td class='num'>2</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0017</td><td class='num mono'>$0.0034</td></tr>
+<tr class=''><td class='mono'>C52923</td><td>1uF</td><td class='num'>1</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0053</td><td class='num mono'>$0.0053</td></tr>
+<tr class='bom-extended'><td class='mono'>C64659</td><td>PH-6P立贴</td><td class='num'>1</td><td><span class='badge-ext'>Extended</span></td><td class='num mono'>$0.0962</td><td class='num mono'>$0.0962</td></tr>
+<tr class='bom-extended'><td class='mono'>C20608465</td><td>210-A-SMD/02</td><td class='num'>1</td><td><span class='badge-ext'>Extended</span></td><td class='num mono'>$1.1920</td><td class='num mono'>$1.1920</td></tr>
+<tr class=''><td class='mono'>C25905</td><td>5.1k</td><td class='num'>2</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0009</td><td class='num mono'>$0.0018</td></tr>
+<tr class=''><td class='mono'>C25744</td><td>10k</td><td class='num'>1</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0013</td><td class='num mono'>$0.0013</td></tr>
+<tr class=''><td class='mono'>C11702</td><td>1k</td><td class='num'>1</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0011</td><td class='num mono'>$0.0011</td></tr>
+<tr class=''><td class='mono'>C25741</td><td>100k</td><td class='num'>1</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0009</td><td class='num mono'>$0.0009</td></tr>
+<tr class=''><td class='mono'>C720477</td><td>BOOT</td><td class='num'>2</td><td><span class='badge-basic'>Basic</span></td><td class='num mono'>$0.0563</td><td class='num mono'>$0.1126</td></tr>
+<tr class='bom-extended'><td class='mono'>C22356044</td><td>ESP32-S3-MINI-1U-N4R2 <span class='badge-warn'>⚠ Std Only</span></td><td class='num'>1</td><td><span class='badge-ext'>Extended</span></td><td class='num mono'>$4.1114</td><td class='num mono'>$4.1114</td></tr>
+<tr class='bom-extended'><td class='mono'>C910544</td><td>MAX98357AETE+T</td><td class='num'>1</td><td><span class='badge-ext'>Extended</span></td><td class='num mono'>$1.1630</td><td class='num mono'>$1.1630</td></tr>
+<tr class='bom-extended'><td class='mono'>C6909495</td><td>MPM3810GQB-33-Z</td><td class='num'>1</td><td><span class='badge-ext'>Extended</span></td><td class='num mono'>$1.8298</td><td class='num mono'>$1.8298</td></tr>
+
+      </tbody>
+    </table>
+  </div>
+  <p class="table-note">
+    <span class="badge-ext">Extended</span> parts incur an extra fee per order &nbsp;|&nbsp;
+    <span class="badge-warn">⚠ Std Only</span> forces Standard PCBA type
+  </p>
+</div>
+
+<div class="divider"></div>
+
+<!-- ═══════════════════ PCBA COST TABLE (collapsible) ═══════════════════ -->
+<div class="section">
+  <details>
+    <summary>PCBA Merch Cost per Board (excl. duty / shipping)</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Panels</th><th>1x1</th><th>2x2</th><th>2x3</th><th>3x3</th></tr></thead>
+        <tbody>
+<tr><td class='col-qty'>5</td><td class="cell-est">~$20.53</td><td class="">$20.29</td><td class="cell-est">~$18.72</td><td class="">$15.89</td></tr>
+<tr><td class='col-qty'>10</td><td class="">$16.68</td><td class="">$16.33</td><td class="cell-est">~$14.37</td><td class="">$14.41</td></tr>
+<tr><td class='col-qty'>15</td><td class="cell-est">~$15.39</td><td class="cell-est">~$11.43</td><td class="cell-est">~$12.92</td><td class="cell-est">~$13.91</td></tr>
+<tr><td class='col-qty'>20</td><td class="cell-est">~$14.75</td><td class="">$9.65</td><td class="cell-est">~$12.19</td><td class="cell-est">~$13.66</td></tr>
+<tr><td class='col-qty'>25</td><td class="cell-est">~$14.37</td><td class="cell-est">~$9.12</td><td class="cell-est">~$11.76</td><td class="cell-est">~$13.52</td></tr>
+
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note" style="padding: 8px 14px">Bare PCBA price from JLCPCB. ~ = estimated from model.</p>
+  </details>
+
+<!-- ═══════════════════ PCB BARE BOARD TABLE (collapsible) ═══════════════════ -->
+  <details>
+    <summary>PCB Bare Board Cost per Board (no assembly)</summary>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Panels</th><th>1x1</th><th>2x2</th><th>2x3</th><th>3x3</th></tr></thead>
+        <tbody>
+<tr><td class='col-qty'>5</td><td class="cell-est">~$0.97</td><td class="cell-est">~$0.37</td><td class="">$0.30</td><td class="">$0.26</td></tr>
+<tr><td class='col-qty'>10</td><td class="cell-est">~$0.57</td><td class="cell-est">~$0.27</td><td class="cell-est">~$0.24</td><td class="cell-est">~$0.21</td></tr>
+<tr><td class='col-qty'>15</td><td class="cell-est">~$0.44</td><td class="cell-est">~$0.24</td><td class="cell-est">~$0.21</td><td class="cell-est">~$0.20</td></tr>
+<tr><td class='col-qty'>20</td><td class="cell-est">~$0.37</td><td class="cell-est">~$0.22</td><td class="cell-est">~$0.20</td><td class="cell-est">~$0.19</td></tr>
+<tr><td class='col-qty'>25</td><td class="cell-est">~$0.33</td><td class="cell-est">~$0.21</td><td class="cell-est">~$0.20</td><td class="cell-est">~$0.19</td></tr>
+
+        </tbody>
+      </table>
+    </div>
+    <p class="table-note" style="padding: 8px 14px">
+      Engineering fee $4.00 + $0.1694/board-in-panel × boards × panels.
+      ~ = estimated from model.
+    </p>
+  </details>
+</div>
+
+</div><!-- .page -->
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+<script>
+(function () {
+  "use strict";
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+  const VARIANTS       = ["1x1", "2x2", "2x3", "3x3"];
+  const QUANTITIES     = [5, 10, 15, 20, 25];
+  const MEDIAN_QTY     = 15;
+  const LINE_DATASETS  = [{"label": "1x1", "data": [36.97147692307693, 27.14495, 23.869441025641027, 22.231686538461542, 21.24903384615385], "borderColor": "#60a5fa", "backgroundColor": "#60a5fa33", "tension": 0.3, "spanGaps": true}, {"label": "2x2", "data": [30.790149999999997, 23.74685, 17.01669761904762, 14.21963125, 13.266399285714291], "borderColor": "#34d399", "backgroundColor": "#34d39933", "tension": 0.3, "spanGaps": true}, {"label": "2x3", "data": [27.541302380952366, 20.53297154761905, 18.49752793650794, 17.25430613095239, 16.641306380952386], "borderColor": "#fbbf24", "backgroundColor": "#fbbf2433", "tension": 0.3, "spanGaps": true}, {"label": "3x3", "data": [22.958711111111114, 20.503572222222225, 19.632451851851858, 19.0861138888889, 18.75831111111112], "borderColor": "#f87171", "backgroundColor": "#f8717133", "tension": 0.3, "spanGaps": true}];
+  const BOM_BREAKDOWN  = {"5": {"1x1": {"total_boards": 5, "pcb_cost_total": 4.847222222222222, "pcba_price_total": 102.62769230769231, "pcba_estimated": true, "ship_cost": 46.31, "component_cost_per_board": 9.4856, "pcb_per_board": 0.9694444444444444, "assembly_cost_detail": {"total": 73.99704612917499, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 0.9760000000000001, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 7.8500000000000005, "packing_fee": 0.001046129175, "jlc_panels": 1, "total_joints": 610, "smt_rate": 0.0016, "xray_rate": 1.57, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 14.799409225834998, "assembly_residual_per_board": -4.728915208740979, "landed_per_board": 36.97147692307693, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.013800000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0033999999999999994, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.4339, "line_total": 1.4339, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 4.6421, "line_total": 4.6421, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.3259, "line_total": 1.3259, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "2x2": {"total_boards": 20, "pcb_cost_total": 7.388888888888889, "pcba_price_total": 405.78, "pcba_estimated": false, "ship_cost": 68.0, "component_cost_per_board": 8.5501, "pcb_per_board": 0.36944444444444446, "assembly_cost_detail": {"total": 84.8781845167, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 3.9040000000000004, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 15.8, "packing_fee": 0.0041845167, "jlc_panels": 1, "total_joints": 2440, "smt_rate": 0.0016, "xray_rate": 0.79, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 4.243909225835, "assembly_residual_per_board": 7.125546329720553, "landed_per_board": 30.790149999999997, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.013800000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0033999999999999994, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 4.1114, "line_total": 4.1114, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.163, "line_total": 1.163, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "2x3": {"total_boards": 30, "pcb_cost_total": 9.083333333333332, "pcba_price_total": 561.6585714285711, "pcba_estimated": true, "ship_cost": 68.0, "component_cost_per_board": 8.0823, "pcb_per_board": 0.30277777777777776, "assembly_cost_detail": {"total": 94.73227677505001, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 5.856, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 23.700000000000003, "packing_fee": 0.006276775049999999, "jlc_panels": 1, "total_joints": 3660, "smt_rate": 0.0016, "xray_rate": 0.79, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 3.1577425591683337, "assembly_residual_per_board": 7.179132044006259, "landed_per_board": 27.541302380952366, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "3x3": {"total_boards": 45, "pcb_cost_total": 11.625, "pcba_price_total": 714.92, "pcba_estimated": false, "ship_cost": 68.0, "component_cost_per_board": 8.0823, "pcb_per_board": 0.25833333333333336, "assembly_cost_detail": {"total": 109.51341516257501, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 8.784, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 35.550000000000004, "packing_fee": 0.009415162574999998, "jlc_panels": 1, "total_joints": 5490, "smt_rate": 0.0016, "xray_rate": 0.79, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 2.4336314480572225, "assembly_residual_per_board": 5.112846329720554, "landed_per_board": 22.958711111111114, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}}, "10": {"1x1": {"total_boards": 10, "pcb_cost_total": 5.694444444444445, "pcba_price_total": 166.77, "pcba_estimated": false, "ship_cost": 46.31, "component_cost_per_board": 8.5501, "pcb_per_board": 0.5694444444444444, "assembly_cost_detail": {"total": 82.82409225835, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 1.9520000000000002, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 15.700000000000001, "packing_fee": 0.00209225835, "jlc_panels": 1, "total_joints": 1220, "smt_rate": 0.0016, "xray_rate": 1.57, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 8.282409225835, "assembly_residual_per_board": -0.7249536702794472, "landed_per_board": 27.14495, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.013800000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0033999999999999994, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 4.1114, "line_total": 4.1114, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.163, "line_total": 1.163, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "2x2": {"total_boards": 40, "pcb_cost_total": 10.777777777777779, "pcba_price_total": 653.24, "pcba_estimated": false, "ship_cost": 68.0, "component_cost_per_board": 8.0823, "pcb_per_board": 0.2694444444444445, "assembly_cost_detail": {"total": 104.5863690334, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 7.808000000000001, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 31.6, "packing_fee": 0.0083690334, "jlc_panels": 1, "total_joints": 4880, "smt_rate": 0.0016, "xray_rate": 0.79, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 2.614659225835, "assembly_residual_per_board": 5.3645963297205554, "landed_per_board": 23.74685, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.013800000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0033999999999999994, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "2x3": {"total_boards": 60, "pcb_cost_total": 14.166666666666666, "pcba_price_total": 862.2061428571428, "pcba_estimated": true, "ship_cost": 68.0, "component_cost_per_board": 7.894500000000001, "pcb_per_board": 0.2361111111111111, "assembly_cost_detail": {"total": 105.0945535501, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 11.712, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 28.2, "packing_fee": 0.012553550099999998, "jlc_panels": 1, "total_joints": 7320, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.7515758925016667, "assembly_residual_per_board": 4.487915377339602, "landed_per_board": 20.53297154761905, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.0581, "line_total": 1.0581, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.0918, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8169, "line_total": 1.8169, "lib_type": "Extended", "standard_only": false}]}, "3x3": {"total_boards": 90, "pcb_cost_total": 19.25, "pcba_price_total": 1296.49, "pcba_estimated": false, "ship_cost": 95.06, "component_cost_per_board": 7.894500000000001, "pcb_per_board": 0.21388888888888888, "assembly_cost_detail": {"total": 125.05683032515, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 17.568, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 42.3, "packing_fee": 0.018830325149999997, "jlc_panels": 1, "total_joints": 10980, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.389520336946111, "assembly_residual_per_board": 4.9075352186094445, "landed_per_board": 20.503572222222225, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.0581, "line_total": 1.0581, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.0918, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8169, "line_total": 1.8169, "lib_type": "Extended", "standard_only": false}]}}, "15": {"1x1": {"total_boards": 15, "pcb_cost_total": 6.541666666666667, "pcba_price_total": 230.9123076923077, "pcba_estimated": true, "ship_cost": 46.31, "component_cost_per_board": 8.5501, "pcb_per_board": 0.4361111111111111, "assembly_cost_detail": {"total": 79.951138387525, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 2.928, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 11.850000000000001, "packing_fee": 0.0031383875249999995, "jlc_panels": 1, "total_joints": 1830, "smt_rate": 0.0016, "xray_rate": 0.79, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 5.330075892501667, "assembly_residual_per_board": 1.0778668425410682, "landed_per_board": 23.869441025641027, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 4.1114, "line_total": 4.1114, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.163, "line_total": 1.163, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "2x2": {"total_boards": 60, "pcb_cost_total": 14.166666666666668, "pcba_price_total": 685.8828571428572, "pcba_estimated": true, "ship_cost": 95.06, "component_cost_per_board": 7.894500000000001, "pcb_per_board": 0.23611111111111113, "assembly_cost_detail": {"total": 105.0945535501, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 11.712, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 28.2, "packing_fee": 0.012553550099999998, "jlc_panels": 1, "total_joints": 7320, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.7515758925016667, "assembly_residual_per_board": 1.5491939487681758, "landed_per_board": 17.01669761904762, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.0581, "line_total": 1.0581, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.0918, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8169, "line_total": 1.8169, "lib_type": "Extended", "standard_only": false}]}, "2x3": {"total_boards": 90, "pcb_cost_total": 19.25, "pcba_price_total": 1162.7537142857145, "pcba_estimated": true, "ship_cost": 95.06, "component_cost_per_board": 7.894500000000001, "pcb_per_board": 0.21388888888888888, "assembly_cost_detail": {"total": 125.05683032515, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 17.568, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 42.3, "packing_fee": 0.018830325149999997, "jlc_panels": 1, "total_joints": 10980, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.389520336946111, "assembly_residual_per_board": 3.4215764884507163, "landed_per_board": 18.49752793650794, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.0581, "line_total": 1.0581, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.0918, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8169, "line_total": 1.8169, "lib_type": "Extended", "standard_only": false}]}, "3x3": {"total_boards": 135, "pcb_cost_total": 26.875, "pcba_price_total": 1878.0600000000006, "pcba_estimated": true, "ship_cost": 115.0, "component_cost_per_board": 7.174, "pcb_per_board": 0.19907407407407407, "assembly_cost_detail": {"total": 162.81024548772498, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 15.62, "smt_fee": 26.352, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 63.449999999999996, "packing_fee": 0.028245487724999997, "jlc_panels": 2, "total_joints": 16470, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.2060018184275925, "assembly_residual_per_board": 5.332479663053894, "landed_per_board": 19.632451851851858, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 0.9081, "line_total": 0.9081, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.0918, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.534, "line_total": 3.534, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 0.8968, "line_total": 0.8968, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.6222, "line_total": 1.6222, "lib_type": "Extended", "standard_only": false}]}}, "20": {"1x1": {"total_boards": 20, "pcb_cost_total": 7.388888888888889, "pcba_price_total": 295.05461538461543, "pcba_estimated": true, "ship_cost": 46.31, "component_cost_per_board": 8.5501, "pcb_per_board": 0.36944444444444446, "assembly_cost_detail": {"total": 84.8781845167, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 3.9040000000000004, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 15.8, "packing_fee": 0.0041845167, "jlc_panels": 1, "total_joints": 2440, "smt_rate": 0.0016, "xray_rate": 0.79, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 4.243909225835, "assembly_residual_per_board": 1.5892770989513263, "landed_per_board": 22.231686538461542, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.013800000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0033999999999999994, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 4.1114, "line_total": 4.1114, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.163, "line_total": 1.163, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "2x2": {"total_boards": 80, "pcb_cost_total": 17.555555555555557, "pcba_price_total": 772.23, "pcba_estimated": false, "ship_cost": 95.06, "component_cost_per_board": 7.894500000000001, "pcb_per_board": 0.21944444444444447, "assembly_cost_detail": {"total": 118.4027380668, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 15.616000000000001, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 37.599999999999994, "packing_fee": 0.0167380668, "jlc_panels": 1, "total_joints": 9760, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.4800342258349999, "assembly_residual_per_board": 0.05889632972055381, "landed_per_board": 14.21963125, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.013800000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0033999999999999994, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.0581, "line_total": 1.0581, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.0918, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.7969, "line_total": 3.7969, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.0097, "line_total": 1.0097, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8169, "line_total": 1.8169, "lib_type": "Extended", "standard_only": false}]}, "2x3": {"total_boards": 120, "pcb_cost_total": 24.333333333333332, "pcba_price_total": 1463.3012857142862, "pcba_estimated": true, "ship_cost": 95.06, "component_cost_per_board": 7.174, "pcb_per_board": 0.20277777777777778, "assembly_cost_detail": {"total": 145.0191071002, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 23.424, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 56.4, "packing_fee": 0.025107100199999996, "jlc_panels": 1, "total_joints": 14640, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.2084925591683333, "assembly_residual_per_board": 3.6089070440062745, "landed_per_board": 17.25430613095239, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 0.9081, "line_total": 0.9081, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.0918, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.534, "line_total": 3.534, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 0.8968, "line_total": 0.8968, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.6222, "line_total": 1.6222, "lib_type": "Extended", "standard_only": false}]}, "3x3": {"total_boards": 180, "pcb_cost_total": 34.5, "pcba_price_total": 2459.630000000001, "pcba_estimated": true, "ship_cost": 115.0, "component_cost_per_board": 7.1530000000000005, "pcb_per_board": 0.19166666666666668, "assembly_cost_detail": {"total": 192.75366065030002, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 15.62, "smt_fee": 35.136, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 84.6, "packing_fee": 0.037660650299999994, "jlc_panels": 2, "total_joints": 21960, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.0708536702794444, "assembly_residual_per_board": 5.249090774165007, "landed_per_board": 19.0861138888889, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.066, "line_total": 0.066, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 0.9081, "line_total": 0.9081, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0404, "line_total": 0.0808, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.534, "line_total": 3.534, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 0.8968, "line_total": 0.8968, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.6222, "line_total": 1.6222000000000003, "lib_type": "Extended", "standard_only": false}]}}, "25": {"1x1": {"total_boards": 25, "pcb_cost_total": 8.23611111111111, "pcba_price_total": 359.1969230769231, "pcba_estimated": true, "ship_cost": 46.31, "component_cost_per_board": 8.5501, "pcb_per_board": 0.32944444444444443, "assembly_cost_detail": {"total": 89.80523064587501, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 4.88, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 19.75, "packing_fee": 0.0052306458749999995, "jlc_panels": 1, "total_joints": 3050, "smt_rate": 0.0016, "xray_rate": 0.79, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 3.5922092258350005, "assembly_residual_per_board": 1.8961232527974783, "landed_per_board": 21.24903384615385, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.11259999999999999, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 4.1114, "line_total": 4.1114, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.163, "line_total": 1.163, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}]}, "2x2": {"total_boards": 100, "pcb_cost_total": 20.944444444444446, "pcba_price_total": 912.2814285714289, "pcba_estimated": true, "ship_cost": 95.06, "component_cost_per_board": 7.174, "pcb_per_board": 0.20944444444444446, "assembly_cost_detail": {"total": 131.7109225835, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 7.81, "smt_fee": 19.52, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 47.0, "packing_fee": 0.020922583499999998, "jlc_panels": 1, "total_joints": 12200, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.3171092258350001, "assembly_residual_per_board": 0.42226061543484406, "landed_per_board": 13.266399285714291, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 0.9081, "line_total": 0.9081, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0459, "line_total": 0.09180000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.534, "line_total": 3.534, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 0.8968, "line_total": 0.8968, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.6222, "line_total": 1.6222, "lib_type": "Extended", "standard_only": false}]}, "2x3": {"total_boards": 150, "pcb_cost_total": 29.416666666666664, "pcba_price_total": 1763.848857142858, "pcba_estimated": true, "ship_cost": 115.0, "component_cost_per_board": 7.163, "pcb_per_board": 0.1961111111111111, "assembly_cost_detail": {"total": 172.79138387524998, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 15.62, "smt_fee": 29.28, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 70.5, "packing_fee": 0.03138387525, "jlc_panels": 2, "total_joints": 18300, "smt_rate": 0.0016, "xray_rate": 0.47, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 1.1519425591683332, "assembly_residual_per_board": 3.2479387106729405, "landed_per_board": 16.641306380952386, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034000000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.076, "line_total": 0.076, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 0.9081, "line_total": 0.9081, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018000000000000002, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009000000000000001, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0404, "line_total": 0.0808, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.534, "line_total": 3.5340000000000003, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 0.8968, "line_total": 0.8968, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.6222, "line_total": 1.6222, "lib_type": "Extended", "standard_only": false}]}, "3x3": {"total_boards": 225, "pcb_cost_total": 42.125, "pcba_price_total": 3041.2000000000016, "pcba_estimated": true, "ship_cost": 115.0, "component_cost_per_board": 7.1508, "pcb_per_board": 0.18722222222222223, "assembly_cost_detail": {"total": 186.697075812875, "setup_fee": 25.0, "stencil_fee": 7.86, "panel_fee": 15.62, "smt_fee": 43.92, "hand_solder_fee": 3.5, "feeder_fee": 21.0, "xray_fee": 69.75, "packing_fee": 0.04707581287499999, "jlc_panels": 2, "total_joints": 27450, "smt_rate": 0.0016, "xray_rate": 0.31, "xray_required": true, "boards_per_jlc": 126}, "assembly_cost_per_board": 0.8297647813905555, "assembly_residual_per_board": 5.348657440831673, "landed_per_board": 18.75831111111112, "line_items": [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0116, "line_total": 0.0116, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0033999999999999994, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.005300000000000001, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.066, "line_total": 0.066, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 0.9081, "line_total": 0.9080999999999999, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0404, "line_total": 0.0808, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 3.534, "line_total": 3.534, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 0.8968, "line_total": 0.8968, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.6222, "line_total": 1.6222, "lib_type": "Extended", "standard_only": false}]}}};
+  const BOM_LINES_ALL  = [{"lcsc": "C19702", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0138, "line_total": 0.0138, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C15525", "desc": "10uF", "qty_per_board": 1, "unit_price": 0.0175, "line_total": 0.0175, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C1525", "desc": "100nF", "qty_per_board": 2, "unit_price": 0.0017, "line_total": 0.0034, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C52923", "desc": "1uF", "qty_per_board": 1, "unit_price": 0.0053, "line_total": 0.0053, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C64659", "desc": "PH-6P立贴", "qty_per_board": 1, "unit_price": 0.0962, "line_total": 0.0962, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C20608465", "desc": "210-A-SMD/02", "qty_per_board": 1, "unit_price": 1.192, "line_total": 1.192, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C25905", "desc": "5.1k", "qty_per_board": 2, "unit_price": 0.0009, "line_total": 0.0018, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25744", "desc": "10k", "qty_per_board": 1, "unit_price": 0.0013, "line_total": 0.0013, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C11702", "desc": "1k", "qty_per_board": 1, "unit_price": 0.0011, "line_total": 0.0011, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C25741", "desc": "100k", "qty_per_board": 1, "unit_price": 0.0009, "line_total": 0.0009, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C720477", "desc": "BOOT", "qty_per_board": 2, "unit_price": 0.0563, "line_total": 0.1126, "lib_type": "Basic", "standard_only": false}, {"lcsc": "C22356044", "desc": "ESP32-S3-MINI-1U-N4R2", "qty_per_board": 1, "unit_price": 4.1114, "line_total": 4.1114, "lib_type": "Extended", "standard_only": true}, {"lcsc": "C910544", "desc": "MAX98357AETE+T", "qty_per_board": 1, "unit_price": 1.163, "line_total": 1.163, "lib_type": "Extended", "standard_only": false}, {"lcsc": "C6909495", "desc": "MPM3810GQB-33-Z", "qty_per_board": 1, "unit_price": 1.8298, "line_total": 1.8298, "lib_type": "Extended", "standard_only": false}];
+  const DUTY_RATE      = 0.35;
+  const PREFERRED_SHIP = "DHL Express (DDP)";
+
+  const VARIANT_COLORS = {
+    "1x1": "#60a5fa",
+    "2x2": "#34d399",
+    "2x3": "#fbbf24",
+    "3x3": "#f87171",
+  };
+
+  const SEG_COLORS = [
+    "#60a5fa", // Components
+    "#34d399", // Assembly
+    "#fbbf24", // PCB bare board
+    "#fb923c", // Import duty
+    "#38bdf8", // Shipping
+  ];
+
+  const SEG_LABELS = [
+    "Components",
+    "Assembly",
+    "PCB bare board",
+    "Import duty",
+    "Shipping",
+  ];
+
+  // ── Chart defaults ─────────────────────────────────────────────────────────
+  Chart.defaults.color            = "#64748b";
+  Chart.defaults.font.family      = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+  Chart.defaults.font.size        = 12;
+  Chart.defaults.plugins.legend.labels.color = "#94a3b8";
+
+  const gridColor  = "#1e293b";
+  const tickColor  = "#475569";
+  const axisColor  = "#1e293b";
+
+  function mkScale(title) {
+    return {
+      grid:  { color: gridColor, drawBorder: false },
+      border:{ color: axisColor },
+      ticks: { color: tickColor, maxTicksLimit: 8 },
+      title: { display: !!title, text: title, color: "#64748b", font: { size: 11 } },
+    };
+  }
+
+  // ── Line chart ─────────────────────────────────────────────────────────────
+  const lineCtx = document.getElementById("lineChart").getContext("2d");
+  const lineChart = new Chart(lineCtx, {
+    type: "line",
+    data: {
+      labels:   QUANTITIES,
+      datasets: LINE_DATASETS,
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1e293b",
+          borderColor: "#334155",
+          borderWidth: 1,
+          titleColor: "#e2e8f0",
+          bodyColor: "#94a3b8",
+          callbacks: {
+            label: ctx => {
+              const v = ctx.raw;
+              return v == null ? `${ctx.dataset.label}: —` : `${ctx.dataset.label}: $${v.toFixed(2)}/board`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: { ...mkScale("Panels Ordered"), grid: { color: gridColor } },
+        y: {
+          ...mkScale("Landed $/board"),
+          ticks: {
+            color: tickColor,
+            callback: v => `$${v.toFixed(2)}`,
+          },
+        },
+      },
+    },
+  });
+
+  // Build custom legend for line chart
+  const lineLegendEl = document.getElementById("lineChartLegend");
+  VARIANTS.forEach(v => {
+    const color = VARIANT_COLORS[v] || "#ffffff";
+    const item  = document.createElement("div");
+    item.className = "chart-legend-item";
+    item.innerHTML = `<span class="legend-dot" style="background:${color}"></span>${v}`;
+    lineLegendEl.appendChild(item);
+  });
+
+  // ── Stacked bar chart ──────────────────────────────────────────────────────
+  const barCtx = document.getElementById("stackedBar").getContext("2d");
+
+  function buildBarData(qty) {
+    const qtyKey = String(qty);
+    // Each dataset = one cost segment, values for each variant
+    const datasets = SEG_LABELS.map((label, i) => ({
+      label:           label,
+      data:            VARIANTS.map(v => {
+        const bb = BOM_BREAKDOWN[qtyKey]?.[v];
+        if (!bb) return null;
+        const boards  = bb.total_boards || 1;
+        const pcbaTotal = bb.pcba_price_total;
+        switch (i) {
+          case 0: return bb.component_cost_per_board ?? 0;
+          case 1: return bb.assembly_cost_per_board ?? 0;
+          case 2: return bb.pcb_per_board ?? 0;
+          case 3: return (pcbaTotal != null) ? (pcbaTotal / boards) * DUTY_RATE : 0;
+          case 4: return (bb.ship_cost != null) ? bb.ship_cost / boards : 0;
+          default: return 0;
+        }
+      }),
+      backgroundColor: SEG_COLORS[i],
+      stack:           "stack",
+    }));
+    return { labels: VARIANTS, datasets };
+  }
+
+  const barChart = new Chart(barCtx, {
+    type: "bar",
+    data: buildBarData(MEDIAN_QTY),
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: "index", intersect: false },
+      plugins: {
+        legend: {
+          display: true,
+          position: "bottom",
+          labels: {
+            color: "#94a3b8",
+            boxWidth: 12,
+            padding: 16,
+          },
+        },
+        tooltip: {
+          backgroundColor: "#1e293b",
+          borderColor: "#334155",
+          borderWidth: 1,
+          titleColor: "#e2e8f0",
+          bodyColor: "#94a3b8",
+          callbacks: {
+            label: ctx => {
+              const v = ctx.raw;
+              return v == null || v === 0 ? null : `${ctx.dataset.label}: $${v.toFixed(4)}/board`;
+            },
+          },
+        },
+      },
+      scales: {
+        x: mkScale("Panel Variant"),
+        y: {
+          ...mkScale("$/board"),
+          stacked: true,
+          ticks: { color: tickColor, callback: v => `$${v.toFixed(2)}` },
+        },
+      },
+    },
+  });
+
+  // ── Pie chart ──────────────────────────────────────────────────────────────
+  const pieCtx = document.getElementById("pieChart").getContext("2d");
+  const PIE_PALETTE = [
+    "#60a5fa","#34d399","#fbbf24","#f87171","#a78bfa",
+    "#fb923c","#38bdf8","#4ade80","#e879f9","#f43f5e",
+    "#22d3ee","#facc15","#86efac","#fda4af","#c4b5fd",
+  ];
+
+  // Build variant selector for pie
+  const variantSelectorPie = document.getElementById("variantSelectorPie");
+  VARIANTS.forEach((v, i) => {
+    const opt = document.createElement("option");
+    opt.value = v;
+    opt.textContent = v;
+    if (i === 0) opt.selected = true;
+    variantSelectorPie.appendChild(opt);
+  });
+
+  function buildPieData(qty, variant) {
+    const qtyKey = String(qty);
+    const bb     = BOM_BREAKDOWN[qtyKey]?.[variant];
+    if (!bb || !bb.line_items || bb.line_items.length === 0) {
+      return { labels: [], datasets: [{ data: [], backgroundColor: [] }] };
+    }
+    const items = bb.line_items.filter(li => li.line_total != null && li.line_total > 0);
+    return {
+      labels:   items.map(li => `${li.lcsc} ${li.desc ? li.desc.substring(0, 18) : ""}`),
+      datasets: [{
+        data:            items.map(li => li.line_total),
+        backgroundColor: PIE_PALETTE.slice(0, items.length),
+        borderColor:     "#0d1117",
+        borderWidth:     2,
+      }],
+    };
+  }
+
+  function buildPieLegend(qty, variant) {
+    const qtyKey = String(qty);
+    const bb     = BOM_BREAKDOWN[qtyKey]?.[variant];
+    const el     = document.getElementById("pieLegend");
+    el.innerHTML = "";
+    if (!bb || !bb.line_items) return;
+    let total = 0;
+    const items = bb.line_items.filter(li => li.line_total != null && li.line_total > 0);
+    items.forEach(li => total += li.line_total);
+    items.forEach((li, i) => {
+      const pct  = total > 0 ? (li.line_total / total * 100).toFixed(1) : "—";
+      const color = PIE_PALETTE[i % PIE_PALETTE.length];
+      el.innerHTML += `
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${color};flex-shrink:0"></span>
+          <span style="color:#cbd5e1;font-weight:500">${li.lcsc}</span>
+          <span style="color:#64748b">${(li.desc || "").substring(0, 22)}</span>
+          <span style="margin-left:auto;color:#94a3b8">$${li.line_total.toFixed(4)}</span>
+          <span style="color:#475569;width:44px;text-align:right">${pct}%</span>
+        </div>`;
+    });
+    if (items.length > 0) {
+      el.innerHTML += `<div style="border-top:1px solid #1e293b;margin-top:6px;padding-top:6px;color:#64748b;font-size:0.75rem">
+        Total component cost/board: <strong style="color:#e2e8f0">$${total.toFixed(4)}</strong>
+      </div>`;
+    }
+  }
+
+  const pieChart = new Chart(pieCtx, {
+    type: "pie",
+    data: buildPieData(MEDIAN_QTY, VARIANTS[0]),
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: "#1e293b",
+          borderColor: "#334155",
+          borderWidth: 1,
+          titleColor: "#e2e8f0",
+          bodyColor: "#94a3b8",
+          callbacks: {
+            label: ctx => `$${ctx.raw.toFixed(4)}/board  (${(ctx.raw / ctx.chart.data.datasets[0].data.reduce((a,b)=>a+b,0) * 100).toFixed(1)}%)`,
+          },
+        },
+      },
+    },
+  });
+  buildPieLegend(MEDIAN_QTY, VARIANTS[0]);
+
+  // ── BOM table updater ──────────────────────────────────────────────────────
+  function updateBomTable(qty, variant) {
+    const qtyKey = String(qty);
+    const bb     = BOM_BREAKDOWN[qtyKey]?.[variant];
+    const tbody  = document.getElementById("bom-tbody");
+    if (!bb || !bb.line_items || bb.line_items.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#475569;text-align:center;padding:20px">No BOM data for this configuration</td></tr>';
+      return;
+    }
+    let html = "";
+    bb.line_items.forEach(li => {
+      const ext    = li.lib_type === "Extended";
+      const so     = li.standard_only;
+      const upStr  = li.unit_price  != null ? `$${li.unit_price.toFixed(4)}`  : "—";
+      const ltStr  = li.line_total  != null ? `$${li.line_total.toFixed(4)}`  : "—";
+      const rowCls = ext ? "bom-extended" : "";
+      const libBadge = ext
+        ? `<span class="badge-ext">Extended</span>`
+        : `<span class="badge-basic">Basic</span>`;
+      const soBadge = so ? ` <span class="badge-warn">⚠ Std Only</span>` : "";
+      const descTrunc = (li.desc || "").substring(0, 40);
+      html += `<tr class="${rowCls}">
+        <td class="mono">${li.lcsc}</td>
+        <td>${descTrunc}${soBadge}</td>
+        <td class="num">${li.qty_per_board}</td>
+        <td>${libBadge}</td>
+        <td class="num mono">${upStr}</td>
+        <td class="num mono">${ltStr}</td>
+      </tr>`;
+    });
+    tbody.innerHTML = html;
+  }
+
+  // ── Shared qty selector handler ────────────────────────────────────────────
+  const qtySelector = document.getElementById("qtySelector");
+
+  function onQtyChange() {
+    const qty     = parseInt(qtySelector.value, 10);
+    const variant = variantSelectorPie.value;
+
+    // Update stacked bar
+    barChart.data = buildBarData(qty);
+    barChart.update();
+
+    // Update pie
+    pieChart.data = buildPieData(qty, variant);
+    pieChart.update();
+    buildPieLegend(qty, variant);
+
+    // Update BOM table
+    updateBomTable(qty, variant);
+  }
+
+  qtySelector.addEventListener("change", onQtyChange);
+  variantSelectorPie.addEventListener("change", () => {
+    const qty     = parseInt(qtySelector.value, 10);
+    const variant = variantSelectorPie.value;
+    pieChart.data = buildPieData(qty, variant);
+    pieChart.update();
+    buildPieLegend(qty, variant);
+    updateBomTable(qty, variant);
+  });
+
+  // Initial render
+  updateBomTable(MEDIAN_QTY, VARIANTS[0]);
+
+})();
+</script>
+</body>
+</html>
