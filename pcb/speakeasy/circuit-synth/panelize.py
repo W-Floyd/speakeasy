@@ -2,27 +2,32 @@
 """Panelize the Speakeasy PCB using KiKit.
 
 Reads:  speakeasy/Speakeasy.kicad_pcb  (hand-made, never overwritten)
-Writes: speakeasy/Speakeasy_panel.kicad_pcb
+Writes: speakeasy/Speakeasy_panel_<cols>x<rows>.kicad_pcb
 
-Panel layout: 2 columns × 2 rows, mouse-bite tabs, top/bottom rails.
-Edit panel_preset.json (same directory) to change layout parameters.
+Usage:
+    python panelize.py           # generate all variants: 2x2, 2x3, 3x3
+    python panelize.py 2x2       # generate a single variant
+    python panelize.py 2x3 3x3   # generate specific variants
+
+Edit panel_preset.json to change layout parameters (rows/cols are overridden per variant).
 """
 
 import json
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT   = Path(__file__).parent.parent / "speakeasy"
 INPUT  = ROOT / "Speakeasy.kicad_pcb"
-OUTPUT = ROOT / "Speakeasy_panel.kicad_pcb"
 PRESET = Path(__file__).parent / "panel_preset.json"
 
-# KiKit requires pcbnew, which is only available in KiCad's bundled Python.
 KIKIT = Path(
     "/Applications/KiCad/KiCad.app/Contents/Frameworks"
     "/Python.framework/Versions/3.9/bin/kikit"
 )
+
+ALL_VARIANTS = ["2x2", "2x3", "3x3"]
 
 
 def ensure_net_settings(pro_path: Path):
@@ -56,7 +61,53 @@ def ensure_net_settings(pro_path: Path):
         print(f"Patched net_settings.classes in {pro_path.name}")
 
 
+def parse_variant(variant: str) -> tuple[int, int]:
+    parts = variant.lower().split("x")
+    if len(parts) != 2:
+        raise ValueError(f"Invalid variant '{variant}' — expected COLSxROWS (e.g. 2x3)")
+    cols, rows = int(parts[0]), int(parts[1])
+    return cols, rows
+
+
+def panelize(cols: int, rows: int) -> bool:
+    output = ROOT / f"Speakeasy_panel_{cols}x{rows}.kicad_pcb"
+
+    with open(PRESET) as f:
+        preset = json.load(f)
+
+    preset.setdefault("layout", {})
+    preset["layout"]["cols"] = cols
+    preset["layout"]["rows"] = rows
+
+    with tempfile.NamedTemporaryFile(
+        mode="w", suffix=".json", delete=False, dir=Path(__file__).parent
+    ) as tf:
+        json.dump(preset, tf, indent=2)
+        tmp_preset = Path(tf.name)
+
+    try:
+        cmd = [
+            str(KIKIT), "panelize",
+            "-p", str(tmp_preset),
+            "--debug", "deterministic: true",
+            str(INPUT), str(output),
+        ]
+        print(f"\n--- {cols}x{rows} panel ---")
+        print(f"Output: {output}")
+        result = subprocess.run(cmd)
+        if result.returncode != 0:
+            print(f"kikit failed for {cols}x{rows}.", file=sys.stderr)
+            return False
+        print(f"Written: {output}")
+        return True
+    finally:
+        tmp_preset.unlink(missing_ok=True)
+
+
 def main():
+    args = sys.argv[1:]
+    variants = args if args else ALL_VARIANTS
+
     for path, label in [(INPUT, "source PCB"), (KIKIT, "kikit"), (PRESET, "preset")]:
         if not path.exists():
             print(f"ERROR: {label} not found: {path}", file=sys.stderr)
@@ -66,21 +117,21 @@ def main():
     if pro_path.exists():
         ensure_net_settings(pro_path)
 
-    cmd = [str(KIKIT), "panelize", "-p", str(PRESET),
-           "--debug", "deterministic: true",
-           str(INPUT), str(OUTPUT)]
+    failed = []
+    for v in variants:
+        try:
+            cols, rows = parse_variant(v)
+        except ValueError as e:
+            print(f"ERROR: {e}", file=sys.stderr)
+            failed.append(v)
+            continue
+        if not panelize(cols, rows):
+            failed.append(v)
 
-    print(f"Input:  {INPUT}")
-    print(f"Output: {OUTPUT}")
-    print(f"Preset: {PRESET}\n")
-    print("Running kikit...")
-
-    result = subprocess.run(cmd)
-    if result.returncode != 0:
-        print("\nkikit failed.", file=sys.stderr)
-        sys.exit(result.returncode)
-
-    print(f"\nPanel written to: {OUTPUT}")
+    if failed:
+        print(f"\nFailed variants: {', '.join(failed)}", file=sys.stderr)
+        sys.exit(1)
+    print(f"\nDone — {len(variants)} panel(s) generated.")
 
 
 if __name__ == "__main__":

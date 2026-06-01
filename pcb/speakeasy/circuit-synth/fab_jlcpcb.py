@@ -21,9 +21,10 @@ from pathlib import Path
 import deterministic_zip
 
 ROOT   = Path(__file__).parent.parent / "speakeasy"
-PCB       = ROOT / "Speakeasy.kicad_pcb"
-PANEL_PCB = ROOT / "Speakeasy_panel.kicad_pcb"
+PCB    = ROOT / "Speakeasy.kicad_pcb"
 OUTDIR = ROOT / "jlcpcb"
+
+PANEL_VARIANTS = ["2x2", "2x3", "3x3"]
 
 KICAD_CLI = Path("/Applications/KiCad/KiCad.app/Contents/MacOS/kicad-cli")
 
@@ -94,11 +95,17 @@ def main():
     export_gerbers(PCB, OUTDIR / "gerbers", OUTDIR / "Speakeasy_gerbers.zip")
 
     # ── Panel Gerbers ─────────────────────────────────────────────────────────
-    if PANEL_PCB.exists():
-        print("Exporting Gerbers (panel)...")
-        export_gerbers(PANEL_PCB, OUTDIR / "gerbers_panel", OUTDIR / "Speakeasy_panel_gerbers.zip")
-    else:
-        print(f"Panel PCB not found, skipping: {PANEL_PCB.name}")
+    for variant in PANEL_VARIANTS:
+        panel_pcb = ROOT / f"Speakeasy_panel_{variant}.kicad_pcb"
+        if panel_pcb.exists():
+            print(f"Exporting Gerbers (panel {variant})...")
+            export_gerbers(
+                panel_pcb,
+                OUTDIR / f"gerbers_panel_{variant}",
+                OUTDIR / f"Speakeasy_panel_{variant}_gerbers.zip",
+            )
+        else:
+            print(f"Panel PCB not found, skipping: {panel_pcb.name}")
 
     # ── CPL (component placement list) ────────────────────────────────────────
     print("Exporting CPL...")
@@ -140,8 +147,11 @@ def main():
         if f.is_file():
             print(f"  {f.name}")
     print(f"\nUpload to JLCPCB:")
-    print(f"  Single board:  Speakeasy_gerbers.zip + speakeasy_jlcpcb_bom.csv + Speakeasy_cpl.csv")
-    print(f"  Panel:         Speakeasy_panel_gerbers.zip")
+    print(f"  Single board:  Speakeasy_gerbers.zip + Speakeasy_cpl.csv + speakeasy_jlcpcb_bom.csv")
+    for variant in PANEL_VARIANTS:
+        zip_name = f"Speakeasy_panel_{variant}_gerbers.zip"
+        if (OUTDIR / zip_name).exists():
+            print(f"  Panel {variant}:      {zip_name}")
 
 
 if __name__ == "__main__":

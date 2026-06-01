@@ -85,7 +85,8 @@ def main():
     else:
         print(f"BOM failed: {bom.get('error')}")
 
-    write_jlcpcb_bom(f"{OUTPUT}/Speakeasy.kicad_sch", f"{OUTPUT}/speakeasy_jlcpcb_bom.csv")
+    pathlib.Path(f"{OUTPUT}/jlcpcb").mkdir(exist_ok=True)
+    write_jlcpcb_bom(f"{OUTPUT}/Speakeasy.kicad_sch", f"{OUTPUT}/jlcpcb/speakeasy_jlcpcb_bom.csv")
 
     pdf = circuit_obj.generate_pdf_schematic(project_name=STAGING)
     if pdf["success"]:
