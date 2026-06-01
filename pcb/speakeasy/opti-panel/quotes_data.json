@@ -1,0 +1,232 @@
+{
+  "_comment": [
+    "fab_quotes: known JLCPCB board quotes. qty = number of panels ordered.",
+    "  Populate from the JLCPCB website quote tool.",
+    "bom_overrides: optional manual price tiers for specific LCSC parts.",
+    "  Used to seed costs before API access is available, or to override a part.",
+    "  BOM is loaded automatically from speakeasy/speakeasy_jlcpcb_bom.csv.",
+    "  Run circuit-synth/generate.py to regenerate that file."
+  ],
+  "fab_quotes_are_pcba": true,
+  "_pcba_note": "fab_quotes include board + components + assembly. BOM is shown for cost breakdown only, not added on top.",
+  "pcb_quotes": {
+    "_note": "Bare PCB only (no assembly). breakdown.board / qty = board_material_cost_per_panel. Scales linearly with boards-per-panel (~$0.170/board-in-panel confirmed across 2x3 and 3x3).",
+    "2x3": [
+      {
+        "qty": 5, "price": 9.10,
+        "breakdown": {"engineering_fee": 4.00, "board": 5.10},
+        "_note": "$1.02/panel, $0.170/board-in-panel"
+      }
+    ],
+    "3x3": [
+      {
+        "qty": 5, "price": 11.60,
+        "breakdown": {"engineering_fee": 4.00, "board": 7.60},
+        "_note": "$1.52/panel, $0.169/board-in-panel — confirms linear area scaling"
+      }
+    ]
+  },
+  "fab_quotes": {
+    "1x1": [
+      {
+        "qty": 10, "price": 166.77,
+        "_note": "SMT026060161104-Y45: PCBA, 10 boards. Grand total $259.51 = $166.77 merch - $20 promo + $46.31 DHL freight + $51.37 import duty (30.8%) + $13.84 sales tax (8.3%) + $1.22 payment fee. DDP = JLCPCB handles customs clearance but duty is still your cost."
+      }
+    ],
+    "2x2": [
+      {"qty": 5,  "price": 405.78},
+      {"qty": 10, "price": 653.24},
+      {"qty": 20, "price": 772.23, "_note": "Grand total $1215.89 = $772.23 merch + $94.94 ship + $270.29 duty (35%) + $5.69 payment (0.74%) + $72.74 sales tax (9.4%)"}
+    ],
+    "2x3": [],
+    "3x3": [
+      {"qty": 5,  "price": 714.92},
+      {"qty": 10, "price": 1296.49}
+    ]
+  },
+  "bom_overrides": {
+    "C6909495": {
+      "lib_type": "Extended",
+      "price_tiers": [
+        {"min_qty": 1,    "unit_price": 1.8298},
+        {"min_qty": 50,   "unit_price": 1.8169},
+        {"min_qty": 100,  "unit_price": 1.6222},
+        {"min_qty": 500,  "unit_price": 1.4664},
+        {"min_qty": 1000, "unit_price": 1.3496},
+        {"min_qty": 3000, "unit_price": 1.3107}
+      ]
+    },
+    "C910544": {
+      "lib_type": "Extended",
+      "price_tiers": [
+        {"min_qty": 1,    "unit_price": 1.3259},
+        {"min_qty": 10,   "unit_price": 1.1630},
+        {"min_qty": 30,   "unit_price": 1.0097},
+        {"min_qty": 100,  "unit_price": 0.8968},
+        {"min_qty": 500,  "unit_price": 0.8501},
+        {"min_qty": 1000, "unit_price": 0.8259}
+      ]
+    },
+    "C22356044": {
+      "lib_type": "Extended",
+      "standard_only": true,
+      "price_tiers": [
+        {"min_qty": 1,    "unit_price": 4.6421},
+        {"min_qty": 10,   "unit_price": 4.1114},
+        {"min_qty": 30,   "unit_price": 3.7969},
+        {"min_qty": 100,  "unit_price": 3.5340},
+        {"min_qty": 650,  "unit_price": 3.3582},
+        {"min_qty": 1300, "unit_price": 3.2775}
+      ]
+    },
+    "C720477": {
+      "price_tiers": [
+        {"min_qty": 1,    "unit_price": 0.0563},
+        {"min_qty": 100,  "unit_price": 0.0459},
+        {"min_qty": 300,  "unit_price": 0.0404},
+        {"min_qty": 1000, "unit_price": 0.0360},
+        {"min_qty": 4000, "unit_price": 0.0323},
+        {"min_qty": 8000, "unit_price": 0.0312}
+      ]
+    },
+    "C25741": {
+      "price_tiers": [
+        {"min_qty": 1,     "unit_price": 0.0009},
+        {"min_qty": 1000,  "unit_price": 0.0007},
+        {"min_qty": 10000, "unit_price": 0.0006}
+      ]
+    },
+    "C11702": {
+      "price_tiers": [
+        {"min_qty": 1,     "unit_price": 0.0011},
+        {"min_qty": 1000,  "unit_price": 0.0009},
+        {"min_qty": 3000,  "unit_price": 0.0008},
+        {"min_qty": 10000, "unit_price": 0.0007}
+      ]
+    },
+    "C25744": {
+      "price_tiers": [
+        {"min_qty": 1,     "unit_price": 0.0013},
+        {"min_qty": 1000,  "unit_price": 0.0011},
+        {"min_qty": 10000, "unit_price": 0.0010},
+        {"min_qty": 50000, "unit_price": 0.0009}
+      ]
+    },
+    "C25905": {
+      "price_tiers": [
+        {"min_qty": 1,    "unit_price": 0.0009},
+        {"min_qty": 1000, "unit_price": 0.0007},
+        {"min_qty": 3000, "unit_price": 0.0006}
+      ]
+    },
+    "C20608465": {
+      "lib_type": "Extended",
+      "price_tiers": [
+        {"min_qty": 1,   "unit_price": 1.4339},
+        {"min_qty": 10,  "unit_price": 1.1920},
+        {"min_qty": 50,  "unit_price": 1.0581},
+        {"min_qty": 100, "unit_price": 0.9081},
+        {"min_qty": 500, "unit_price": 0.8404},
+        {"min_qty": 900, "unit_price": 0.8097}
+      ]
+    },
+    "C64659": {
+      "lib_type": "Extended",
+      "price_tiers": [
+        {"min_qty": 1,    "unit_price": 0.0962},
+        {"min_qty": 60,   "unit_price": 0.0760},
+        {"min_qty": 180,  "unit_price": 0.0660},
+        {"min_qty": 600,  "unit_price": 0.0584},
+        {"min_qty": 3000, "unit_price": 0.0523},
+        {"min_qty": 6000, "unit_price": 0.0494}
+      ]
+    },
+    "C52923": {
+      "price_tiers": [
+        {"min_qty": 1,     "unit_price": 0.0053},
+        {"min_qty": 1000,  "unit_price": 0.0044},
+        {"min_qty": 3000,  "unit_price": 0.0040},
+        {"min_qty": 10000, "unit_price": 0.0035},
+        {"min_qty": 50000, "unit_price": 0.0033}
+      ]
+    },
+    "C1525": {
+      "price_tiers": [
+        {"min_qty": 1,     "unit_price": 0.0017},
+        {"min_qty": 1000,  "unit_price": 0.0014},
+        {"min_qty": 3000,  "unit_price": 0.0012},
+        {"min_qty": 50000, "unit_price": 0.0011}
+      ]
+    },
+    "C15525": {
+      "price_tiers": [
+        {"min_qty": 1,      "unit_price": 0.0175},
+        {"min_qty": 1000,   "unit_price": 0.0149},
+        {"min_qty": 3000,   "unit_price": 0.0138},
+        {"min_qty": 10000,  "unit_price": 0.0129},
+        {"min_qty": 50000,  "unit_price": 0.0126},
+        {"min_qty": 100000, "unit_price": 0.0124}
+      ]
+    },
+    "C19702": {
+      "price_tiers": [
+        {"min_qty": 1,     "unit_price": 0.0138},
+        {"min_qty": 200,   "unit_price": 0.0116},
+        {"min_qty": 600,   "unit_price": 0.0106},
+        {"min_qty": 4000,  "unit_price": 0.0099},
+        {"min_qty": 8000,  "unit_price": 0.0096},
+        {"min_qty": 20000, "unit_price": 0.0094}
+      ]
+    }
+  },
+  "assembly": {
+    "type": "Standard",
+    "_type_note": "Standard required — U1 (ESP32, C22356044) is Standard Only (0201 package / thermal limits).",
+    "extended_part_fee": 3.00,
+    "_extended_note": "One-time per-order fee per unique Extended part. This design has 5 Extended parts = $15/order.",
+    "standard_base_fee": 25.00,
+    "_base_note": "$25 per assembly side for Standard PCBA (one-time per order, not per board).",
+    "assembly_sides": 1
+  },
+  "import_duty_rate": 0.35,
+  "_import_duty_note": "Exactly 35% per JLCPCB tax detail on SMT026060161104-Y45. Applied to post-discount taxable value ($146.77 × 35% = $51.37). Since we don't model the one-time promo, apply to full merchandise total.",
+  "sales_tax_rate": 0.094,
+  "_sales_tax_note": "Varies: 8.3% on SMT026060161104-Y45 (qty=10), 9.4% on 2x2 qty=20 quote. Using 9.4% as conservative estimate.",
+  "payment_fee_rate": 0.0073,
+  "_payment_fee_note": "0.73% = $1.22 / $166.77.",
+  "shipping": {
+    "destination": "US",
+    "preferred_method": "DHL Express (DDP)",
+    "_note": "DHL tier calibrated from SMT026060161104-Y45: $46.31 freight for ~106g (10 PCBA boards). Import duties are separate — see import_duty_rate.",
+    "methods": [
+      {
+        "name": "DHL Express (DDP)",
+        "days": "3-5",
+        "_calibration": [
+          "$46.31 for 10x 1x1 PCBA (~106g bare PCB, ~200g actual incl. components)",
+          "$95.06 for 20x 2x2 PCBA (~376g bare PCB, ~700g actual incl. components)",
+          "Note: weight model uses bare PCB only — PCBA actual weight is higher"
+        ],
+        "tiers": [
+          {"max_weight_g": 150,  "cost": 46.31},
+          {"max_weight_g": 300,  "cost": 68.00},
+          {"max_weight_g": 500,  "cost": 95.06},
+          {"max_weight_g": 1000, "cost": 115.00},
+          {"max_weight_g": 2000, "cost": 145.00}
+        ]
+      },
+      {
+        "name": "Ordinary Mail",
+        "days": "25-35",
+        "_note": "estimates only — replace with actual JLCPCB quote",
+        "tiers": [
+          {"max_weight_g": 100,  "cost": 1.50},
+          {"max_weight_g": 200,  "cost": 2.20},
+          {"max_weight_g": 500,  "cost": 3.80},
+          {"max_weight_g": 1000, "cost": 5.50},
+          {"max_weight_g": 2000, "cost": 8.00}
+        ]
+      }
+    ]
+  }
+}
