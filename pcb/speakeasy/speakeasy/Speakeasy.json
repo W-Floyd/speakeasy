@@ -1029,52 +1029,112 @@
       ]
     },
     "U3": {
-      "symbol": "EasyEDA:AMS1117-3.3",
+      "symbol": "EasyEDA:MPM3810GQB-33-Z",
       "ref": "U3",
-      "value": "AMS1117-3.3",
-      "footprint": "EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR",
-      "datasheet": "https://lcsc.com/product-detail/Low-Dropout-Regulators-LDO_AMS_AMS1117-3-3_AMS1117-3-3_C6186.html",
+      "value": "MPM3810GQB-33-Z",
+      "footprint": "EasyEDA:QFN-12_L3.0-W2.5_MPM3810AGQB-AEC1",
+      "datasheet": "https://www.lcsc.com/datasheet/C6909495.pdf",
       "description": "",
       "properties": {},
       "_extra_fields": {},
       "pins": [
         {
           "pin_id": "1",
-          "name": "GND",
+          "name": "PGND",
           "func": "unspecified",
           "unit": 1,
           "x": -11.43,
-          "y": 2.54,
+          "y": 6.35,
           "length": 2.54,
           "orientation": 0.0
         },
         {
           "pin_id": "2",
-          "name": "VOUT",
+          "name": "PGND",
           "func": "unspecified",
           "unit": 1,
           "x": -11.43,
-          "y": -0.0,
+          "y": 3.81,
           "length": 2.54,
           "orientation": 0.0
         },
         {
           "pin_id": "3",
-          "name": "VIN",
+          "name": "NC",
           "func": "unspecified",
           "unit": 1,
           "x": -11.43,
-          "y": -2.54,
+          "y": 1.27,
           "length": 2.54,
           "orientation": 0.0
         },
         {
-          "pin_id": "4",
-          "name": "VOUT",
+          "pin_id": "5",
+          "name": "OUT",
+          "func": "unspecified",
+          "unit": 1,
+          "x": -11.43,
+          "y": -3.81,
+          "length": 2.54,
+          "orientation": 0.0
+        },
+        {
+          "pin_id": "7",
+          "name": "VIN",
           "func": "unspecified",
           "unit": 1,
           "x": 11.43,
-          "y": -0.0,
+          "y": -6.35,
+          "length": 2.54,
+          "orientation": 180.0
+        },
+        {
+          "pin_id": "8",
+          "name": "PG",
+          "func": "unspecified",
+          "unit": 1,
+          "x": 11.43,
+          "y": -3.81,
+          "length": 2.54,
+          "orientation": 180.0
+        },
+        {
+          "pin_id": "9",
+          "name": "EN",
+          "func": "unspecified",
+          "unit": 1,
+          "x": 11.43,
+          "y": -1.27,
+          "length": 2.54,
+          "orientation": 180.0
+        },
+        {
+          "pin_id": "10",
+          "name": "NC",
+          "func": "unspecified",
+          "unit": 1,
+          "x": 11.43,
+          "y": 1.27,
+          "length": 2.54,
+          "orientation": 180.0
+        },
+        {
+          "pin_id": "11",
+          "name": "AGND",
+          "func": "unspecified",
+          "unit": 1,
+          "x": 11.43,
+          "y": 3.81,
+          "length": 2.54,
+          "orientation": 180.0
+        },
+        {
+          "pin_id": "12",
+          "name": "OUT_S",
+          "func": "unspecified",
+          "unit": 1,
+          "x": 11.43,
+          "y": 6.35,
           "length": 2.54,
           "orientation": 180.0
         }
@@ -1201,6 +1261,110 @@
           "y": -1.27,
           "length": 2.54,
           "orientation": 0.0
+        }
+      ]
+    },
+    "H1": {
+      "symbol": "Mechanical:MountingHole_Pad",
+      "ref": "H1",
+      "value": "MountingHole",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad_Via",
+      "datasheet": "",
+      "description": "Mounting Hole with connection",
+      "properties": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "_extra_fields": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "pins": [
+        {
+          "pin_id": "1",
+          "name": "1",
+          "func": "input",
+          "unit": 1,
+          "x": 0.0,
+          "y": -2.54,
+          "length": 2.54,
+          "orientation": 90.0
+        }
+      ]
+    },
+    "H2": {
+      "symbol": "Mechanical:MountingHole_Pad",
+      "ref": "H2",
+      "value": "MountingHole",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad_Via",
+      "datasheet": "",
+      "description": "Mounting Hole with connection",
+      "properties": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "_extra_fields": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "pins": [
+        {
+          "pin_id": "1",
+          "name": "1",
+          "func": "input",
+          "unit": 1,
+          "x": 0.0,
+          "y": -2.54,
+          "length": 2.54,
+          "orientation": 90.0
+        }
+      ]
+    },
+    "H3": {
+      "symbol": "Mechanical:MountingHole_Pad",
+      "ref": "H3",
+      "value": "MountingHole",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad_Via",
+      "datasheet": "",
+      "description": "Mounting Hole with connection",
+      "properties": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "_extra_fields": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "pins": [
+        {
+          "pin_id": "1",
+          "name": "1",
+          "func": "input",
+          "unit": 1,
+          "x": 0.0,
+          "y": -2.54,
+          "length": 2.54,
+          "orientation": 90.0
+        }
+      ]
+    },
+    "H4": {
+      "symbol": "Mechanical:MountingHole_Pad",
+      "ref": "H4",
+      "value": "MountingHole",
+      "footprint": "MountingHole:MountingHole_3.2mm_M3_Pad_Via",
+      "datasheet": "",
+      "description": "Mounting Hole with connection",
+      "properties": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "_extra_fields": {
+        "ki_fp_filters": "MountingHole*Pad*"
+      },
+      "pins": [
+        {
+          "pin_id": "1",
+          "name": "1",
+          "func": "input",
+          "unit": 1,
+          "x": 0.0,
+          "y": -2.54,
+          "length": 2.54,
+          "orientation": 90.0
         }
       ]
     },
@@ -1469,11 +1633,11 @@
       ]
     },
     "C1": {
-      "symbol": "EasyEDA:CL21A106KAYNNNE",
+      "symbol": "EasyEDA:CL10A106KP8NNNC",
       "ref": "C1",
       "value": "10uF",
-      "footprint": "EasyEDA:C0805",
-      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL21A106KAYNNNE_10uF-106-10-25V_C15850.html",
+      "footprint": "EasyEDA:C0603",
+      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL10A106KP8NNNC_10uF-106-10-10V_C19702.html",
       "description": "",
       "properties": {},
       "_extra_fields": {},
@@ -1501,11 +1665,11 @@
       ]
     },
     "C2": {
-      "symbol": "EasyEDA:CL21A106KAYNNNE",
+      "symbol": "EasyEDA:CL05A106MQ5NUNC",
       "ref": "C2",
       "value": "10uF",
-      "footprint": "EasyEDA:C0805",
-      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL21A106KAYNNNE_10uF-106-10-25V_C15850.html",
+      "footprint": "EasyEDA:C0402",
+      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL05A106MQ5NUNC_10uF-106-20-6-3V_C15525.html",
       "description": "",
       "properties": {},
       "_extra_fields": {},
@@ -1513,9 +1677,9 @@
         {
           "pin_id": "1",
           "name": "1",
-          "func": "unspecified",
+          "func": "input",
           "unit": 1,
-          "x": -5.08,
+          "x": -3.81,
           "y": -0.0,
           "length": 2.54,
           "orientation": 0.0
@@ -1523,9 +1687,9 @@
         {
           "pin_id": "2",
           "name": "2",
-          "func": "unspecified",
+          "func": "input",
           "unit": 1,
-          "x": 5.08,
+          "x": 3.81,
           "y": -0.0,
           "length": 2.54,
           "orientation": 180.0
@@ -1533,43 +1697,11 @@
       ]
     },
     "C3": {
-      "symbol": "EasyEDA:CL21A106KAYNNNE",
+      "symbol": "EasyEDA:CL05B104KO5NNNC",
       "ref": "C3",
-      "value": "10uF",
-      "footprint": "EasyEDA:C0805",
-      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL21A106KAYNNNE_10uF-106-10-25V_C15850.html",
-      "description": "",
-      "properties": {},
-      "_extra_fields": {},
-      "pins": [
-        {
-          "pin_id": "1",
-          "name": "1",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "2",
-          "name": "2",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 180.0
-        }
-      ]
-    },
-    "C4": {
-      "symbol": "EasyEDA:CC0603KRX7R9BB104",
-      "ref": "C4",
       "value": "100nF",
-      "footprint": "EasyEDA:C0603",
-      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_100nF-104-10-50V_C14663.html",
+      "footprint": "EasyEDA:C0402",
+      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL05B104KO5NNNC_100nF-104-10-16V_C1525.html",
       "description": "",
       "properties": {},
       "_extra_fields": {},
@@ -1629,11 +1761,11 @@
       ]
     },
     "C6": {
-      "symbol": "EasyEDA:CC0603KRX7R9BB104",
+      "symbol": "EasyEDA:CL05B104KO5NNNC",
       "ref": "C6",
       "value": "100nF",
-      "footprint": "EasyEDA:C0603",
-      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_100nF-104-10-50V_C14663.html",
+      "footprint": "EasyEDA:C0402",
+      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL05B104KO5NNNC_100nF-104-10-16V_C1525.html",
       "description": "",
       "properties": {},
       "_extra_fields": {},
@@ -1661,104 +1793,64 @@
       ]
     },
     "SW1": {
-      "symbol": "EasyEDA:TS-1187A-B-A-B",
+      "symbol": "EasyEDA:TS-1088-AR02016",
       "ref": "SW1",
       "value": "BOOT",
-      "footprint": "EasyEDA:SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5",
-      "datasheet": "https://lcsc.com/product-detail/Tactile-Switches_XKB-Enterprise-TS-1187-B-A-A_C318884.html",
+      "footprint": "EasyEDA:SW-SMD_L3.9-W3.0-P4.45",
+      "datasheet": "https://lcsc.com/product-detail/Tactile-Switches_XUNPU-TS-1088-AR02016_C720477.html",
       "description": "",
       "properties": {},
       "_extra_fields": {},
       "pins": [
         {
           "pin_id": "1",
-          "name": "A",
+          "name": "1",
           "func": "unspecified",
           "unit": 1,
-          "x": -5.08,
-          "y": 2.54,
+          "x": -7.62,
+          "y": -1.27,
           "length": 2.54,
           "orientation": 0.0
         },
         {
           "pin_id": "2",
-          "name": "B",
+          "name": "2",
           "func": "unspecified",
           "unit": 1,
-          "x": 5.08,
-          "y": 2.54,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "3",
-          "name": "C",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -5.08,
-          "y": -5.08,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "4",
-          "name": "D",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 5.08,
-          "y": -5.08,
+          "x": 7.62,
+          "y": -1.27,
           "length": 2.54,
           "orientation": 180.0
         }
       ]
     },
     "SW2": {
-      "symbol": "EasyEDA:TS-1187A-B-A-B",
+      "symbol": "EasyEDA:TS-1088-AR02016",
       "ref": "SW2",
       "value": "RST",
-      "footprint": "EasyEDA:SW-SMD_4P-L5.1-W5.1-P3.70-LS6.5-TL_H1.5",
-      "datasheet": "https://lcsc.com/product-detail/Tactile-Switches_XKB-Enterprise-TS-1187-B-A-A_C318884.html",
+      "footprint": "EasyEDA:SW-SMD_L3.9-W3.0-P4.45",
+      "datasheet": "https://lcsc.com/product-detail/Tactile-Switches_XUNPU-TS-1088-AR02016_C720477.html",
       "description": "",
       "properties": {},
       "_extra_fields": {},
       "pins": [
         {
           "pin_id": "1",
-          "name": "A",
+          "name": "1",
           "func": "unspecified",
           "unit": 1,
-          "x": -5.08,
-          "y": 2.54,
+          "x": -7.62,
+          "y": -1.27,
           "length": 2.54,
           "orientation": 0.0
         },
         {
           "pin_id": "2",
-          "name": "B",
+          "name": "2",
           "func": "unspecified",
           "unit": 1,
-          "x": 5.08,
-          "y": 2.54,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "3",
-          "name": "C",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -5.08,
-          "y": -5.08,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "4",
-          "name": "D",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 5.08,
-          "y": -5.08,
+          "x": 7.62,
+          "y": -1.27,
           "length": 2.54,
           "orientation": 180.0
         }
@@ -2004,7 +2096,23 @@
           "component": "U3",
           "pin": {
             "number": "1",
-            "name": "GND",
+            "name": "PGND",
+            "type": "unspecified"
+          }
+        },
+        {
+          "component": "U3",
+          "pin": {
+            "number": "2",
+            "name": "PGND",
+            "type": "unspecified"
+          }
+        },
+        {
+          "component": "U3",
+          "pin": {
+            "number": "11",
+            "name": "AGND",
             "type": "unspecified"
           }
         },
@@ -2030,6 +2138,38 @@
             "number": "1",
             "name": "1",
             "type": "unspecified"
+          }
+        },
+        {
+          "component": "H1",
+          "pin": {
+            "number": "1",
+            "name": "1",
+            "type": "input"
+          }
+        },
+        {
+          "component": "H2",
+          "pin": {
+            "number": "1",
+            "name": "1",
+            "type": "input"
+          }
+        },
+        {
+          "component": "H3",
+          "pin": {
+            "number": "1",
+            "name": "1",
+            "type": "input"
+          }
+        },
+        {
+          "component": "H4",
+          "pin": {
+            "number": "1",
+            "name": "1",
+            "type": "input"
           }
         },
         {
@@ -2069,19 +2209,11 @@
           "pin": {
             "number": "2",
             "name": "2",
-            "type": "unspecified"
+            "type": "input"
           }
         },
         {
           "component": "C3",
-          "pin": {
-            "number": "2",
-            "name": "2",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "C4",
           "pin": {
             "number": "2",
             "name": "2",
@@ -2107,16 +2239,16 @@
         {
           "component": "SW1",
           "pin": {
-            "number": "3",
-            "name": "C",
+            "number": "2",
+            "name": "2",
             "type": "unspecified"
           }
         },
         {
           "component": "SW2",
           "pin": {
-            "number": "3",
-            "name": "C",
+            "number": "2",
+            "name": "2",
             "type": "unspecified"
           }
         }
@@ -2157,7 +2289,7 @@
           "component": "SW2",
           "pin": {
             "number": "1",
-            "name": "A",
+            "name": "1",
             "type": "unspecified"
           }
         }
@@ -2511,7 +2643,7 @@
           "component": "SW1",
           "pin": {
             "number": "1",
-            "name": "A",
+            "name": "1",
             "type": "unspecified"
           }
         }
@@ -2535,16 +2667,16 @@
         {
           "component": "U3",
           "pin": {
-            "number": "2",
-            "name": "VOUT",
+            "number": "5",
+            "name": "OUT",
             "type": "unspecified"
           }
         },
         {
           "component": "U3",
           "pin": {
-            "number": "4",
-            "name": "VOUT",
+            "number": "12",
+            "name": "OUT_S",
             "type": "unspecified"
           }
         },
@@ -2569,19 +2701,11 @@
           "pin": {
             "number": "1",
             "name": "1",
-            "type": "unspecified"
+            "type": "input"
           }
         },
         {
           "component": "C3",
-          "pin": {
-            "number": "1",
-            "name": "1",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "C4",
           "pin": {
             "number": "1",
             "name": "1",
@@ -2657,8 +2781,16 @@
         {
           "component": "U3",
           "pin": {
-            "number": "3",
+            "number": "7",
             "name": "VIN",
+            "type": "unspecified"
+          }
+        },
+        {
+          "component": "U3",
+          "pin": {
+            "number": "9",
+            "name": "EN",
             "type": "unspecified"
           }
         },

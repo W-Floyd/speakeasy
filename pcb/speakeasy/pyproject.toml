@@ -6,4 +6,9 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "circuit-synth>=0.12.1",
+    "deterministic-zip>=0.1",
+    "kikit>=1.8.0",
 ]
+
+[tool.uv.sources]
+circuit-synth = { path = "../circuit-synth-local", editable = true }
