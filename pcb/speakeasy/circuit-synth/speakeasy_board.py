@@ -15,19 +15,14 @@ Design notes:
     IO4 → MAX98357A DIN     (I2S data out from ESP)
     IO5 → MAX98357A BCLK    (bit clock)
     IO6 → MAX98357A LRCLK   (left/right clock)
-- U2 (DAC1) SD_MODE controlled by 2-GPIO resistor network (IO7/IO8):
+- U2 (DAC) SD_MODE controlled by 2-GPIO resistor network (IO7/IO8):
     IO7 Hi-Z,  IO8 Hi-Z  → Right channel
     IO7 Hi-Z,  IO8 HIGH  → Left channel   (default for Sendspin mono)
     IO7 HIGH,  IO8 Hi-Z  → Stereo (L+R)/2
     IO7 LOW,   IO8 Hi-Z  → Shutdown
-- U4 (DAC2) SD_MODE controlled by mirrored 2-GPIO resistor network (IO9/IO10):
-    IO9 Hi-Z,  IO10 Hi-Z  → Right channel
-    IO9 Hi-Z,  IO10 HIGH  → Left channel
-    IO9 HIGH,  IO10 Hi-Z  → Stereo (L+R)/2
-    IO9 LOW,   IO10 Hi-Z  → Shutdown
 - MAX98357A OUTP/OUTN connect directly to the speaker terminal (no DC-blocking cap;
   the MAX98357A is a filterless Class D amp with no DC offset on the outputs)
-- J2 (speaker 1) and J3 (speaker 2) are independent 2-pin SMD screw terminals
+- J2 is the 2-pin SMD screw terminal for the speaker
 """
 
 from circuit_synth import Component, Net, circuit
@@ -101,9 +96,6 @@ def speakeasy_board():
     # MAX98357AETE+T: mono I2S input → Class D amplifier, 2.5–5.5V, up to 3.2W/4Ω
     dac = component_from_lcsc("C910544", ref="U2")
 
-    # Second MAX98357A — shares I2S bus, independent SD_MODE via IO9/IO10
-    dac2 = component_from_lcsc("C910544", ref="U4")
-
     # AMS1117-3.3: 800mA LDO, VBUS (5V) → 3.3V for ESP32 module
     ldo = component_from_lcsc("C6186", ref="U3")
 
@@ -115,10 +107,6 @@ def speakeasy_board():
 
     # 2-pin SMD screw terminal for speaker 1 (DAC1 / U2)
     spkr_conn = component_from_lcsc("C20608465", ref="J2")
-
-    # 2-pin SMD screw terminal for speaker 2 (DAC2 / U4)
-    spkr_conn2 = component_from_lcsc("C20608465", ref="J3")
-
 
     # UART test pads — probe points for 3V3, GND, TXD0, RXD0
     _tp_fp = "TestPoint:TestPoint_Pad_D1.5mm"
@@ -161,16 +149,6 @@ def speakeasy_board():
     # MAX98357A VDD high-frequency bypass (as close to chip as possible)
     c_dac_bypass = component_from_lcsc("C14663", ref="C6", value="100nF")
 
-    # DAC2 (U4) VDD bulk decoupling
-    c_dac2_bulk   = component_from_lcsc("C52923", ref="C7", value="1uF")
-
-    # DAC2 (U4) VDD high-frequency bypass
-    c_dac2_bypass = component_from_lcsc("C14663", ref="C8", value="100nF")
-
-    # DAC2 SD_MODE GPIO control network (same topology as R4/R5, for IO9/IO10)
-    r_sd2_a = component_from_lcsc("C11702", ref="R6", value="1k")
-    r_sd2_b = component_from_lcsc("C25741", ref="R7", value="100k")
-
     # Boot button: pulls IO0 low to enter USB download mode
     # C318884 pin layout: A(1)+B(2) = one terminal, C(3)+D(4) = other terminal
     boot_btn = component_from_lcsc("C318884", ref="SW1", value="BOOT")
@@ -204,13 +182,6 @@ def speakeasy_board():
 
     spkr_p = Net("SPKR_P")
     spkr_n = Net("SPKR_N")
-
-    sd_mode2   = Net("SD_MODE2")
-    sd_ctrl2_a = Net("SD_CTRL2_A") # IO9  → 1kΩ  → SD_MODE2
-    sd_ctrl2_b = Net("SD_CTRL2_B") # IO10 → 100kΩ → SD_MODE2
-
-    spkr2_p = Net("SPKR2_P")
-    spkr2_n = Net("SPKR2_N")
 
     # ── JST-XH 6-pin (panel-mount USB-C interface) ─────────────────────────
     # Pin 1=GND  2=D+  3=D-  4=CC2  5=CC1  6=VCC
@@ -308,41 +279,10 @@ def speakeasy_board():
     c_dac_bypass[1] += vbus
     c_dac_bypass[2] += gnd
 
-    # ── MAX98357A (DAC2 / U4) ──────────────────────────────────────────────
-
-    dac2["VDD"]          += vbus
-    dac2["GND"]          += gnd
-    dac2["EP"]           += gnd
-    dac2["BCLK"]         += i2s_bclk
-    dac2["LRCLK"]        += i2s_lrclk
-    dac2["DIN"]          += i2s_dout
-    dac2["~{SD_MODE}"]   += sd_mode2
-    dac2["OUTP"]         += spkr2_p
-    dac2["OUTN"]         += spkr2_n
-
-    # SD_MODE2 GPIO control network (IO9/IO10, mirrors DAC1 R4/R5)
-    r_sd2_a[1] += sd_ctrl2_a
-    r_sd2_a[2] += sd_mode2
-    r_sd2_b[1] += sd_ctrl2_b
-    r_sd2_b[2] += sd_mode2
-
-    # IO9/IO10 → DAC2 SD_MODE
-    esp32["IO9"]  += sd_ctrl2_a
-    esp32["IO10"] += sd_ctrl2_b
-
-    # VDD decoupling for DAC2
-    c_dac2_bulk[1]   += vbus
-    c_dac2_bulk[2]   += gnd
-    c_dac2_bypass[1] += vbus
-    c_dac2_bypass[2] += gnd
-
-    # ── Speaker connectors ─────────────────────────────────────────────────
+    # ── Speaker connector ──────────────────────────────────────────────────
 
     spkr_conn[1] += spkr_p
     spkr_conn[2] += spkr_n
-
-    spkr_conn2[1] += spkr2_p
-    spkr_conn2[2] += spkr2_n
 
     # ── UART test pads ─────────────────────────────────────────────────────
 

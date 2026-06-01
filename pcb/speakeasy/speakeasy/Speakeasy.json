@@ -773,284 +773,12 @@
           "y": -22.86,
           "length": 2.54,
           "orientation": 180.0
-        },
-        {
-          "pin_id": "IO9",
-          "name": "IO9",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -11.43,
-          "y": 7.62,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "IO10",
-          "name": "IO10",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -11.43,
-          "y": 5.08,
-          "length": 2.54,
-          "orientation": 0.0
         }
       ]
     },
     "U2": {
       "symbol": "EasyEDA:MAX98357AETE+T",
       "ref": "U2",
-      "value": "MAX98357AETE+T",
-      "footprint": "EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5",
-      "datasheet": "https://www.lcsc.com/datasheet/C910544.pdf",
-      "description": "",
-      "properties": {},
-      "_extra_fields": {},
-      "pins": [
-        {
-          "pin_id": "1",
-          "name": "DIN",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": 10.16,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "2",
-          "name": "GAIN_SLOT",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": 7.62,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "3",
-          "name": "GND",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": 5.08,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "4",
-          "name": "~{SD_MODE}",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": 2.54,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "5",
-          "name": "N.C.",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "6",
-          "name": "N.C.",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": -2.54,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "7",
-          "name": "VDD",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": -5.08,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "8",
-          "name": "VDD",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": -7.62,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "9",
-          "name": "OUTP",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": -7.62,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "10",
-          "name": "OUTN",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": -5.08,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "11",
-          "name": "GND",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": -2.54,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "12",
-          "name": "N.C.",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "13",
-          "name": "N.C.",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": 2.54,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "14",
-          "name": "LRCLK",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": 5.08,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "15",
-          "name": "GND",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": 7.62,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "16",
-          "name": "BCLK",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": 10.16,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "17",
-          "name": "EP",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 0.0,
-          "y": -12.7,
-          "length": 2.54,
-          "orientation": 90.0
-        },
-        {
-          "pin_id": "EP",
-          "name": "EP",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 0.0,
-          "y": -12.7,
-          "length": 2.54,
-          "orientation": 90.0
-        },
-        {
-          "pin_id": "BCLK",
-          "name": "BCLK",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": 10.16,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "LRCLK",
-          "name": "LRCLK",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": 5.08,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "DIN",
-          "name": "DIN",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": 10.16,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "~{SD_MODE}",
-          "name": "~{SD_MODE}",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -16.51,
-          "y": 2.54,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "OUTP",
-          "name": "OUTP",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": -7.62,
-          "length": 2.54,
-          "orientation": 180.0
-        },
-        {
-          "pin_id": "OUTN",
-          "name": "OUTN",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 16.51,
-          "y": -5.08,
-          "length": 2.54,
-          "orientation": 180.0
-        }
-      ]
-    },
-    "U4": {
-      "symbol": "EasyEDA:MAX98357AETE+T",
-      "ref": "U4",
       "value": "MAX98357AETE+T",
       "footprint": "EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5",
       "datasheet": "https://www.lcsc.com/datasheet/C910544.pdf",
@@ -1447,38 +1175,6 @@
     "J2": {
       "symbol": "EasyEDA:210-A-SMD_02",
       "ref": "J2",
-      "value": "210-A-SMD/02",
-      "footprint": "EasyEDA:CONN-SMD_210-A-SMD-02",
-      "datasheet": "https://www.lcsc.com/datasheet/C20608465.pdf",
-      "description": "",
-      "properties": {},
-      "_extra_fields": {},
-      "pins": [
-        {
-          "pin_id": "1",
-          "name": "1",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -3.81,
-          "y": 1.27,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "2",
-          "name": "2",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -3.81,
-          "y": -1.27,
-          "length": 2.54,
-          "orientation": 0.0
-        }
-      ]
-    },
-    "J3": {
-      "symbol": "EasyEDA:210-A-SMD_02",
-      "ref": "J3",
       "value": "210-A-SMD/02",
       "footprint": "EasyEDA:CONN-SMD_210-A-SMD-02",
       "datasheet": "https://www.lcsc.com/datasheet/C20608465.pdf",
@@ -1964,134 +1660,6 @@
         }
       ]
     },
-    "C7": {
-      "symbol": "EasyEDA:CL05A105KA5NQNC",
-      "ref": "C7",
-      "value": "1uF",
-      "footprint": "EasyEDA:C0402",
-      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_SAMSUNG_CL05A105KA5NQNC_1uF-105-10-25V_C52923.html",
-      "description": "",
-      "properties": {},
-      "_extra_fields": {},
-      "pins": [
-        {
-          "pin_id": "1",
-          "name": "1",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "2",
-          "name": "2",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 180.0
-        }
-      ]
-    },
-    "C8": {
-      "symbol": "EasyEDA:CC0603KRX7R9BB104",
-      "ref": "C8",
-      "value": "100nF",
-      "footprint": "EasyEDA:C0603",
-      "datasheet": "https://lcsc.com/product-detail/Multilayer-Ceramic-Capacitors-MLCC-SMD-SMT_100nF-104-10-50V_C14663.html",
-      "description": "",
-      "properties": {},
-      "_extra_fields": {},
-      "pins": [
-        {
-          "pin_id": "1",
-          "name": "1",
-          "func": "unspecified",
-          "unit": 1,
-          "x": -5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "2",
-          "name": "2",
-          "func": "unspecified",
-          "unit": 1,
-          "x": 5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 180.0
-        }
-      ]
-    },
-    "R6": {
-      "symbol": "EasyEDA:0402WGF1001TCE",
-      "ref": "R6",
-      "value": "1k",
-      "footprint": "EasyEDA:R0402",
-      "datasheet": "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount-UniOhm_1KR-1001-1_C11702.html",
-      "description": "",
-      "properties": {},
-      "_extra_fields": {},
-      "pins": [
-        {
-          "pin_id": "1",
-          "name": "1",
-          "func": "input",
-          "unit": 1,
-          "x": -5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "2",
-          "name": "2",
-          "func": "input",
-          "unit": 1,
-          "x": 5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 180.0
-        }
-      ]
-    },
-    "R7": {
-      "symbol": "EasyEDA:0402WGF1003TCE",
-      "ref": "R7",
-      "value": "100k",
-      "footprint": "EasyEDA:R0402",
-      "datasheet": "https://lcsc.com/product-detail/Chip-Resistor-Surface-Mount-UniOhm_100KR-1003-1_C25741.html",
-      "description": "",
-      "properties": {},
-      "_extra_fields": {},
-      "pins": [
-        {
-          "pin_id": "1",
-          "name": "1",
-          "func": "input",
-          "unit": 1,
-          "x": -5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 0.0
-        },
-        {
-          "pin_id": "2",
-          "name": "2",
-          "func": "input",
-          "unit": 1,
-          "x": 5.08,
-          "y": -0.0,
-          "length": 2.54,
-          "orientation": 180.0
-        }
-      ]
-    },
     "SW1": {
       "symbol": "EasyEDA:TS-1187A-B-A-B",
       "ref": "SW1",
@@ -2433,46 +2001,6 @@
           }
         },
         {
-          "component": "U4",
-          "pin": {
-            "number": "3",
-            "name": "GND",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "11",
-            "name": "GND",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "15",
-            "name": "GND",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "17",
-            "name": "EP",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "17",
-            "name": "EP",
-            "type": "unspecified"
-          }
-        },
-        {
           "component": "U3",
           "pin": {
             "number": "1",
@@ -2570,22 +2098,6 @@
         },
         {
           "component": "C6",
-          "pin": {
-            "number": "2",
-            "name": "2",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "C7",
-          "pin": {
-            "number": "2",
-            "name": "2",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "C8",
           "pin": {
             "number": "2",
             "name": "2",
@@ -2788,72 +2300,6 @@
       "impedance": null,
       "properties": {}
     },
-    "SD_CTRL2_B": {
-      "nodes": [
-        {
-          "component": "U1",
-          "pin": {
-            "number": "14",
-            "name": "IO10",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U1",
-          "pin": {
-            "number": "14",
-            "name": "IO10",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "R7",
-          "pin": {
-            "number": "1",
-            "name": "1",
-            "type": "input"
-          }
-        }
-      ],
-      "is_power": false,
-      "power_symbol": null,
-      "trace_current": null,
-      "impedance": null,
-      "properties": {}
-    },
-    "SD_CTRL2_A": {
-      "nodes": [
-        {
-          "component": "U1",
-          "pin": {
-            "number": "13",
-            "name": "IO9",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U1",
-          "pin": {
-            "number": "13",
-            "name": "IO9",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "R6",
-          "pin": {
-            "number": "1",
-            "name": "1",
-            "type": "input"
-          }
-        }
-      ],
-      "is_power": false,
-      "power_symbol": null,
-      "trace_current": null,
-      "impedance": null,
-      "properties": {}
-    },
     "SD_CTRL_B": {
       "nodes": [
         {
@@ -2953,22 +2399,6 @@
             "name": "LRCLK",
             "type": "unspecified"
           }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "14",
-            "name": "LRCLK",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "14",
-            "name": "LRCLK",
-            "type": "unspecified"
-          }
         }
       ],
       "is_power": false,
@@ -3010,22 +2440,6 @@
             "name": "BCLK",
             "type": "unspecified"
           }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "16",
-            "name": "BCLK",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "16",
-            "name": "BCLK",
-            "type": "unspecified"
-          }
         }
       ],
       "is_power": false,
@@ -3062,22 +2476,6 @@
         },
         {
           "component": "U2",
-          "pin": {
-            "number": "1",
-            "name": "DIN",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "1",
-            "name": "DIN",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
           "pin": {
             "number": "1",
             "name": "DIN",
@@ -3257,22 +2655,6 @@
           }
         },
         {
-          "component": "U4",
-          "pin": {
-            "number": "7",
-            "name": "VDD",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "8",
-            "name": "VDD",
-            "type": "unspecified"
-          }
-        },
-        {
           "component": "U3",
           "pin": {
             "number": "3",
@@ -3306,22 +2688,6 @@
         },
         {
           "component": "C6",
-          "pin": {
-            "number": "1",
-            "name": "1",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "C7",
-          "pin": {
-            "number": "1",
-            "name": "1",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "C8",
           "pin": {
             "number": "1",
             "name": "1",
@@ -3388,113 +2754,6 @@
         },
         {
           "component": "J2",
-          "pin": {
-            "number": "2",
-            "name": "2",
-            "type": "unspecified"
-          }
-        }
-      ],
-      "is_power": false,
-      "power_symbol": null,
-      "trace_current": null,
-      "impedance": null,
-      "properties": {}
-    },
-    "SD_MODE2": {
-      "nodes": [
-        {
-          "component": "U4",
-          "pin": {
-            "number": "4",
-            "name": "~{SD_MODE}",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "4",
-            "name": "~{SD_MODE}",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "R6",
-          "pin": {
-            "number": "2",
-            "name": "2",
-            "type": "input"
-          }
-        },
-        {
-          "component": "R7",
-          "pin": {
-            "number": "2",
-            "name": "2",
-            "type": "input"
-          }
-        }
-      ],
-      "is_power": false,
-      "power_symbol": null,
-      "trace_current": null,
-      "impedance": null,
-      "properties": {}
-    },
-    "SPKR2_P": {
-      "nodes": [
-        {
-          "component": "U4",
-          "pin": {
-            "number": "9",
-            "name": "OUTP",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "9",
-            "name": "OUTP",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "J3",
-          "pin": {
-            "number": "1",
-            "name": "1",
-            "type": "unspecified"
-          }
-        }
-      ],
-      "is_power": false,
-      "power_symbol": null,
-      "trace_current": null,
-      "impedance": null,
-      "properties": {}
-    },
-    "SPKR2_N": {
-      "nodes": [
-        {
-          "component": "U4",
-          "pin": {
-            "number": "10",
-            "name": "OUTN",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "U4",
-          "pin": {
-            "number": "10",
-            "name": "OUTN",
-            "type": "unspecified"
-          }
-        },
-        {
-          "component": "J3",
           "pin": {
             "number": "2",
             "name": "2",
