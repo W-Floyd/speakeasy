@@ -19,172 +19,156 @@ Design notes:
   (Sendspin sends mono audio on left channel)
 - MAX98357A OUTP/OUTN connect directly to the speaker terminal (no DC-blocking cap;
   the MAX98357A is a filterless Class D amp with no DC offset on the outputs)
-
-Output: generates speakeasy/Speakeasy.net (KiCad netlist) and speakeasy_jlcpcb_bom.csv.
-Import the netlist into KiCad (Tools → Update Schematic from Netlist) to sync changes.
 """
 
-import csv
-import pathlib
-from collections import defaultdict
-
-from skidl import Net, Part, subcircuit
-from skidl import generate_netlist, generate_xml, generate_schematic, ERC
-from skidl import KICAD, set_default_tool, lib_search_paths
-
-# Use KiCad library format and add search paths.
-# EasyEDA (~/KiCad/EasyEDA.kicad_sym) must come before system libs so
-# EasyEDA-imported parts shadow any same-named KiCad built-ins.
-set_default_tool(KICAD)
-_kicad_system = "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols"
-_kicad_user = str(pathlib.Path.home() / "KiCad")
-# Prepend in reverse order so user (EasyEDA) ends up ahead of system libs
-for _p in [_kicad_system, _kicad_user]:
-    if _p not in lib_search_paths[KICAD]:
-        lib_search_paths[KICAD].insert(0, _p)
+from circuit_synth import Component, Net, circuit
 
 
-# JLCPCB LCSC part numbers keyed by designator.
-# ⚠  Verify U1, U2, C5, J1, J2, SW1/SW2 on lcsc.com before ordering —
-#    passives and AMS1117 are well-known basic parts; modules/ICs can change.
-LCSC_PARTS = {
-    "U1":  "C22356044",  # ESP32-S3-MINI-1U-N4R2
-    "U2":  "C910544",    # MAX98357AETE+T TQFN-16
-    "U3":  "C6186",      # AMS1117-3.3 SOT-223  (basic part)
-    "J1":  "C64659",     # PH-6P SMD 6-pin 2.0mm
-    "J2":  "C20608465",  # 210-A-SMD/02 SMD screw terminal
-    # TP1–TP4 are bare test pads — no LCSC part
-    "R1":  "C25905",     # 5.1kΩ 0402 1% (basic)
-    "R2":  "C25905",
-    "R3":  "C25744",     # 10kΩ  0402 1% (basic)
-    "R4":  "C25741",     # 100kΩ 0402 1% (basic)
-    "C1":  "C15850",     # 10uF 0805 X5R 10V (basic)
-    "C2":  "C15850",
-    "C3":  "C15850",
-    "C4":  "C14663",     # 100nF 0402 X7R 16V (basic)
-    "C5":  "C52923",     # 1uF   0402 X5R 16V (basic)
-    "C6":  "C14663",     # 100nF 0402 X7R 16V (basic)
-    "SW1": "C318884",    # SMD tact switch 6×6mm  ← verify footprint
-    "SW2": "C318884",
-}
+def connect(component, pin_name, net):
+    """Connect all pins named pin_name to net.
+
+    circuit-synth's component[name] only wires the first matching pin.
+    This helper finds every pin with the given name (e.g. duplicate VOUT
+    or GND pads) and connects them all, so nothing is silently left floating.
+    """
+    from circuit_synth.kicad.kicad_symbol_cache import SymbolLibCache
+    import re as _re
+
+    sym_data = SymbolLibCache.get_symbol_data(component.symbol)
+    pins = sym_data.get("pins", {})
+
+    # pins may be a dict keyed by number or a list — normalise to [(num, name)]
+    if isinstance(pins, dict):
+        items = [(num, info.get("name", "")) for num, info in pins.items()]
+    else:
+        items = [(p.get("number"), p.get("name", "")) for p in (pins or [])]
+
+    matched = [num for num, name in items if name == pin_name]
+
+    if not matched:
+        # Fall back to direct connection (catches numeric pin refs)
+        component[pin_name] += net
+        return
+
+    for num in matched:
+        # circuit-synth uses integers for pin number access, strings for pin names
+        try:
+            component[int(num)] += net
+        except (ValueError, TypeError, Exception):
+            component[num] += net
 
 
-@subcircuit
+@circuit(name="Speakeasy")
 def speakeasy_board():
 
     # ── Modules / ICs ──────────────────────────────────────────────────────
 
-    esp32 = Part(
-        "EasyEDA", "ESP32-S3-MINI-1U-N4R2",
-        footprint="EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8",
+    esp32 = Component(
+        symbol="EasyEDA:ESP32-S3-MINI-1U-N4R2",
+        ref="U1",
         value="ESP32-S3-MINI-1U-N4R2",
+        footprint="EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8",
     )
-    esp32.ref = "U1"
 
     # MAX98357AETE+T: mono I2S input → Class D amplifier, 2.5–5.5V, up to 3.2W/4Ω
-    dac = Part(
-        "EasyEDA", "MAX98357AETE+T",
-        footprint="EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5",
+    dac = Component(
+        symbol="EasyEDA:MAX98357AETE+T",
+        ref="U2",
         value="MAX98357AETE+T",
+        footprint="EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5",
     )
-    dac.ref = "U2"
 
     # AMS1117-3.3: 800mA LDO, VBUS (5V) → 3.3V for ESP32 module
-    ldo = Part(
-        "EasyEDA", "AMS1117-3.3",
-        footprint="EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR",
+    ldo = Component(
+        symbol="EasyEDA:AMS1117-3.3",
+        ref="U3",
         value="AMS1117-3.3",
+        footprint="EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR",
     )
-    ldo.ref = "U3"
 
     # ── Connectors ─────────────────────────────────────────────────────────
 
     # 6-pin JST PH 2.0mm SMD (mates with panel-mount USB-C cable, female PH)
     # Pinout: 1=GND  2=D+  3=D-  4=CC2  5=CC1  6=VCC  7/8=mounting tabs
-    # simp-sexp reads .kicad_sym as latin-1; re-encode the UTF-8 name to match.
-    _ph6p = "PH-6P立贴".encode("utf-8").decode("latin-1")
-    usbc = Part(
-        "EasyEDA", _ph6p,
-        footprint="EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4",
+    usbc = Component(
+        symbol="EasyEDA:PH-6P立贴",
+        ref="J1",
         value="PH-6P立贴",
+        footprint="EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4",
     )
-    usbc.ref = "J1"
 
     # 2-pin SMD screw terminal for speaker wires
-    spkr_conn = Part(
-        "EasyEDA", "210-A-SMD_02",
-        footprint="EasyEDA:CONN-SMD_210-A-SMD-02",
+    spkr_conn = Component(
+        symbol="EasyEDA:210-A-SMD_02",
+        ref="J2",
         value="210-A-SMD/02",
+        footprint="EasyEDA:CONN-SMD_210-A-SMD-02",
     )
-    spkr_conn.ref = "J2"
+
 
     # UART test pads — probe points for 3V3, GND, TXD0, RXD0
     _tp_fp = "TestPoint:TestPoint_Pad_D1.5mm"
-    tp_3v3 = Part("Connector", "TestPoint", footprint=_tp_fp, value="3V3")
-    tp_3v3.ref = "TP1"
-    tp_gnd = Part("Connector", "TestPoint", footprint=_tp_fp, value="GND")
-    tp_gnd.ref = "TP2"
-    tp_tx = Part("Connector", "TestPoint", footprint=_tp_fp, value="TXD0")
-    tp_tx.ref = "TP3"
-    tp_rx = Part("Connector", "TestPoint", footprint=_tp_fp, value="RXD0")
-    tp_rx.ref = "TP4"
+    tp_3v3 = Component(symbol="Connector:TestPoint", ref="TP1", value="3V3",  footprint=_tp_fp)
+    tp_gnd = Component(symbol="Connector:TestPoint", ref="TP2", value="GND",  footprint=_tp_fp)
+    tp_tx  = Component(symbol="Connector:TestPoint", ref="TP3", value="TXD0", footprint=_tp_fp)
+    tp_rx  = Component(symbol="Connector:TestPoint", ref="TP4", value="RXD0", footprint=_tp_fp)
 
     # ── Passive components ─────────────────────────────────────────────────
 
     # CC1/CC2 pull-down resistors — 5.1k to GND, identifies board as 5V/900mA sink
-    r_cc1 = Part("Device", "R", footprint="Resistor_SMD:R_0402_1005Metric", value="5.1k")
-    r_cc1.ref = "R1"
-    r_cc2 = Part("Device", "R", footprint="Resistor_SMD:R_0402_1005Metric", value="5.1k")
-    r_cc2.ref = "R2"
+    r_cc1 = Component(symbol="Device:R", ref="R1", value="5.1k",
+                      footprint="Resistor_SMD:R_0402_1005Metric")
+    r_cc2 = Component(symbol="Device:R", ref="R2", value="5.1k",
+                      footprint="Resistor_SMD:R_0402_1005Metric")
 
     # EN pullup — supplements ESP32 module internal pullup for clean power-on reset
-    r_en = Part("Device", "R", footprint="Resistor_SMD:R_0402_1005Metric", value="10k")
-    r_en.ref = "R3"
+    r_en = Component(symbol="Device:R", ref="R3", value="10k",
+                     footprint="Resistor_SMD:R_0402_1005Metric")
 
     # MAX98357A SD_MODE (pin 4): 100k to 3.3V → left-channel mode enabled
-    r_sd = Part("Device", "R", footprint="Resistor_SMD:R_0402_1005Metric", value="100k")
-    r_sd.ref = "R4"
+    r_sd = Component(symbol="Device:R", ref="R4", value="100k",
+                     footprint="Resistor_SMD:R_0402_1005Metric")
 
     # LDO input bulk cap (+5V rail, near U3 input)
-    c_ldo_in = Part("Device", "C", footprint="Capacitor_SMD:C_0805_2012Metric", value="10uF")
-    c_ldo_in.ref = "C1"
+    c_ldo_in = Component(symbol="Device:C", ref="C1", value="10uF",
+                         footprint="Capacitor_SMD:C_0805_2012Metric")
 
     # LDO output cap (+3.3V rail — required for AMS1117 stability: min 10uF)
-    c_ldo_out = Part("Device", "C", footprint="Capacitor_SMD:C_0805_2012Metric", value="10uF")
-    c_ldo_out.ref = "C2"
+    c_ldo_out = Component(symbol="Device:C", ref="C2", value="10uF",
+                          footprint="Capacitor_SMD:C_0805_2012Metric")
 
     # ESP32 +3.3V bulk decoupling
-    c_esp_bulk = Part("Device", "C", footprint="Capacitor_SMD:C_0805_2012Metric", value="10uF")
-    c_esp_bulk.ref = "C3"
+    c_esp_bulk = Component(symbol="Device:C", ref="C3", value="10uF",
+                           footprint="Capacitor_SMD:C_0805_2012Metric")
 
     # ESP32 +3.3V high-frequency bypass
-    c_esp_bypass = Part("Device", "C", footprint="Capacitor_SMD:C_0402_1005Metric", value="100nF")
-    c_esp_bypass.ref = "C4"
+    c_esp_bypass = Component(symbol="Device:C", ref="C4", value="100nF",
+                             footprint="Capacitor_SMD:C_0402_1005Metric")
 
     # MAX98357A VDD bulk decoupling (+5V rail, near U2)
-    c_dac_bulk = Part("Device", "C", footprint="Capacitor_SMD:C_0402_1005Metric", value="1uF")
-    c_dac_bulk.ref = "C5"
+    c_dac_bulk = Component(symbol="Device:C", ref="C5", value="1uF",
+                           footprint="Capacitor_SMD:C_0402_1005Metric")
 
     # MAX98357A VDD high-frequency bypass (as close to chip as possible)
-    c_dac_bypass = Part("Device", "C", footprint="Capacitor_SMD:C_0402_1005Metric", value="100nF")
-    c_dac_bypass.ref = "C6"
+    c_dac_bypass = Component(symbol="Device:C", ref="C6", value="100nF",
+                             footprint="Capacitor_SMD:C_0402_1005Metric")
 
     # Boot button: pulls IO0 low to enter USB download mode
-    boot_btn = Part("Switch", "SW_Push", footprint="Button_Switch_SMD:SW_SPST_CK_RS282G05A3", value="BOOT")
-    boot_btn.ref = "SW1"
+    boot_btn = Component(symbol="Switch:SW_Push", ref="SW1", value="BOOT",
+                         footprint="Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
 
     # Reset button: pulls EN low to reset the ESP32
-    rst_btn = Part("Switch", "SW_Push", footprint="Button_Switch_SMD:SW_SPST_CK_RS282G05A3", value="RST")
-    rst_btn.ref = "SW2"
+    rst_btn = Component(symbol="Switch:SW_Push", ref="SW2", value="RST",
+                        footprint="Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
 
     # ── Nets ───────────────────────────────────────────────────────────────
 
-    vbus    = Net("+5V")     # 5V from panel-mount USB-C
-    vcc_3v3 = Net("+3.3V")  # 3.3V regulated (ESP32 supply)
+    vbus    = Net("+5V")    # 5V from panel-mount USB-C
+    vcc_3v3 = Net("+3.3V") # 3.3V regulated (ESP32 supply)
     gnd     = Net("GND")
 
-    usb_dp  = Net("USB_DP")  # USB D+  → ESP32 USB_D+
-    usb_dm  = Net("USB_DM")  # USB D-  → ESP32 USB_D-
+    usb_dp  = Net("USB_DP")    # USB D+  → ESP32 USB_D+
+    usb_dm  = Net("USB_DM")    # USB D-  → ESP32 USB_D-
 
     cc1 = Net("CC1")
     cc2 = Net("CC2")
@@ -196,14 +180,14 @@ def speakeasy_board():
     en_net  = Net("EN")
     gpio0   = Net("GPIO0")
     sd_mode = Net("SD_MODE")
-    uart_tx = Net("UART_TX")  # ESP TXD0 → dongle RX
-    uart_rx = Net("UART_RX")  # ESP RXD0 ← dongle TX
+    uart_tx = Net("UART_TX")   # ESP TXD0 → dongle RX
+    uart_rx = Net("UART_RX")   # ESP RXD0 ← dongle TX
 
     spkr_p = Net("SPKR_P")
     spkr_n = Net("SPKR_N")
 
     # ── JST-XH 6-pin (panel-mount USB-C interface) ─────────────────────────
-    # Pin 1=GND  2=D+  3=D-  4=CC2  5=CC1  6=VCC  7/8=mounting tabs
+    # Pin 1=GND  2=D+  3=D-  4=CC2  5=CC1  6=VCC
 
     usbc[1] += gnd
     usbc[2] += usb_dp
@@ -211,8 +195,8 @@ def speakeasy_board():
     usbc[4] += cc2
     usbc[5] += cc1
     usbc[6] += vbus
-    usbc[7] += gnd
-    usbc[8] += gnd
+    usbc[7] += gnd  # SMD mounting tab
+    usbc[8] += gnd  # SMD mounting tab
 
     # CC pull-downs on PCB side: identifies board as USB power sink
     r_cc1[1] += cc1
@@ -222,9 +206,9 @@ def speakeasy_board():
 
     # ── LDO: VBUS → 3.3V ──────────────────────────────────────────────────
 
-    ldo["VIN"]  += vbus
-    ldo["VOUT"] += vcc_3v3
-    ldo["GND"]  += gnd
+    connect(ldo, "VIN",  vbus)
+    connect(ldo, "VOUT", vcc_3v3)
+    connect(ldo, "GND",  gnd)
 
     c_ldo_in[1]  += vbus
     c_ldo_in[2]  += gnd
@@ -233,10 +217,9 @@ def speakeasy_board():
 
     # ── ESP32-S3-WROOM-1 ──────────────────────────────────────────────────
 
-    # SKiDL connects all pins named "3V3" / "GND" automatically when multiple exist
-    esp32["3V3"] += vcc_3v3
-    esp32["GND"] += gnd
-    esp32["EN"]  += en_net
+    connect(esp32, "3V3", vcc_3v3)
+    connect(esp32, "GND", gnd)
+    esp32["EN"]     += en_net
 
     # Native USB peripheral (no CH340/CP2102 needed)
     # ESP32-S3 MINI: IO20 = USB D+, IO19 = USB D-
@@ -249,7 +232,9 @@ def speakeasy_board():
     esp32["IO6"] += i2s_lrclk
 
     # Boot/reset pins
-    esp32["IO0"]  += gpio0
+    esp32["IO0"] += gpio0
+
+    # UART0 → debug header
     esp32["TXD0"] += uart_tx
     esp32["RXD0"] += uart_rx
 
@@ -304,19 +289,329 @@ def speakeasy_board():
     tp_rx[1]  += uart_rx
 
 
-def write_jlcpcb_bom(out_path):
-    """Write a JLCPCB-compatible BOM CSV from the current SKiDL circuit."""
-    import builtins
-    default_circuit = builtins.default_circuit
+def fix_power_symbol_overlaps(sch_path):
+    """Move GND power symbols that sit on VBUS symbols to the correct cap pin.
 
-    groups = defaultdict(list)
-    for part in sorted(default_circuit.parts, key=lambda p: p.ref):
-        ref = part.ref
+    circuit-synth places GND power symbols at the same coordinate as VBUS
+    symbols (both end up at pin 2 / top of the decoupling cap).  The GND
+    symbols should instead be at pin 1 / bottom of the cap.
+
+    For Device:C in default orientation:
+      pin 2 (top)    = (cx, cy - 3.81)  ← where VBUS is placed
+      pin 1 (bottom) = (cx, cy + 3.81)  ← where GND belongs
+
+    This finds caps whose bottom pin has no GND symbol and moves displaced
+    GND symbols there, matching them by x-coordinate.
+    """
+    import kicad_sch_api as ksa
+
+    sch = ksa.load_schematic(sch_path)
+    POSITIVE_SYMBOLS = {"power:+5V", "power:+3.3V", "power:VBUS"}
+    pwr = [c for c in sch.components if c.lib_id in POSITIVE_SYMBOLS | {"power:GND"}]
+
+    PIN_OFFSET = 3.81  # Device:C pin-to-center distance (mm)
+
+    vbus_xy = {(round(c.position.x, 2), round(c.position.y, 2))
+               for c in pwr if c.lib_id in POSITIVE_SYMBOLS}
+    gnd_xy  = {(round(c.position.x, 2), round(c.position.y, 2))
+               for c in pwr if c.lib_id == "power:GND"}
+
+    # Find caps whose bottom pin (cy + PIN_OFFSET) lacks a GND symbol.
+    caps = [c for c in sch.components if c.lib_id == "Device:C"]
+    unconnected_bottoms = []
+    for cap in caps:
+        cx = round(cap.position.x, 2)
+        cy = round(cap.position.y, 2)
+        bottom = (cx, round(cy + PIN_OFFSET, 2))
+        if bottom not in gnd_xy:
+            unconnected_bottoms.append(bottom)
+
+    # Find GND symbols sitting on a VBUS position (misplaced).
+    misplaced = [c for c in pwr
+                 if c.lib_id == "power:GND"
+                 and (round(c.position.x, 2), round(c.position.y, 2)) in vbus_xy]
+
+    fixed = 0
+    for gnd_sym in misplaced:
+        if not unconnected_bottoms:
+            break
+        # Pick the bottom pin at the same x (same cap column).
+        gx = round(gnd_sym.position.x, 2)
+        target = next((b for b in unconnected_bottoms if b[0] == gx), None)
+        if target is None:
+            # Fall back to nearest by distance.
+            gy = round(gnd_sym.position.y, 2)
+            target = min(unconnected_bottoms, key=lambda b: (b[0]-gx)**2 + (b[1]-gy)**2)
+        gnd_sym.move(target[0], target[1])
+        unconnected_bottoms.remove(target)
+        fixed += 1
+
+    if fixed:
+        sch.save(sch_path)
+        print(f"Fixed {fixed} GND symbol(s) moved to cap bottom pin")
+
+
+# JLCPCB LCSC part numbers keyed by designator.
+# ⚠  Verify U1, U2, C7, J1, J2, SW1/SW2 on lcsc.com before ordering —
+#    passives and AMS1117 are well-known basic parts; modules/ICs can change.
+LCSC_PARTS = {
+    "U1":       "C22356044",  # ESP32-S3-MINI-1U-N4R2
+    "U2":       "C910544",    # MAX98357AETE+T TQFN-16
+    "U3":       "C6186",      # AMS1117-3.3 SOT-223  (basic part)
+    "J1":       "C64659",     # PH-6P SMD 6-pin 2.0mm
+    "J2":       "C20608465",  # 210-A-SMD/02 SMD screw terminal
+    # TP1–TP4 are bare test pads — no LCSC part
+    "R1":       "C25905",     # 5.1kΩ 0402 1% (basic)
+    "R2":       "C25905",     # 5.1kΩ 0402 1% (basic)
+    "R3":       "C25744",     # 10kΩ  0402 1% (basic)
+    "R4":       "C25741",     # 100kΩ 0402 1% (basic)
+    "C1":       "C15850",     # 10uF 0805 X5R 10V (basic)
+    "C2":       "C15850",
+    "C3":       "C15850",
+    "C4":       "C14663",     # 100nF 0402 X7R 16V (basic)
+    "C5":       "C52923",     # 1uF   0402 X5R 16V (basic)
+    "C6":       "C14663",     # 100nF 0402 X7R 16V (basic)
+    "SW1":      "C318884",    # SMD tact switch 6×6mm  ← verify footprint
+    "SW2":      "C318884",
+}
+
+
+def add_lcsc_numbers(sch_path):
+    """Stamp LCSC part numbers onto each component in the schematic."""
+    import kicad_sch_api as ksa
+
+    sch = ksa.load_schematic(sch_path)
+    stamped = 0
+    for comp in sch.components:
+        ref = comp.reference
+        lcsc = LCSC_PARTS.get(ref)
+        if lcsc:
+            comp.add_property("LCSC", lcsc)
+            stamped += 1
+    if stamped:
+        sch.save(sch_path)
+        print(f"Stamped LCSC numbers on {stamped} component(s)")
+
+
+def preserve_component_uuids(old_sch_path, new_sch_path,
+                             net_path=None, pro_path=None):
+    """Re-apply stable UUIDs from the existing schematic to the newly generated one.
+
+    circuit-synth assigns fresh UUIDs on every run, creating noisy diffs and breaking
+    KiCad's schematic↔PCB links (net file tstamps are the same UUID values).
+
+    Three things are stabilised:
+    - Root sheet UUID — propagates into hierarchy_path, root_uuid, and path fields
+    - Component instance UUIDs — only when lib_id is unchanged (swapped components get fresh UUIDs)
+    - Per-pin UUIDs inside component blocks — stabilised alongside the component UUID
+    """
+    import re
+
+    def get_root_uuid(text):
+        m = re.search(r'^\s*\(uuid\s+"([^"]+)"', text, re.MULTILINE)
+        return m.group(1) if m else None
+
+    def extract_blocks(text):
+        """Yield (ref, lib_id, uuid, pin_uuids, start, end) for every component instance."""
+        for m in re.finditer(r'\(symbol\s+\(lib_id\s+"([^"]+)"\)', text):
+            lib_id = m.group(1)
+            start = m.start()
+            depth, end = 0, start
+            for i, ch in enumerate(text[start:], start):
+                if ch == "(": depth += 1
+                elif ch == ")":
+                    depth -= 1
+                    if depth == 0:
+                        end = i + 1
+                        break
+            block = text[start:end]
+            uuid_m = re.search(r'\(uuid\s+"([^"]+)"', block)
+            ref_m  = re.search(r'\(property\s+"Reference"\s+"([^"]+)"', block)
+            if not (uuid_m and ref_m):
+                continue
+            # Map pin number → uuid for all (pin "N" (uuid "...")) entries
+            pin_uuids = {m2.group(1): m2.group(2)
+                         for m2 in re.finditer(r'\(pin\s+"([^"]+)"\s*\(\s*uuid\s+"([^"]+)"', block)}
+            yield ref_m.group(1), lib_id, uuid_m.group(1), pin_uuids, start, end
+
+    try:
+        old_text = open(old_sch_path).read()
+    except FileNotFoundError:
+        return
+
+    old_root_uuid = get_root_uuid(old_text)
+    old_map = {ref: (lib_id, uuid, pin_uuids)
+               for ref, lib_id, uuid, pin_uuids, *_ in extract_blocks(old_text)}
+    if not old_map and not old_root_uuid:
+        return
+
+    new_text = open(new_sch_path).read()
+
+    # ── 1. Stabilise root sheet UUID ────────────────────────────────────────
+    result = new_text
+    if old_root_uuid:
+        new_root_uuid = get_root_uuid(result)
+        if new_root_uuid and new_root_uuid != old_root_uuid:
+            result = result.replace(new_root_uuid, old_root_uuid)
+
+    # ── 2. Stabilise hierarchical_label UUIDs (net name labels) ────────────
+    def extract_label_uuids(text):
+        """Return {(name, index): uuid} for hierarchical_label elements."""
+        mapping = {}
+        counts = {}
+        for m in re.finditer(
+            r'\(hierarchical_label\s+"([^"]+)".*?\(uuid\s+"([^"]+)"',
+            text, re.DOTALL
+        ):
+            name = m.group(1)
+            idx = counts.get(name, 0)
+            mapping[(name, idx)] = m.group(2)
+            counts[name] = idx + 1
+        return mapping
+
+    old_labels = extract_label_uuids(old_text)
+    if old_labels:
+        new_labels = extract_label_uuids(result)
+        for key, new_uuid in new_labels.items():
+            old_uuid = old_labels.get(key)
+            if old_uuid and old_uuid != new_uuid:
+                result = result.replace(f'"{new_uuid}"', f'"{old_uuid}"', 1)
+
+    # ── 3. Stabilise component + pin UUIDs ─────────────────────────────────
+    uuid_replacements = {}  # new_uuid → old_uuid, for patching net/pro files
+    if new_root_uuid := get_root_uuid(new_text):
+        if old_root_uuid and new_root_uuid != old_root_uuid:
+            uuid_replacements[new_root_uuid] = old_root_uuid
+
+    patched = []
+    pos = 0
+    preserved = replaced = 0
+    for ref, lib_id, new_uuid, _new_pins, start, end in extract_blocks(result):
+        patched.append(result[pos:start])
+        block = result[start:end]
+        old_entry = old_map.get(ref)
+        if old_entry and old_entry[0] == lib_id:
+            uuid_replacements[new_uuid] = old_entry[1]
+            # Restore component UUID
+            block = re.sub(r'(\(uuid\s+)"[^"]+"', rf'\1"{old_entry[1]}"', block, count=1)
+            # Restore per-pin UUIDs
+            old_pin_uuids = old_entry[2]
+            def _restore_pin(m):
+                pin_num = m.group(1)
+                old_pu = old_pin_uuids.get(pin_num)
+                if old_pu:
+                    return f'(pin "{pin_num}"\n\t\t\t\t(uuid "{old_pu}"'
+                return m.group(0)
+            block = re.sub(r'\(pin\s+"([^"]+)"\s*\(\s*uuid\s+"[^"]+"', _restore_pin, block)
+            preserved += 1
+        else:
+            replaced += 1
+        patched.append(block)
+        pos = end
+    patched.append(result[pos:])
+    result = "".join(patched)
+
+    if result != new_text:
+        open(new_sch_path, "w").write(result)
+    print(f"UUIDs: {preserved} preserved (unchanged components), {replaced} refreshed (new/swapped)")
+
+    # ── 4. Patch .kicad_pro with schematic UUID replacements ────────────────
+    if pro_path:
+        try:
+            text = open(pro_path).read()
+            patched_text = text
+            for new_uuid, old_uuid in uuid_replacements.items():
+                patched_text = patched_text.replace(new_uuid, old_uuid)
+            if patched_text != text:
+                open(pro_path, "w").write(patched_text)
+        except FileNotFoundError:
+            pass
+
+    # ── 5. Patch net file tstamps by component ref ──────────────────────────
+    # The net file uses its own tstamps independent of the schematic UUIDs.
+    # Match old→new by ref name, then restore old tstamps.
+    if net_path:
+        UUID_RE = r'[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'
+
+        def extract_net_tstamps(text):
+            """Return {ref: tstamp} from a KiCad net file.
+            Matches the UUID-shaped tstamp at the end of each comp block,
+            not the sheetpath's (tstamps "/") placeholder.
+            """
+            mapping = {}
+            for m in re.finditer(
+                rf'\(comp\s+\(ref\s+"([^"]+)"\).*?\(tstamps\s+"({UUID_RE})"\)',
+                text, re.DOTALL
+            ):
+                mapping[m.group(1)] = m.group(2)
+            return mapping
+
+        def extract_net_sheet_tstamp(text):
+            m = re.search(rf'\(sheet\b.*?\(tstamps\s+"(/({UUID_RE})/)"\)', text, re.DOTALL)
+            return m.group(2) if m else None
+
+        import pathlib as _pl
+        old_net_path = _pl.Path(old_sch_path).parent / _pl.Path(net_path).name
+        try:
+            old_net = old_net_path.read_text()
+        except FileNotFoundError:
+            old_net = None
+
+        if old_net:
+            try:
+                new_net = open(net_path).read()
+            except FileNotFoundError:
+                new_net = None
+
+            if new_net:
+                # Stabilise the generated date so it doesn't appear in every diff
+                new_net = re.sub(r'\(date "[^"]*"\)', '(date "1970-01-01T00:00:00+0000")', new_net)
+                open(net_path, "w").write(new_net)
+                old_net_tstamps = extract_net_tstamps(old_net)
+                new_net_tstamps = extract_net_tstamps(new_net)
+
+                result_net = new_net
+                # Restore per-component tstamps
+                for ref, new_ts in new_net_tstamps.items():
+                    old_ts = old_net_tstamps.get(ref)
+                    if old_ts and old_ts != new_ts:
+                        result_net = result_net.replace(
+                            f'(tstamps "{new_ts}")', f'(tstamps "{old_ts}")', 1
+                        )
+
+                # Restore sheet tstamp (root UUID in net file)
+                old_sheet_ts = extract_net_sheet_tstamp(old_net)
+                new_sheet_ts = extract_net_sheet_tstamp(new_net)
+                if old_sheet_ts and new_sheet_ts and old_sheet_ts != new_sheet_ts:
+                    result_net = result_net.replace(
+                        f'"/{new_sheet_ts}/"', f'"/{old_sheet_ts}/"'
+                    )
+
+                if result_net != new_net:
+                    open(net_path, "w").write(result_net)
+
+
+def write_jlcpcb_bom(sch_path, out_path):
+    """Write a JLCPCB-compatible BOM CSV from the schematic."""
+    import kicad_sch_api as ksa
+    import csv
+    from collections import defaultdict
+
+    sch = ksa.load_schematic(sch_path)
+    # Skip power symbols and virtual refs
+    rows = []
+    for comp in sch.components:
+        ref = comp.reference
         if not ref or ref.startswith("#"):
             continue
-        value = str(part.value) if part.value else ""
-        fp = str(part.footprint) if part.footprint else ""
         lcsc = LCSC_PARTS.get(ref, "")
+        value = comp.value or ""
+        fp = comp.footprint or ""
+        rows.append((ref, value, fp, lcsc))
+
+    # Group identical (value, footprint, lcsc) lines, combine designators
+    groups = defaultdict(list)
+    for ref, value, fp, lcsc in rows:
         groups[(value, fp, lcsc)].append(ref)
 
     with open(out_path, "w", newline="") as f:
@@ -328,233 +623,80 @@ def write_jlcpcb_bom(out_path):
     print(f"JLCPCB BOM: {out_path}")
 
 
-def generate_reference_schematic():
-    """Generate a reference schematic in a subprocess to avoid SKiDL state pollution.
+if __name__ == "__main__":
+    import os, shutil, pathlib
 
-    generate_schematic() modifies internal SKiDL circuit state in ways that break
-    generate_netlist() and part attribute access when called in the same process.
-    Running it in a subprocess keeps the main circuit pristine.
-
-    Returns the path to the .kicad_sch file with the most symbol instances,
-    or None on failure.
-    """
-    import subprocess
-    import sys
-    import tempfile
-
-    tmp_dir = tempfile.mkdtemp(prefix="speakeasy_sch_")
+    # Ensure both the standard KiCad symbols and ~/KiCad (EasyEDA library) are on
+    # the search path. Setting KICAD_SYMBOL_DIR disables circuit-synth's built-in
+    # fallback to /Applications/KiCad, so we must include it explicitly.
     _kicad_system = "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols"
     _kicad_user = str(pathlib.Path.home() / "KiCad")
+    _existing = os.environ.get("KICAD_SYMBOL_DIR", "")
+    _paths = [p for p in [_kicad_user, _kicad_system, _existing] if p]
+    os.environ["KICAD_SYMBOL_DIR"] = ":".join(_paths)
 
-    script = f"""
-import sys, pathlib
-sys.path.insert(0, {str(pathlib.Path(__file__).parent)!r})
-from skidl import *
-from skidl import KICAD, set_default_tool, lib_search_paths, generate_schematic
-set_default_tool(KICAD)
-lib_search_paths[KICAD].insert(0, {_kicad_system!r})
-lib_search_paths[KICAD].insert(0, {_kicad_user!r})
-from speakeasy_board import speakeasy_board
-speakeasy_board()
-generate_schematic(filepath={tmp_dir!r}, top_name='ref', auto_stub=True)
-"""
-    result = subprocess.run(
-        [sys.executable, "-c", script],
-        capture_output=True, text=True,
+    # circuit-synth crashes on incremental update (SheetManager bug) so we must
+    # generate fresh.  To avoid forcing a KiCad restart, we generate into a
+    # temporary folder and then overwrite the real output folder file-by-file.
+    # KiCad detects the in-place modification and shows a one-click "Reload"
+    # prompt instead of losing track of the open project.
+    STAGING = "speakeasy_staging"
+    OUTPUT  = "speakeasy"
+
+    shutil.rmtree(STAGING, ignore_errors=True)
+
+    circuit_obj = speakeasy_board()
+
+    project_result = circuit_obj.generate_kicad_project(
+        project_name=STAGING,
+        placement_algorithm="hierarchical",
+        generate_pcb=True,
+        preserve_user_components=False,
     )
-    # generate_schematic warns but exits 0 on routing fallback — that's fine
-    if result.returncode != 0:
-        print(f"Warning: reference schematic generation failed (exit {result.returncode}); "
-              "missing components will need manual placement")
-        print("  stderr:", result.stderr[-300:] if result.stderr else "(none)")
-        return None
+    # Stabilise the circuit-synth internal tstamp in Speakeasy.json
+    import re as _re
+    _json_path = f"{STAGING}/Speakeasy.json"
+    try:
+        _jtext = open(_json_path).read()
+        _jtext = _re.sub(r'"tstamps":\s*"[^"]*"', '"tstamps": "/speakeasy/"', _jtext, count=1)
+        open(_json_path, "w").write(_jtext)
+    except Exception:
+        pass
 
-    # Pick the largest .kicad_sch — SKiDL generates a hierarchical schematic where
-    # the sub-sheet (containing actual component instances) is much bigger than the
-    # top-level sheet (which only has lib_symbols and a sheet link).
-    files = list(pathlib.Path(tmp_dir).rglob("*.kicad_sch"))
-    if not files:
-        return None
-    return str(max(files, key=lambda f: f.stat().st_size))
+    fix_power_symbol_overlaps(f"{STAGING}/Speakeasy.kicad_sch")
+    add_lcsc_numbers(f"{STAGING}/Speakeasy.kicad_sch")
+    preserve_component_uuids(
+        f"{OUTPUT}/Speakeasy.kicad_sch", f"{STAGING}/Speakeasy.kicad_sch",
+        net_path=f"{STAGING}/Speakeasy.net",
+        pro_path=f"{STAGING}/Speakeasy.kicad_pro",
+    )
 
+    # Copy staging → output, preserving any KiCad-managed files (e.g. .kicad_pcb
+    # with user-placed components) that are not regenerated by circuit-synth.
+    pathlib.Path(OUTPUT).mkdir(exist_ok=True)
+    for src in pathlib.Path(STAGING).iterdir():
+        dst = pathlib.Path(OUTPUT) / src.name
+        shutil.copy2(src, dst)
+    shutil.rmtree(STAGING)
 
-def sync_schematic_from_circuit(sch_path, ref_sch_path=None):
-    """Sync an existing .kicad_sch with the current SKiDL circuit using kicad-skip.
+    print("KiCad project: speakeasy/speakeasy.kicad_pro")
 
-    For each real component (non-power) in the schematic:
-      - If the ref exists in the SKiDL circuit: update Value, Footprint, LCSC.
-      - If the ref was deleted from the circuit: warn (manual removal needed).
+    bom = circuit_obj.generate_bom(project_name=STAGING)
+    if bom["success"]:
+        print(f"BOM: {OUTPUT}/{pathlib.Path(bom['file']).name}  ({bom['component_count']} components)")
+    else:
+        print(f"BOM failed: {bom.get('error')}")
 
-    For each SKiDL part missing from the schematic:
-      - Auto-place it by copying its symbol instance and lib definition from
-        ref_sch_path (a pre-generated reference schematic from generate_reference_schematic()).
+    write_jlcpcb_bom(f"{OUTPUT}/Speakeasy.kicad_sch", f"{OUTPUT}/speakeasy_jlcpcb_bom.csv")
 
-    Wire/net topology is NOT touched — only component placement and properties.
-    """
-    import builtins
-    import copy
-    import skip
+    pdf = circuit_obj.generate_pdf_schematic(project_name=STAGING)
+    if pdf["success"]:
+        print(f"PDF: {OUTPUT}/{pathlib.Path(pdf['file']).name}")
+    else:
+        print(f"PDF failed: {pdf.get('error')}")
 
-    default_circuit = builtins.default_circuit
-
-    # Build a dict of {ref: part} from the live SKiDL circuit, ignoring power symbols
-    skidl_parts = {
-        p.ref: p
-        for p in default_circuit.parts
-        if p.ref and not p.ref.startswith("#")
-    }
-
-    sch = skip.Schematic(sch_path)
-
-    # Build a dict of {ref: symbol} for all real schematic symbols
-    sch_syms = {}
-    for sym in sch.symbol:
-        try:
-            ref = sym.property.Reference.value
-        except Exception:
-            continue
-        if ref and not ref.startswith("#"):
-            sch_syms[ref] = sym
-
-    updated = []
-    not_in_circuit = []
-    missing_refs = [ref for ref in skidl_parts if ref not in sch_syms]
-
-    # ── Update properties on existing symbols ─────────────────────────────
-
-    for ref, sym in sch_syms.items():
-        part = skidl_parts.get(ref)
-        if part is None:
-            not_in_circuit.append(ref)
-            continue
-
-        changed = False
-
-        new_val = str(part.value) if part.value else ""
-        if sym.property.Value.value != new_val:
-            sym.property.Value.value = new_val
-            changed = True
-
-        new_fp = str(part.footprint) if part.footprint else ""
-        if sym.property.Footprint.value != new_fp:
-            sym.property.Footprint.value = new_fp
-            changed = True
-
-        new_lcsc = LCSC_PARTS.get(ref, "")
-        try:
-            cur_lcsc = sym.property.LCSC.value
-        except Exception:
-            cur_lcsc = None
-
-        if new_lcsc and cur_lcsc != new_lcsc:
-            if cur_lcsc is None:
-                lcsc_prop = sym.property.Value.clone()
-                lcsc_prop.name = "LCSC"
-                lcsc_prop.value = new_lcsc
-            else:
-                sym.property.LCSC.value = new_lcsc
-            changed = True
-
-        if changed:
-            updated.append(ref)
-
-    # ── Auto-place missing symbols from a reference schematic ──────────────
-
-    placed = []
-    still_missing = []
-
-    if missing_refs:
-        if ref_sch_path:
-            ref_sch = skip.Schematic(ref_sch_path)
-
-            # Index ref symbols and lib_symbols from the reference schematic
-            ref_syms = {}
-            for sym in ref_sch.symbol:
-                try:
-                    ref_syms[sym.property.Reference.value] = sym
-                except Exception:
-                    pass
-
-            # Find lib_symbols block in both trees
-            ref_lib_block = next(
-                (item for item in ref_sch.tree
-                 if isinstance(item, list) and str(item[0]) == "lib_symbols"), None
-            )
-            tgt_lib_block = next(
-                (item for item in sch.tree
-                 if isinstance(item, list) and str(item[0]) == "lib_symbols"), None
-            )
-            if tgt_lib_block is None:
-                from sexp import Symbol as SexpSymbol
-                tgt_lib_block = [SexpSymbol("lib_symbols")]
-                sch.tree.append(tgt_lib_block)
-
-            # Collect lib_ids already in target
-            tgt_lib_ids = {
-                entry[1] for entry in tgt_lib_block[1:]
-                if isinstance(entry, list) and len(entry) > 1
-            }
-
-            for ref in missing_refs:
-                src_sym = ref_syms.get(ref)
-                if src_sym is None:
-                    still_missing.append(ref)
-                    continue
-
-                # Inject symbol instance
-                sch.tree.append(copy.deepcopy(src_sym.raw))
-
-                # Inject lib definition if not already present
-                lib_id = src_sym.lib_id.value if hasattr(src_sym, "lib_id") else None
-                if lib_id and ref_lib_block and lib_id not in tgt_lib_ids:
-                    lib_def = next(
-                        (entry for entry in ref_lib_block[1:]
-                         if isinstance(entry, list) and len(entry) > 1
-                         and entry[1] == lib_id),
-                        None,
-                    )
-                    if lib_def:
-                        tgt_lib_block.append(copy.deepcopy(lib_def))
-                        tgt_lib_ids.add(lib_id)
-
-                placed.append(ref)
-        else:
-            still_missing = missing_refs
-
-    sch.write(sch_path)
-
-    if updated:
-        print(f"Schematic: updated {len(updated)} component(s): {', '.join(sorted(updated))}")
-    if placed:
-        print(f"Schematic: placed {len(placed)} new component(s): {', '.join(sorted(placed))}")
-    if not updated and not placed:
-        print("Schematic: all components up to date")
-    if still_missing:
-        print(f"Schematic: ⚠ could not auto-place {len(still_missing)} component(s) "
-              f"(place manually): {', '.join(sorted(still_missing))}")
-    if not_in_circuit:
-        print(f"Schematic: ⚠ {len(not_in_circuit)} component(s) removed from circuit, "
-              f"delete manually if desired: {', '.join(sorted(not_in_circuit))}")
-
-
-if __name__ == "__main__":
-    OUTPUT = pathlib.Path("speakeasy")
-    OUTPUT.mkdir(exist_ok=True)
-
-    speakeasy_board()
-
-    ERC()
-
-    net_path = str(OUTPUT / "Speakeasy.net")
-    generate_netlist(file_=net_path)
-    print(f"Netlist: {net_path}")
-
-    xml_path = str(OUTPUT / "Speakeasy.xml")
-    generate_xml(file_=xml_path)
-    print(f"XML BOM:  {xml_path}")
-
-    write_jlcpcb_bom(str(OUTPUT / "speakeasy_jlcpcb_bom.csv"))
-
-    sch_path = str(OUTPUT / "Speakeasy.kicad_sch")
-    ref_sch_path = generate_reference_schematic()
-    sync_schematic_from_circuit(sch_path, ref_sch_path=ref_sch_path)
+    gerbers = circuit_obj.generate_gerbers(project_name=STAGING)
+    if gerbers["success"]:
+        print(f"Gerbers: {gerbers['output_dir']}  ({len(gerbers['gerber_files'])} files)")
+    else:
+        print(f"Gerbers failed: {gerbers.get('error')}")
