@@ -1,4 +1,4 @@
-"""Speakeasy Board — ESP32-S3-MINI-1 + MAX98357A I2S Amplifier
+"""Speakeasy Board — ESP32-S3-MINI-1 + dual MAX98357A I2S Amplifiers
 
 Custom speaker board for Music Assistant / Sendspin integration.
 
@@ -11,17 +11,50 @@ Design notes:
 - CC resistors (5.1k to GND) on PCB side identify board as 5V power sink
 - ESP32-S3 native USB used for programming — no USB-Serial bridge needed:
     IO19 (USB D-) → panel connector D-    IO20 (USB D+) → panel connector D+
-- I2S pin assignment matches speakeasy firmware:
+- I2S pin assignment matches speakeasy firmware (both DACs share the I2S bus):
     IO4 → MAX98357A DIN     (I2S data out from ESP)
     IO5 → MAX98357A BCLK    (bit clock)
     IO6 → MAX98357A LRCLK   (left/right clock)
-- MAX98357A SD_MODE pin 4 pulled high via 100k → left-channel/enable
-  (Sendspin sends mono audio on left channel)
+- U2 (DAC1) SD_MODE controlled by 2-GPIO resistor network (IO7/IO8):
+    IO7 Hi-Z,  IO8 Hi-Z  → Right channel
+    IO7 Hi-Z,  IO8 HIGH  → Left channel   (default for Sendspin mono)
+    IO7 HIGH,  IO8 Hi-Z  → Stereo (L+R)/2
+    IO7 LOW,   IO8 Hi-Z  → Shutdown
+- U4 (DAC2) SD_MODE controlled by mirrored 2-GPIO resistor network (IO9/IO10):
+    IO9 Hi-Z,  IO10 Hi-Z  → Right channel
+    IO9 Hi-Z,  IO10 HIGH  → Left channel
+    IO9 HIGH,  IO10 Hi-Z  → Stereo (L+R)/2
+    IO9 LOW,   IO10 Hi-Z  → Shutdown
 - MAX98357A OUTP/OUTN connect directly to the speaker terminal (no DC-blocking cap;
   the MAX98357A is a filterless Class D amp with no DC offset on the outputs)
+- J2 (speaker 1) and J3 (speaker 2) are independent 2-pin SMD screw terminals
 """
 
 from circuit_synth import Component, Net, circuit
+from lookup_part import lookup
+
+# Populated by component_from_lcsc() as components are instantiated.
+# Used by add_lcsc_numbers() to stamp LCSC properties onto the schematic.
+_LCSC_REGISTRY: dict = {}
+
+
+def component_from_lcsc(lcsc: str, ref: str, **overrides):
+    """Create a Component, registering its LCSC number for BOM stamping.
+
+    If symbol is not provided, looks it up from the local EasyEDA library and
+    prefixes it with 'EasyEDA:'.  Pass symbol/footprint/value as keyword args
+    to use standard KiCad library parts (e.g. Device:R) instead.
+    """
+    if "symbol" not in overrides:
+        data = lookup(lcsc)
+        if data is None:
+            raise ValueError(f"LCSC {lcsc} not found in ~/KiCad/EasyEDA.kicad_sym — "
+                             f"export it from EasyEDA first")
+        overrides.setdefault("value", data.get("Value", ""))
+        overrides.setdefault("footprint", data.get("Footprint", ""))
+        overrides["symbol"] = f"EasyEDA:{data['symbol']}"
+    _LCSC_REGISTRY[ref] = lcsc
+    return Component(ref=ref, **overrides)
 
 
 def connect(component, pin_name, net):
@@ -63,47 +96,28 @@ def speakeasy_board():
 
     # ── Modules / ICs ──────────────────────────────────────────────────────
 
-    esp32 = Component(
-        symbol="EasyEDA:ESP32-S3-MINI-1U-N4R2",
-        ref="U1",
-        value="ESP32-S3-MINI-1U-N4R2",
-        footprint="EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8",
-    )
+    esp32 = component_from_lcsc("C22356044", ref="U1")
 
     # MAX98357AETE+T: mono I2S input → Class D amplifier, 2.5–5.5V, up to 3.2W/4Ω
-    dac = Component(
-        symbol="EasyEDA:MAX98357AETE+T",
-        ref="U2",
-        value="MAX98357AETE+T",
-        footprint="EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5",
-    )
+    dac = component_from_lcsc("C910544", ref="U2")
+
+    # Second MAX98357A — shares I2S bus, independent SD_MODE via IO9/IO10
+    dac2 = component_from_lcsc("C910544", ref="U4")
 
     # AMS1117-3.3: 800mA LDO, VBUS (5V) → 3.3V for ESP32 module
-    ldo = Component(
-        symbol="EasyEDA:AMS1117-3.3",
-        ref="U3",
-        value="AMS1117-3.3",
-        footprint="EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR",
-    )
+    ldo = component_from_lcsc("C6186", ref="U3")
 
     # ── Connectors ─────────────────────────────────────────────────────────
 
     # 6-pin JST PH 2.0mm SMD (mates with panel-mount USB-C cable, female PH)
     # Pinout: 1=GND  2=D+  3=D-  4=CC2  5=CC1  6=VCC  7/8=mounting tabs
-    usbc = Component(
-        symbol="EasyEDA:PH-6P立贴",
-        ref="J1",
-        value="PH-6P立贴",
-        footprint="EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4",
-    )
+    usbc = component_from_lcsc("C64659", ref="J1")
 
-    # 2-pin SMD screw terminal for speaker wires
-    spkr_conn = Component(
-        symbol="EasyEDA:210-A-SMD_02",
-        ref="J2",
-        value="210-A-SMD/02",
-        footprint="EasyEDA:CONN-SMD_210-A-SMD-02",
-    )
+    # 2-pin SMD screw terminal for speaker 1 (DAC1 / U2)
+    spkr_conn = component_from_lcsc("C20608465", ref="J2")
+
+    # 2-pin SMD screw terminal for speaker 2 (DAC2 / U4)
+    spkr_conn2 = component_from_lcsc("C20608465", ref="J3")
 
 
     # UART test pads — probe points for 3V3, GND, TXD0, RXD0
@@ -116,50 +130,53 @@ def speakeasy_board():
     # ── Passive components ─────────────────────────────────────────────────
 
     # CC1/CC2 pull-down resistors — 5.1k to GND, identifies board as 5V/900mA sink
-    r_cc1 = Component(symbol="Device:R", ref="R1", value="5.1k",
-                      footprint="Resistor_SMD:R_0402_1005Metric")
-    r_cc2 = Component(symbol="Device:R", ref="R2", value="5.1k",
-                      footprint="Resistor_SMD:R_0402_1005Metric")
+    r_cc1 = component_from_lcsc("C25905", ref="R1", value="5.1k")
+    r_cc2 = component_from_lcsc("C25905", ref="R2", value="5.1k")
 
     # EN pullup — supplements ESP32 module internal pullup for clean power-on reset
-    r_en = Component(symbol="Device:R", ref="R3", value="10k",
-                     footprint="Resistor_SMD:R_0402_1005Metric")
+    r_en  = component_from_lcsc("C25744", ref="R3", value="10k")
 
-    # MAX98357A SD_MODE (pin 4): 100k to 3.3V → left-channel mode enabled
-    r_sd = Component(symbol="Device:R", ref="R4", value="100k",
-                     footprint="Resistor_SMD:R_0402_1005Metric")
+    # MAX98357A SD_MODE 2-resistor GPIO network for runtime L/R/Stereo/Shutdown:
+    #   IO7 (GPIO_A) → 1kΩ  → SD_MODE  (low-Z drive:  Stereo when HIGH, Shutdown when LOW)
+    #   IO8 (GPIO_B) → 100kΩ → SD_MODE (mid-Z drive:  Left when HIGH)
+    #   Both Hi-Z → SD_MODE floating → Right channel
+    r_sd_a = component_from_lcsc("C11702", ref="R4", value="1k")
+    r_sd_b = component_from_lcsc("C25741", ref="R5", value="100k")
 
     # LDO input bulk cap (+5V rail, near U3 input)
-    c_ldo_in = Component(symbol="Device:C", ref="C1", value="10uF",
-                         footprint="Capacitor_SMD:C_0805_2012Metric")
+    c_ldo_in   = component_from_lcsc("C15850", ref="C1", value="10uF")
 
     # LDO output cap (+3.3V rail — required for AMS1117 stability: min 10uF)
-    c_ldo_out = Component(symbol="Device:C", ref="C2", value="10uF",
-                          footprint="Capacitor_SMD:C_0805_2012Metric")
+    c_ldo_out  = component_from_lcsc("C15850", ref="C2", value="10uF")
 
     # ESP32 +3.3V bulk decoupling
-    c_esp_bulk = Component(symbol="Device:C", ref="C3", value="10uF",
-                           footprint="Capacitor_SMD:C_0805_2012Metric")
+    c_esp_bulk = component_from_lcsc("C15850", ref="C3", value="10uF")
 
     # ESP32 +3.3V high-frequency bypass
-    c_esp_bypass = Component(symbol="Device:C", ref="C4", value="100nF",
-                             footprint="Capacitor_SMD:C_0402_1005Metric")
+    c_esp_bypass = component_from_lcsc("C14663", ref="C4", value="100nF")
 
     # MAX98357A VDD bulk decoupling (+5V rail, near U2)
-    c_dac_bulk = Component(symbol="Device:C", ref="C5", value="1uF",
-                           footprint="Capacitor_SMD:C_0402_1005Metric")
+    c_dac_bulk   = component_from_lcsc("C52923", ref="C5", value="1uF")
 
     # MAX98357A VDD high-frequency bypass (as close to chip as possible)
-    c_dac_bypass = Component(symbol="Device:C", ref="C6", value="100nF",
-                             footprint="Capacitor_SMD:C_0402_1005Metric")
+    c_dac_bypass = component_from_lcsc("C14663", ref="C6", value="100nF")
+
+    # DAC2 (U4) VDD bulk decoupling
+    c_dac2_bulk   = component_from_lcsc("C52923", ref="C7", value="1uF")
+
+    # DAC2 (U4) VDD high-frequency bypass
+    c_dac2_bypass = component_from_lcsc("C14663", ref="C8", value="100nF")
+
+    # DAC2 SD_MODE GPIO control network (same topology as R4/R5, for IO9/IO10)
+    r_sd2_a = component_from_lcsc("C11702", ref="R6", value="1k")
+    r_sd2_b = component_from_lcsc("C25741", ref="R7", value="100k")
 
     # Boot button: pulls IO0 low to enter USB download mode
-    boot_btn = Component(symbol="Switch:SW_Push", ref="SW1", value="BOOT",
-                         footprint="Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
+    # C318884 pin layout: A(1)+B(2) = one terminal, C(3)+D(4) = other terminal
+    boot_btn = component_from_lcsc("C318884", ref="SW1", value="BOOT")
 
     # Reset button: pulls EN low to reset the ESP32
-    rst_btn = Component(symbol="Switch:SW_Push", ref="SW2", value="RST",
-                        footprint="Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
+    rst_btn  = component_from_lcsc("C318884", ref="SW2", value="RST")
 
     # ── Nets ───────────────────────────────────────────────────────────────
 
@@ -177,14 +194,23 @@ def speakeasy_board():
     i2s_lrclk = Net("I2S_LRCLK")  # IO6
     i2s_dout  = Net("I2S_DOUT")   # IO4
 
-    en_net  = Net("EN")
-    gpio0   = Net("GPIO0")
-    sd_mode = Net("SD_MODE")
-    uart_tx = Net("UART_TX")   # ESP TXD0 → dongle RX
-    uart_rx = Net("UART_RX")   # ESP RXD0 ← dongle TX
+    en_net    = Net("EN")
+    gpio0     = Net("GPIO0")
+    sd_mode   = Net("SD_MODE")
+    sd_ctrl_a = Net("SD_CTRL_A")   # IO7 → 1kΩ → SD_MODE (Stereo/Shutdown)
+    sd_ctrl_b = Net("SD_CTRL_B")   # IO8 → 100kΩ → SD_MODE (Left)
+    uart_tx   = Net("UART_TX")     # ESP TXD0 → dongle RX
+    uart_rx   = Net("UART_RX")     # ESP RXD0 ← dongle TX
 
     spkr_p = Net("SPKR_P")
     spkr_n = Net("SPKR_N")
+
+    sd_mode2   = Net("SD_MODE2")
+    sd_ctrl2_a = Net("SD_CTRL2_A") # IO9  → 1kΩ  → SD_MODE2
+    sd_ctrl2_b = Net("SD_CTRL2_B") # IO10 → 100kΩ → SD_MODE2
+
+    spkr2_p = Net("SPKR2_P")
+    spkr2_n = Net("SPKR2_N")
 
     # ── JST-XH 6-pin (panel-mount USB-C interface) ─────────────────────────
     # Pin 1=GND  2=D+  3=D-  4=CC2  5=CC1  6=VCC
@@ -234,6 +260,10 @@ def speakeasy_board():
     # Boot/reset pins
     esp32["IO0"] += gpio0
 
+    # SD_MODE channel select (see r_sd_a / r_sd_b for truth table)
+    esp32["IO7"] += sd_ctrl_a
+    esp32["IO8"] += sd_ctrl_b
+
     # UART0 → debug header
     esp32["TXD0"] += uart_tx
     esp32["RXD0"] += uart_rx
@@ -248,11 +278,11 @@ def speakeasy_board():
     r_en[1]    += vcc_3v3
     r_en[2]    += en_net
     rst_btn[1] += en_net
-    rst_btn[2] += gnd
+    rst_btn[3] += gnd
 
     # Boot circuit: button pulls IO0 to GND (hold at power-on → download mode)
     boot_btn[1] += gpio0
-    boot_btn[2] += gnd
+    boot_btn[3] += gnd
 
     # ── MAX98357A ──────────────────────────────────────────────────────────
 
@@ -266,9 +296,11 @@ def speakeasy_board():
     dac["OUTP"]         += spkr_p
     dac["OUTN"]         += spkr_n
 
-    # SD_MODE high via 100k to 3.3V (left channel, 9dB gain)
-    r_sd[1] += vcc_3v3
-    r_sd[2] += sd_mode
+    # SD_MODE GPIO control network (see component declaration for truth table)
+    r_sd_a[1] += sd_ctrl_a
+    r_sd_a[2] += sd_mode
+    r_sd_b[1] += sd_ctrl_b
+    r_sd_b[2] += sd_mode
 
     # VDD decoupling (Class D switching; place these as close as possible)
     c_dac_bulk[1]   += vbus
@@ -276,10 +308,41 @@ def speakeasy_board():
     c_dac_bypass[1] += vbus
     c_dac_bypass[2] += gnd
 
-    # ── Speaker connector ───────────────────────────────────────────────────
+    # ── MAX98357A (DAC2 / U4) ──────────────────────────────────────────────
+
+    dac2["VDD"]          += vbus
+    dac2["GND"]          += gnd
+    dac2["EP"]           += gnd
+    dac2["BCLK"]         += i2s_bclk
+    dac2["LRCLK"]        += i2s_lrclk
+    dac2["DIN"]          += i2s_dout
+    dac2["~{SD_MODE}"]   += sd_mode2
+    dac2["OUTP"]         += spkr2_p
+    dac2["OUTN"]         += spkr2_n
+
+    # SD_MODE2 GPIO control network (IO9/IO10, mirrors DAC1 R4/R5)
+    r_sd2_a[1] += sd_ctrl2_a
+    r_sd2_a[2] += sd_mode2
+    r_sd2_b[1] += sd_ctrl2_b
+    r_sd2_b[2] += sd_mode2
+
+    # IO9/IO10 → DAC2 SD_MODE
+    esp32["IO9"]  += sd_ctrl2_a
+    esp32["IO10"] += sd_ctrl2_b
+
+    # VDD decoupling for DAC2
+    c_dac2_bulk[1]   += vbus
+    c_dac2_bulk[2]   += gnd
+    c_dac2_bypass[1] += vbus
+    c_dac2_bypass[2] += gnd
+
+    # ── Speaker connectors ─────────────────────────────────────────────────
 
     spkr_conn[1] += spkr_p
     spkr_conn[2] += spkr_n
+
+    spkr_conn2[1] += spkr2_p
+    spkr_conn2[2] += spkr2_n
 
     # ── UART test pads ─────────────────────────────────────────────────────
 
@@ -351,31 +414,6 @@ def fix_power_symbol_overlaps(sch_path):
         print(f"Fixed {fixed} GND symbol(s) moved to cap bottom pin")
 
 
-# JLCPCB LCSC part numbers keyed by designator.
-# ⚠  Verify U1, U2, C7, J1, J2, SW1/SW2 on lcsc.com before ordering —
-#    passives and AMS1117 are well-known basic parts; modules/ICs can change.
-LCSC_PARTS = {
-    "U1":       "C22356044",  # ESP32-S3-MINI-1U-N4R2
-    "U2":       "C910544",    # MAX98357AETE+T TQFN-16
-    "U3":       "C6186",      # AMS1117-3.3 SOT-223  (basic part)
-    "J1":       "C64659",     # PH-6P SMD 6-pin 2.0mm
-    "J2":       "C20608465",  # 210-A-SMD/02 SMD screw terminal
-    # TP1–TP4 are bare test pads — no LCSC part
-    "R1":       "C25905",     # 5.1kΩ 0402 1% (basic)
-    "R2":       "C25905",     # 5.1kΩ 0402 1% (basic)
-    "R3":       "C25744",     # 10kΩ  0402 1% (basic)
-    "R4":       "C25741",     # 100kΩ 0402 1% (basic)
-    "C1":       "C15850",     # 10uF 0805 X5R 10V (basic)
-    "C2":       "C15850",
-    "C3":       "C15850",
-    "C4":       "C14663",     # 100nF 0402 X7R 16V (basic)
-    "C5":       "C52923",     # 1uF   0402 X5R 16V (basic)
-    "C6":       "C14663",     # 100nF 0402 X7R 16V (basic)
-    "SW1":      "C318884",    # SMD tact switch 6×6mm  ← verify footprint
-    "SW2":      "C318884",
-}
-
-
 def add_lcsc_numbers(sch_path):
     """Stamp LCSC part numbers onto each component in the schematic."""
     import kicad_sch_api as ksa
@@ -383,8 +421,7 @@ def add_lcsc_numbers(sch_path):
     sch = ksa.load_schematic(sch_path)
     stamped = 0
     for comp in sch.components:
-        ref = comp.reference
-        lcsc = LCSC_PARTS.get(ref)
+        lcsc = _LCSC_REGISTRY.get(comp.reference)
         if lcsc:
             comp.add_property("LCSC", lcsc)
             stamped += 1
@@ -604,7 +641,7 @@ def write_jlcpcb_bom(sch_path, out_path):
         ref = comp.reference
         if not ref or ref.startswith("#"):
             continue
-        lcsc = LCSC_PARTS.get(ref, "")
+        lcsc = _LCSC_REGISTRY.get(ref, "")
         value = comp.value or ""
         fp = comp.footprint or ""
         rows.append((ref, value, fp, lcsc))
@@ -624,7 +661,20 @@ def write_jlcpcb_bom(sch_path, out_path):
 
 
 if __name__ == "__main__":
-    import os, shutil, pathlib
+    import os, shutil, pathlib, sys
+
+    # Verify we're running the local circuit-synth fork, not a stale installed copy.
+    import circuit_synth as _cs
+    _cs_path = pathlib.Path(_cs.__file__).resolve()
+    _fork = (pathlib.Path(__file__).resolve().parent.parent.parent
+             / "circuit-synth-local" / "src" / "circuit_synth").resolve()
+    if not str(_cs_path).startswith(str(_fork)):
+        print(f"ERROR: circuit_synth loaded from wrong location:\n  {_cs_path}\n"
+              f"Expected: {_fork}\n\n"
+              f"Fix with:\n  uv pip install setuptools && "
+              f"uv pip install --editable ../circuit-synth-local --no-build-isolation",
+              file=sys.stderr)
+        sys.exit(1)
 
     # Ensure both the standard KiCad symbols and ~/KiCad (EasyEDA library) are on
     # the search path. Setting KICAD_SYMBOL_DIR disables circuit-synth's built-in
@@ -663,7 +713,7 @@ if __name__ == "__main__":
     except Exception:
         pass
 
-    fix_power_symbol_overlaps(f"{STAGING}/Speakeasy.kicad_sch")
+    # fix_power_symbol_overlaps(f"{STAGING}/Speakeasy.kicad_sch")
     add_lcsc_numbers(f"{STAGING}/Speakeasy.kicad_sch")
     preserve_component_uuids(
         f"{OUTPUT}/Speakeasy.kicad_sch", f"{STAGING}/Speakeasy.kicad_sch",
