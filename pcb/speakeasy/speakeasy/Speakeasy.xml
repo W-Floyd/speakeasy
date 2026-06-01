@@ -1,0 +1,239 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<export version="D">
+  <design>
+    <source>/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py</source>
+    <date>05/31/2026 08:30 PM</date>
+    <tool>SKiDL (2.2.3)</tool>
+  </design>
+  <components>
+    <comp ref="U1">
+      <value>"ESP32-S3-MINI-1U-N4R2"</value>
+      <footprint>EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8</footprint>
+      <libsource lib="EasyEDA" part=""ESP32-S3-MINI-1U-N4R2""/>
+    </comp>
+    <comp ref="U2">
+      <value>"MAX98357AETE+T"</value>
+      <footprint>EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5</footprint>
+      <libsource lib="EasyEDA" part=""MAX98357AETE+T""/>
+    </comp>
+    <comp ref="U3">
+      <value>"AMS1117-3.3"</value>
+      <footprint>EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR</footprint>
+      <libsource lib="EasyEDA" part=""AMS1117-3.3""/>
+    </comp>
+    <comp ref="J1">
+      <value>"PH-6P立贴"</value>
+      <footprint>EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4</footprint>
+      <libsource lib="EasyEDA" part=""PH-6Pç«è´´""/>
+    </comp>
+    <comp ref="J2">
+      <value>"210-A-SMD/02"</value>
+      <footprint>EasyEDA:CONN-SMD_210-A-SMD-02</footprint>
+      <libsource lib="EasyEDA" part=""210-A-SMD_02""/>
+    </comp>
+    <comp ref="TP1">
+      <value>"3V3"</value>
+      <footprint>TestPoint:TestPoint_Pad_D1.5mm</footprint>
+      <libsource lib="Connector" part=""TestPoint""/>
+    </comp>
+    <comp ref="TP2">
+      <value>"GND"</value>
+      <footprint>TestPoint:TestPoint_Pad_D1.5mm</footprint>
+      <libsource lib="Connector" part=""TestPoint""/>
+    </comp>
+    <comp ref="TP3">
+      <value>"TXD0"</value>
+      <footprint>TestPoint:TestPoint_Pad_D1.5mm</footprint>
+      <libsource lib="Connector" part=""TestPoint""/>
+    </comp>
+    <comp ref="TP4">
+      <value>"RXD0"</value>
+      <footprint>TestPoint:TestPoint_Pad_D1.5mm</footprint>
+      <libsource lib="Connector" part=""TestPoint""/>
+    </comp>
+    <comp ref="R1">
+      <value>"5.1k"</value>
+      <footprint>Resistor_SMD:R_0402_1005Metric</footprint>
+      <libsource lib="Device" part=""R""/>
+    </comp>
+    <comp ref="R2">
+      <value>"5.1k"</value>
+      <footprint>Resistor_SMD:R_0402_1005Metric</footprint>
+      <libsource lib="Device" part=""R""/>
+    </comp>
+    <comp ref="R3">
+      <value>"10k"</value>
+      <footprint>Resistor_SMD:R_0402_1005Metric</footprint>
+      <libsource lib="Device" part=""R""/>
+    </comp>
+    <comp ref="R4">
+      <value>"100k"</value>
+      <footprint>Resistor_SMD:R_0402_1005Metric</footprint>
+      <libsource lib="Device" part=""R""/>
+    </comp>
+    <comp ref="C1">
+      <value>"10uF"</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Device" part=""C""/>
+    </comp>
+    <comp ref="C2">
+      <value>"10uF"</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Device" part=""C""/>
+    </comp>
+    <comp ref="C3">
+      <value>"10uF"</value>
+      <footprint>Capacitor_SMD:C_0805_2012Metric</footprint>
+      <libsource lib="Device" part=""C""/>
+    </comp>
+    <comp ref="C4">
+      <value>"100nF"</value>
+      <footprint>Capacitor_SMD:C_0402_1005Metric</footprint>
+      <libsource lib="Device" part=""C""/>
+    </comp>
+    <comp ref="C5">
+      <value>"1uF"</value>
+      <footprint>Capacitor_SMD:C_0402_1005Metric</footprint>
+      <libsource lib="Device" part=""C""/>
+    </comp>
+    <comp ref="C6">
+      <value>"100nF"</value>
+      <footprint>Capacitor_SMD:C_0402_1005Metric</footprint>
+      <libsource lib="Device" part=""C""/>
+    </comp>
+    <comp ref="SW1">
+      <value>"BOOT"</value>
+      <footprint>Button_Switch_SMD:SW_SPST_CK_RS282G05A3</footprint>
+      <libsource lib="Switch" part=""SW_Push""/>
+    </comp>
+    <comp ref="SW2">
+      <value>"RST"</value>
+      <footprint>Button_Switch_SMD:SW_SPST_CK_RS282G05A3</footprint>
+      <libsource lib="Switch" part=""SW_Push""/>
+    </comp>
+  </components>
+  <nets>
+    <net code="0" name="+5V">
+      <node ref="U2" pin="8"/>
+      <node ref="C1" pin="1"/>
+      <node ref="U3" pin="3"/>
+      <node ref="J1" pin="6"/>
+      <node ref="C6" pin="1"/>
+      <node ref="U2" pin="7"/>
+      <node ref="C5" pin="1"/>
+    </net>
+    <net code="1" name="+3.3V">
+      <node ref="C2" pin="1"/>
+      <node ref="U3" pin="2"/>
+      <node ref="TP1" pin="1"/>
+      <node ref="C3" pin="1"/>
+      <node ref="U1" pin="3"/>
+      <node ref="R4" pin="1"/>
+      <node ref="R3" pin="1"/>
+      <node ref="U3" pin="4"/>
+      <node ref="C4" pin="1"/>
+    </net>
+    <net code="2" name="GND">
+      <node ref="U1" pin="52"/>
+      <node ref="U3" pin="1"/>
+      <node ref="U1" pin="42"/>
+      <node ref="U1" pin="61"/>
+      <node ref="U1" pin="51"/>
+      <node ref="SW2" pin="2"/>
+      <node ref="U2" pin="11"/>
+      <node ref="C3" pin="2"/>
+      <node ref="J1" pin="1"/>
+      <node ref="U1" pin="2"/>
+      <node ref="U1" pin="60"/>
+      <node ref="U1" pin="50"/>
+      <node ref="U1" pin="1"/>
+      <node ref="U1" pin="59"/>
+      <node ref="U2" pin="3"/>
+      <node ref="U1" pin="49"/>
+      <node ref="U1" pin="65"/>
+      <node ref="C4" pin="2"/>
+      <node ref="TP2" pin="1"/>
+      <node ref="U1" pin="58"/>
+      <node ref="U1" pin="48"/>
+      <node ref="U1" pin="57"/>
+      <node ref="U1" pin="47"/>
+      <node ref="U2" pin="15"/>
+      <node ref="R1" pin="2"/>
+      <node ref="J1" pin="7"/>
+      <node ref="C5" pin="2"/>
+      <node ref="U1" pin="56"/>
+      <node ref="SW1" pin="2"/>
+      <node ref="U1" pin="46"/>
+      <node ref="C1" pin="2"/>
+      <node ref="U1" pin="55"/>
+      <node ref="U2" pin="17"/>
+      <node ref="C6" pin="2"/>
+      <node ref="U1" pin="64"/>
+      <node ref="U1" pin="54"/>
+      <node ref="R2" pin="2"/>
+      <node ref="C2" pin="2"/>
+      <node ref="U1" pin="63"/>
+      <node ref="U1" pin="53"/>
+      <node ref="J1" pin="8"/>
+      <node ref="U1" pin="43"/>
+      <node ref="U1" pin="62"/>
+    </net>
+    <net code="3" name="USB_DP">
+      <node ref="U1" pin="24"/>
+      <node ref="J1" pin="2"/>
+    </net>
+    <net code="4" name="USB_DM">
+      <node ref="J1" pin="3"/>
+      <node ref="U1" pin="23"/>
+    </net>
+    <net code="5" name="CC1">
+      <node ref="R1" pin="1"/>
+      <node ref="J1" pin="5"/>
+    </net>
+    <net code="6" name="CC2">
+      <node ref="J1" pin="4"/>
+      <node ref="R2" pin="1"/>
+    </net>
+    <net code="7" name="I2S_BCLK">
+      <node ref="U1" pin="9"/>
+      <node ref="U2" pin="16"/>
+    </net>
+    <net code="8" name="I2S_LRCLK">
+      <node ref="U1" pin="10"/>
+      <node ref="U2" pin="14"/>
+    </net>
+    <net code="9" name="I2S_DOUT">
+      <node ref="U1" pin="8"/>
+      <node ref="U2" pin="1"/>
+    </net>
+    <net code="10" name="EN">
+      <node ref="SW2" pin="1"/>
+      <node ref="U1" pin="45"/>
+      <node ref="R3" pin="2"/>
+    </net>
+    <net code="11" name="GPIO0">
+      <node ref="U1" pin="4"/>
+      <node ref="SW1" pin="1"/>
+    </net>
+    <net code="12" name="SD_MODE">
+      <node ref="R4" pin="2"/>
+      <node ref="U2" pin="4"/>
+    </net>
+    <net code="13" name="UART_TX">
+      <node ref="U1" pin="39"/>
+      <node ref="TP3" pin="1"/>
+    </net>
+    <net code="14" name="UART_RX">
+      <node ref="U1" pin="40"/>
+      <node ref="TP4" pin="1"/>
+    </net>
+    <net code="15" name="SPKR_P">
+      <node ref="J2" pin="1"/>
+      <node ref="U2" pin="9"/>
+    </net>
+    <net code="16" name="SPKR_N">
+      <node ref="U2" pin="10"/>
+      <node ref="J2" pin="2"/>
+    </net>
+  </nets>
+</export>

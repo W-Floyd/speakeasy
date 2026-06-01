@@ -1,0 +1,691 @@
+ERC report (2026-05-31T20:14:21, Encoding UTF8)
+Report includes: Errors, Warnings
+
+***** Sheet /
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 59.78 mm): Symbol U1 Pin 5 [IO1, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 62.32 mm): Symbol U1 Pin 6 [IO2, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 64.86 mm): Symbol U1 Pin 7 [IO3, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 75.02 mm): Symbol U1 Pin 11 [IO7, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 77.56 mm): Symbol U1 Pin 12 [IO8, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 80.10 mm): Symbol U1 Pin 13 [IO9, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 82.64 mm): Symbol U1 Pin 14 [IO10, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 85.18 mm): Symbol U1 Pin 15 [IO11, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 87.72 mm): Symbol U1 Pin 16 [IO12, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 90.26 mm): Symbol U1 Pin 17 [IO13, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 92.80 mm): Symbol U1 Pin 18 [IO14, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 95.34 mm): Symbol U1 Pin 19 [IO15, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 97.88 mm): Symbol U1 Pin 20 [IO16, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 100.42 mm): Symbol U1 Pin 21 [IO17, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 102.96 mm): Symbol U1 Pin 22 [IO18, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 110.58 mm): Symbol U1 Pin 25 [IO21, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 113.12 mm): Symbol U1 Pin 26 [IO26, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 115.66 mm): Symbol U1 Pin 27 [IO47, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 118.20 mm): Symbol U1 Pin 28 [IO33, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 120.74 mm): Symbol U1 Pin 29 [IO34, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 123.28 mm): Symbol U1 Pin 30 [IO48, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 125.82 mm): Symbol U1 Pin 31 [IO35, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(335.28 mm, 128.36 mm): Symbol U1 Pin 32 [IO36, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 100.42 mm): Symbol U1 Pin 44 [IO46, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 108.04 mm): Symbol U1 Pin 41 [IO45, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 115.66 mm): Symbol U1 Pin 38 [IO42, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 118.20 mm): Symbol U1 Pin 37 [IO41, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 120.74 mm): Symbol U1 Pin 36 [IO40, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 123.28 mm): Symbol U1 Pin 35 [IO39, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 125.82 mm): Symbol U1 Pin 34 [IO38, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(358.14 mm, 128.36 mm): Symbol U1 Pin 33 [IO37, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(473.46 mm, 446.96 mm): Symbol U2 Pin 2 [GAIN_SLOT, Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(473.46 mm, 454.58 mm): Symbol U2 Pin 5 [N.C., Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(473.46 mm, 457.12 mm): Symbol U2 Pin 6 [N.C., Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(506.48 mm, 452.04 mm): Symbol U2 Pin 13 [N.C., Unspecified, Line]
+[pin_not_connected]: Pin not connected
+    ; error
+    @(506.48 mm, 454.58 mm): Symbol U2 Pin 12 [N.C., Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(332.74 mm, 544.83 mm): Pin 1 [???, ?]
+    @(332.74 mm, 544.83 mm): Symbol J1 Pin 8 [8, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(335.28 mm, 49.62 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(335.28 mm, 49.62 mm): Pin 1 [???, ?]
+    @(335.28 mm, 49.62 mm): Symbol U1 Pin 1 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(335.28 mm, 52.16 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(335.28 mm, 52.16 mm): Pin 1 [???, ?]
+    @(335.28 mm, 52.16 mm): Symbol U1 Pin 2 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(335.28 mm, 54.70 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(335.28 mm, 54.70 mm): Pin 1 [???, ?]
+    @(335.28 mm, 54.70 mm): Symbol U1 Pin 3 [3V3, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(335.28 mm, 57.24 mm): Symbol U1 Pin 4 [IO0, Unspecified, Line]
+    @(402.59 mm, 505.79 mm): Symbol SW1 Pin 1 [1, Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(335.28 mm, 67.40 mm): Symbol U1 Pin 8 [IO4, Unspecified, Line]
+    @(473.46 mm, 444.42 mm): Symbol U2 Pin 1 [DIN, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(335.28 mm, 69.94 mm): Symbol U1 Pin 9 [IO5, Unspecified, Line]
+    @(506.48 mm, 444.42 mm): Symbol U2 Pin 16 [BCLK, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(335.28 mm, 72.48 mm): Symbol U1 Pin 10 [IO6, Unspecified, Line]
+    @(506.48 mm, 449.50 mm): Symbol U2 Pin 14 [LRCLK, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(340.36 mm, 534.67 mm): Pin 1 [???, ?]
+    @(340.36 mm, 534.67 mm): Symbol J1 Pin 1 [1, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(342.90 mm, 534.67 mm): Symbol J1 Pin 2 [2, Unspecified, Line]
+    @(335.28 mm, 108.04 mm): Symbol U1 Pin 24 [IO20, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(345.44 mm, 534.67 mm): Symbol J1 Pin 3 [3, Unspecified, Line]
+    @(335.28 mm, 105.50 mm): Symbol U1 Pin 23 [IO19, Unspecified, Line]
+[lib_symbol_mismatch]: Symbol 'ESP32-S3-MINI-1U-N4R2' doesn't match copy in library 'EasyEDA'
+    ; warning
+    @(346.71 mm, 87.72 mm): Symbol U1 [ESP32-S3-MINI-1U-N4R2]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(346.71 mm, 415.29 mm): Pin 1 [???, ?]
+    @(346.71 mm, 415.29 mm): Symbol C1 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'C' doesn't match copy in library 'Device'
+    ; warning
+    @(346.71 mm, 419.10 mm): Symbol C1 [C]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(346.71 mm, 422.91 mm): Pin 1 [???, ?]
+    @(346.71 mm, 422.91 mm): Symbol C1 Pin 2 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(346.71 mm, 488.08 mm): Pin 1 [???, ?]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(346.71 mm, 488.08 mm): Symbol TP2 Pin 1 [1, Passive, Line]
+[lib_symbol_mismatch]: Symbol 'TestPoint' doesn't match copy in library 'Connector'
+    ; warning
+    @(346.71 mm, 488.08 mm): Symbol TP2 [TestPoint]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(346.71 mm, 488.08 mm): Pin 1 [???, ?]
+    @(346.71 mm, 488.08 mm): Symbol TP2 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(346.71 mm, 493.53 mm): Symbol TP4 Pin 1 [1, Passive, Line]
+[lib_symbol_mismatch]: Symbol 'TestPoint' doesn't match copy in library 'Connector'
+    ; warning
+    @(346.71 mm, 493.53 mm): Symbol TP4 [TestPoint]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(346.71 mm, 512.83 mm): Symbol R2 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'R' doesn't match copy in library 'Device'
+    ; warning
+    @(346.71 mm, 516.64 mm): Symbol R2 [R]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(346.71 mm, 520.45 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(346.71 mm, 520.45 mm): Pin 1 [???, ?]
+    @(346.71 mm, 520.45 mm): Symbol R2 Pin 2 [Passive, Line]
+[lib_symbol_issues]: Symbol 'PH-6Pç«è´´' not found in symbol library 'EasyEDA'
+    ; warning
+    @(346.71 mm, 541.02 mm): Symbol J1 [PH-6Pç«è´´]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(347.98 mm, 534.67 mm): Symbol J1 Pin 4 [4, Unspecified, Line]
+    @(346.71 mm, 512.83 mm): Symbol R2 Pin 1 [Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(350.52 mm, 534.67 mm): Symbol J1 Pin 5 [5, Unspecified, Line]
+    @(360.67 mm, 537.21 mm): Symbol R1 Pin 1 [Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(353.06 mm, 534.67 mm): Pin 1 [???, ?]
+    @(353.06 mm, 534.67 mm): Symbol J1 Pin 6 [6, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(354.63 mm, 427.48 mm): Symbol C3 Pin 1 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(354.63 mm, 427.48 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(354.63 mm, 427.48 mm): Pin 1 [???, ?]
+    @(354.63 mm, 427.48 mm): Symbol C3 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'C' doesn't match copy in library 'Device'
+    ; warning
+    @(354.63 mm, 431.29 mm): Symbol C3 [C]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(354.63 mm, 435.10 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(354.63 mm, 435.10 mm): Pin 1 [???, ?]
+    @(354.63 mm, 435.10 mm): Symbol C3 Pin 2 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(354.63 mm, 509.78 mm): Symbol C2 Pin 1 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(354.63 mm, 509.78 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(354.63 mm, 509.78 mm): Pin 1 [???, ?]
+    @(354.63 mm, 509.78 mm): Symbol C2 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'C' doesn't match copy in library 'Device'
+    ; warning
+    @(354.63 mm, 513.59 mm): Symbol C2 [C]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(354.63 mm, 517.40 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(354.63 mm, 517.40 mm): Pin 1 [???, ?]
+    @(354.63 mm, 517.40 mm): Symbol C2 Pin 2 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(355.61 mm, 541.02 mm): Symbol TP3 Pin 1 [1, Passive, Line]
+[lib_symbol_mismatch]: Symbol 'TestPoint' doesn't match copy in library 'Connector'
+    ; warning
+    @(355.61 mm, 541.02 mm): Symbol TP3 [TestPoint]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 47.08 mm): Symbol U1 Pin 65 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 47.08 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 47.08 mm): Pin 1 [???, ?]
+    @(358.14 mm, 47.08 mm): Symbol U1 Pin 65 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 49.62 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 49.62 mm): Pin 1 [???, ?]
+    @(358.14 mm, 49.62 mm): Symbol U1 Pin 64 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 52.16 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 52.16 mm): Pin 1 [???, ?]
+    @(358.14 mm, 52.16 mm): Symbol U1 Pin 63 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 54.70 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 54.70 mm): Pin 1 [???, ?]
+    @(358.14 mm, 54.70 mm): Symbol U1 Pin 62 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 57.24 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 57.24 mm): Pin 1 [???, ?]
+    @(358.14 mm, 57.24 mm): Symbol U1 Pin 61 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 59.78 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 59.78 mm): Pin 1 [???, ?]
+    @(358.14 mm, 59.78 mm): Symbol U1 Pin 60 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 62.32 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 62.32 mm): Pin 1 [???, ?]
+    @(358.14 mm, 62.32 mm): Symbol U1 Pin 59 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 64.86 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 64.86 mm): Pin 1 [???, ?]
+    @(358.14 mm, 64.86 mm): Symbol U1 Pin 58 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 67.40 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 67.40 mm): Pin 1 [???, ?]
+    @(358.14 mm, 67.40 mm): Symbol U1 Pin 57 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 69.94 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 69.94 mm): Pin 1 [???, ?]
+    @(358.14 mm, 69.94 mm): Symbol U1 Pin 56 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 72.48 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 72.48 mm): Pin 1 [???, ?]
+    @(358.14 mm, 72.48 mm): Symbol U1 Pin 55 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 75.02 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 75.02 mm): Pin 1 [???, ?]
+    @(358.14 mm, 75.02 mm): Symbol U1 Pin 54 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 77.56 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 77.56 mm): Pin 1 [???, ?]
+    @(358.14 mm, 77.56 mm): Symbol U1 Pin 53 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 80.10 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 80.10 mm): Pin 1 [???, ?]
+    @(358.14 mm, 80.10 mm): Symbol U1 Pin 52 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 82.64 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 82.64 mm): Pin 1 [???, ?]
+    @(358.14 mm, 82.64 mm): Symbol U1 Pin 51 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 85.18 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 85.18 mm): Pin 1 [???, ?]
+    @(358.14 mm, 85.18 mm): Symbol U1 Pin 50 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 87.72 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 87.72 mm): Pin 1 [???, ?]
+    @(358.14 mm, 87.72 mm): Symbol U1 Pin 49 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 90.26 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 90.26 mm): Pin 1 [???, ?]
+    @(358.14 mm, 90.26 mm): Symbol U1 Pin 48 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 92.80 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 92.80 mm): Pin 1 [???, ?]
+    @(358.14 mm, 92.80 mm): Symbol U1 Pin 47 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 95.34 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 95.34 mm): Pin 1 [???, ?]
+    @(358.14 mm, 95.34 mm): Symbol U1 Pin 46 [GND, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(358.14 mm, 97.88 mm): Symbol U1 Pin 45 [EN, Unspecified, Line]
+    @(367.65 mm, 467.11 mm): Symbol R3 Pin 2 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 102.96 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 102.96 mm): Pin 1 [???, ?]
+    @(358.14 mm, 102.96 mm): Symbol U1 Pin 43 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(358.14 mm, 105.50 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(358.14 mm, 105.50 mm): Pin 1 [???, ?]
+    @(358.14 mm, 105.50 mm): Symbol U1 Pin 42 [GND, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(358.14 mm, 110.58 mm): Symbol U1 Pin 40 [RXD0, Unspecified, Line]
+    @(346.71 mm, 493.53 mm): Symbol TP4 Pin 1 [1, Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(358.14 mm, 113.12 mm): Symbol U1 Pin 39 [TXD0, Unspecified, Line]
+    @(355.61 mm, 541.02 mm): Symbol TP3 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(360.67 mm, 503.68 mm): Pin 1 [???, ?]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(360.67 mm, 503.68 mm): Symbol R4 Pin 1 [Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(360.67 mm, 503.68 mm): Pin 1 [???, ?]
+    @(360.67 mm, 503.68 mm): Symbol R4 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'R' doesn't match copy in library 'Device'
+    ; warning
+    @(360.67 mm, 507.49 mm): Symbol R4 [R]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(360.67 mm, 537.21 mm): Symbol R1 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'R' doesn't match copy in library 'Device'
+    ; warning
+    @(360.67 mm, 541.02 mm): Symbol R1 [R]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(360.67 mm, 544.83 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(360.67 mm, 544.83 mm): Pin 1 [???, ?]
+    @(360.67 mm, 544.83 mm): Symbol R1 Pin 2 [Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(360.68 mm, 544.83 mm): Pin 1 [???, ?]
+    @(360.68 mm, 544.83 mm): Symbol J1 Pin 7 [7, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(365.76 mm, 483.24 mm): Symbol J2 Pin 1 [1, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(365.76 mm, 483.24 mm): Symbol J2 Pin 1 [1, Unspecified, Line]
+    @(506.48 mm, 462.20 mm): Symbol U2 Pin 9 [OUTP, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(365.76 mm, 485.78 mm): Symbol J2 Pin 2 [2, Unspecified, Line]
+    @(506.48 mm, 459.66 mm): Symbol U2 Pin 10 [OUTN, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(367.54 mm, 523.40 mm): Symbol SW2 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(367.65 mm, 459.49 mm): Pin 1 [???, ?]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(367.65 mm, 459.49 mm): Symbol R3 Pin 1 [Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(367.65 mm, 459.49 mm): Pin 1 [???, ?]
+    @(367.65 mm, 459.49 mm): Symbol R3 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'R' doesn't match copy in library 'Device'
+    ; warning
+    @(367.65 mm, 463.30 mm): Symbol R3 [R]
+[lib_symbol_mismatch]: Symbol '210-A-SMD_02' doesn't match copy in library 'EasyEDA'
+    ; warning
+    @(369.57 mm, 484.51 mm): Symbol J2 [210-A-SMD_02]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 439.67 mm): Pin 1 [???, ?]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 439.67 mm): Symbol C5 Pin 1 [Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(370.48 mm, 439.67 mm): Pin 1 [???, ?]
+    @(370.48 mm, 439.67 mm): Symbol C5 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'C' doesn't match copy in library 'Device'
+    ; warning
+    @(370.48 mm, 443.48 mm): Symbol C5 [C]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 447.29 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(370.48 mm, 447.29 mm): Pin 1 [???, ?]
+    @(370.48 mm, 447.29 mm): Symbol C5 Pin 2 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 509.78 mm): Symbol C4 Pin 1 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 509.78 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(370.48 mm, 509.78 mm): Pin 1 [???, ?]
+    @(370.48 mm, 509.78 mm): Symbol C4 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'C' doesn't match copy in library 'Device'
+    ; warning
+    @(370.48 mm, 513.59 mm): Symbol C4 [C]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 517.40 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(370.48 mm, 517.40 mm): Pin 1 [???, ?]
+    @(370.48 mm, 517.40 mm): Symbol C4 Pin 2 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 537.21 mm): Pin 1 [???, ?]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 537.21 mm): Symbol C6 Pin 1 [Passive, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(370.48 mm, 537.21 mm): Pin 1 [???, ?]
+    @(370.48 mm, 537.21 mm): Symbol C6 Pin 1 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'C' doesn't match copy in library 'Device'
+    ; warning
+    @(370.48 mm, 541.02 mm): Symbol C6 [C]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(370.48 mm, 544.83 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(370.48 mm, 544.83 mm): Pin 1 [???, ?]
+    @(370.48 mm, 544.83 mm): Symbol C6 Pin 2 [Passive, Line]
+[lib_symbol_mismatch]: Symbol 'SW_Push' doesn't match copy in library 'Switch'
+    ; warning
+    @(372.62 mm, 523.40 mm): Symbol SW2 [SW_Push]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(373.41 mm, 499.63 mm): Pin 1 [???, ?]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(373.41 mm, 499.63 mm): Symbol TP1 Pin 1 [1, Passive, Line]
+[lib_symbol_mismatch]: Symbol 'TestPoint' doesn't match copy in library 'Connector'
+    ; warning
+    @(373.41 mm, 499.63 mm): Symbol TP1 [TestPoint]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(373.41 mm, 499.63 mm): Pin 1 [???, ?]
+    @(373.41 mm, 499.63 mm): Symbol TP1 Pin 1 [1, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(377.70 mm, 523.40 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(377.70 mm, 523.40 mm): Pin 1 [???, ?]
+    @(377.70 mm, 523.40 mm): Symbol SW2 Pin 2 [2, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(402.59 mm, 505.79 mm): Symbol SW1 Pin 1 [1, Passive, Line]
+[lib_symbol_mismatch]: Symbol 'SW_Push' doesn't match copy in library 'Switch'
+    ; warning
+    @(407.67 mm, 505.79 mm): Symbol SW1 [SW_Push]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(412.75 mm, 505.79 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(412.75 mm, 505.79 mm): Pin 1 [???, ?]
+    @(412.75 mm, 505.79 mm): Symbol SW1 Pin 2 [2, Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(432.82 mm, 472.83 mm): Symbol U3 Pin 1 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(432.82 mm, 472.83 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(432.82 mm, 472.83 mm): Pin 1 [???, ?]
+    @(432.82 mm, 472.83 mm): Symbol U3 Pin 1 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(432.82 mm, 475.37 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(432.82 mm, 475.37 mm): Pin 1 [???, ?]
+    @(432.82 mm, 475.37 mm): Symbol U3 Pin 2 [VOUT, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(432.82 mm, 477.91 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(432.82 mm, 477.91 mm): Pin 1 [???, ?]
+    @(432.82 mm, 477.91 mm): Symbol U3 Pin 3 [VIN, Unspecified, Line]
+[lib_symbol_mismatch]: Symbol 'AMS1117-3.3' doesn't match copy in library 'EasyEDA'
+    ; warning
+    @(444.25 mm, 475.37 mm): Symbol U3 [AMS1117-3.3]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(455.68 mm, 475.37 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(455.68 mm, 475.37 mm): Pin 1 [???, ?]
+    @(455.68 mm, 475.37 mm): Symbol U3 Pin 4 [VOUT, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(473.46 mm, 444.42 mm): Symbol U2 Pin 1 [DIN, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(473.46 mm, 449.50 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(473.46 mm, 449.50 mm): Pin 1 [???, ?]
+    @(473.46 mm, 449.50 mm): Symbol U2 Pin 3 [GND, Unspecified, Line]
+[pin_to_pin]: Pins of type Unspecified and Passive are connected
+    ; warning
+    @(473.46 mm, 452.04 mm): Symbol U2 Pin 4 [~{SD_MODE}, Unspecified, Line]
+    @(360.67 mm, 511.30 mm): Symbol R4 Pin 2 [Passive, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(473.46 mm, 459.66 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(473.46 mm, 459.66 mm): Pin 1 [???, ?]
+    @(473.46 mm, 459.66 mm): Symbol U2 Pin 7 [VDD, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(473.46 mm, 462.20 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(473.46 mm, 462.20 mm): Pin 1 [???, ?]
+    @(473.46 mm, 462.20 mm): Symbol U2 Pin 8 [VDD, Unspecified, Line]
+[lib_symbol_mismatch]: Symbol 'MAX98357AETE+T' doesn't match copy in library 'EasyEDA'
+    ; warning
+    @(489.97 mm, 454.58 mm): Symbol U2 [MAX98357AETE+T]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(489.97 mm, 467.28 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(489.97 mm, 467.28 mm): Pin 1 [???, ?]
+    @(489.97 mm, 467.28 mm): Symbol U2 Pin 17 [EP, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(506.48 mm, 446.96 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(506.48 mm, 446.96 mm): Pin 1 [???, ?]
+    @(506.48 mm, 446.96 mm): Symbol U2 Pin 15 [GND, Unspecified, Line]
+[endpoint_off_grid]: Symbol pin or wire end off connection grid
+    ; warning
+    @(506.48 mm, 457.12 mm): Pin 1 [???, ?]
+[pin_to_pin]: Pins of type Unspecified and Unspecified are connected
+    ; warning
+    @(506.48 mm, 457.12 mm): Pin 1 [???, ?]
+    @(506.48 mm, 457.12 mm): Symbol U2 Pin 11 [GND, Unspecified, Line]
+
+ ** ERC messages: 202  Errors 36  Warnings 166
+
+ ** Ignored checks:
+    - Global label only appears once in the schematic
+    - Four connection points are joined together
+    - SPICE model issue
+    - Assigned footprint doesn't match footprint filters

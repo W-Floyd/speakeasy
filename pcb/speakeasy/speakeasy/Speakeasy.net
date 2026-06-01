@@ -1,601 +1,1006 @@
-(export (version "E")
-    (design
-      (source "Speakeasy.kicad_sch")
-      (date "1970-01-01T00:00:00+0000")
-      (tool "Circuit-Synth Exporter v0.1.0")
-      (sheet (number "1") (name "root") (tstamps "/50bb5fb2-7c90-49dd-879b-fb4405101f87/")
+(export 
+  (version "D")
+  (design
+    (source "speakeasy_board.py")
+    (date "05/31/2026 08:30 PM")
+    (tool "SKiDL (2.2.3)")
+    (sheet
+      (number 1)
+      (name "/")
+      (tstamps "/")
       (title_block
-        (title )
-        (company )
-        (rev )
-        (date )
-        (source "root.kicad_sch")
-        (comment (number "1") (value ""))
-        (comment (number "2") (value ""))
-        (comment (number "3") (value ""))
-        (comment (number "4") (value ""))
-        (comment (number "5") (value ""))
-        (comment (number "6") (value ""))
-        (comment (number "7") (value ""))
-        (comment (number "8") (value ""))
-        (comment (number "9") (value "")))))
-    (components
-    (comp (ref "U1")
-      (value "ESP32-S3-MINI-1U-N4R2")
-      (footprint "EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8")
+        (title)
+        (company)
+        (rev)
+        (date)
+        (source "../speakeasy_board.py")
+        (comment
+          (number "1")
+          (value ""))
+        (comment
+          (number "2")
+          (value ""))
+        (comment
+          (number "3")
+          (value ""))
+        (comment
+          (number "4")
+          (value ""))
+        (comment
+          (number "5")
+          (value ""))
+        (comment
+          (number "6")
+          (value ""))
+        (comment
+          (number "7")
+          (value ""))
+        (comment
+          (number "8")
+          (value ""))
+        (comment
+          (number "9")
+          (value ""))))
+    (sheet
+      (number 2)
+      (name "/speakeasy_board1/")
+      (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/")
+      (title_block
+        (title)
+        (company)
+        (rev)
+        (date)
+        (source "../speakeasy_board.py")
+        (comment
+          (number "1")
+          (value ""))
+        (comment
+          (number "2")
+          (value ""))
+        (comment
+          (number "3")
+          (value ""))
+        (comment
+          (number "4")
+          (value ""))
+        (comment
+          (number "5")
+          (value ""))
+        (comment
+          (number "6")
+          (value ""))
+        (comment
+          (number "7")
+          (value ""))
+        (comment
+          (number "8")
+          (value ""))
+        (comment
+          (number "9")
+          (value "")))))
+  (components
+    (comp
+      (ref "C1")
+      (value "10uF")
+      (description "Unpolarized capacitor")
+      (footprint "Capacitor_SMD:C_0805_2012Metric")
       (fields
-        (field (name "Footprint") "EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C22356044.pdf"))
-      (libsource (lib "EasyEDA") (part "ESP32-S3-MINI-1U-N4R2") (description ""))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "3a801d58-b907-4a08-8789-e534ceb86747"))
-    (comp (ref "U2")
-      (value "MAX98357AETE+T")
-      (footprint "EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5")
+        (field
+          (name "Description") "Unpolarized capacitor")
+        (field
+          (name "Footprint") "Capacitor_SMD:C_0805_2012Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "AfmPd_faie")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:149"))
+      (libsource
+        (lib "Device")
+        (part "C"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "674edf4c-6203-5418-9c98-b3973661e405"))
+    (comp
+      (ref "C2")
+      (value "10uF")
+      (description "Unpolarized capacitor")
+      (footprint "Capacitor_SMD:C_0805_2012Metric")
       (fields
-        (field (name "Footprint") "EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C910544.pdf"))
-      (libsource (lib "EasyEDA") (part "MAX98357AETE+T") (description ""))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "eec7b9b7-2e03-485b-a85e-26d9c94254ca"))
-    (comp (ref "U3")
-      (value "AMS1117-3.3")
-      (footprint "EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR")
+        (field
+          (name "Description") "Unpolarized capacitor")
+        (field
+          (name "Footprint") "Capacitor_SMD:C_0805_2012Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "9l6TzIqJF4")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:153"))
+      (libsource
+        (lib "Device")
+        (part "C"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "3345f837-33be-5ff2-a59c-6ee0c61ac427"))
+    (comp
+      (ref "C3")
+      (value "10uF")
+      (description "Unpolarized capacitor")
+      (footprint "Capacitor_SMD:C_0805_2012Metric")
       (fields
-        (field (name "Footprint") "EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR")
-        (field (name "Datasheet") "https://lcsc.com/product-detail/Low-Dropout-Regulators-LDO_AMS_AMS1117-3-3_AMS1117-3-3_C6186.html"))
-      (libsource (lib "EasyEDA") (part "AMS1117-3.3") (description ""))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "df17f850-b6aa-4705-a20a-4bb66b736742"))
-    (comp (ref "J1")
+        (field
+          (name "Description") "Unpolarized capacitor")
+        (field
+          (name "Footprint") "Capacitor_SMD:C_0805_2012Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "sP7J8qSscN")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:157"))
+      (libsource
+        (lib "Device")
+        (part "C"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "f8a9dab6-6239-5ab9-a8c1-bd3b590e3659"))
+    (comp
+      (ref "C4")
+      (value "100nF")
+      (description "Unpolarized capacitor")
+      (footprint "Capacitor_SMD:C_0402_1005Metric")
+      (fields
+        (field
+          (name "Description") "Unpolarized capacitor")
+        (field
+          (name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "1SjnSKP6SZ")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:161"))
+      (libsource
+        (lib "Device")
+        (part "C"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "b5a0b9a4-8b1f-57e7-9b3e-1b07e1e16494"))
+    (comp
+      (ref "C5")
+      (value "1uF")
+      (description "Unpolarized capacitor")
+      (footprint "Capacitor_SMD:C_0402_1005Metric")
+      (fields
+        (field
+          (name "Description") "Unpolarized capacitor")
+        (field
+          (name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "gsv96NYVG8")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:165"))
+      (libsource
+        (lib "Device")
+        (part "C"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "6b01b684-78c2-5bd6-bdcf-ebd34c745104"))
+    (comp
+      (ref "C6")
+      (value "100nF")
+      (description "Unpolarized capacitor")
+      (footprint "Capacitor_SMD:C_0402_1005Metric")
+      (fields
+        (field
+          (name "Description") "Unpolarized capacitor")
+        (field
+          (name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "DF6VkY8wqQ")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:169"))
+      (libsource
+        (lib "Device")
+        (part "C"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "0bbb8518-81d7-5baf-86e7-fd3e3aa7b52c"))
+    (comp
+      (ref "J1")
       (value "PH-6P立贴")
+      (description "")
       (footprint "EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4")
       (fields
-        (field (name "Footprint") "EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C64659.pdf"))
-      (libsource (lib "EasyEDA") (part "PH-6P立贴") (description ""))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "44b290c5-2588-4f90-9b9f-5e0f5ee3ccf7"))
-    (comp (ref "J2")
+        (field
+          (name "Description"))
+        (field
+          (name "Footprint") "EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4")
+        (field
+          (name "Datasheet") "https://www.lcsc.com/datasheet/C64659.pdf")
+        (field
+          (name "SKiDL Tag") "QbnR0wpa79")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:106"))
+      (libsource
+        (lib "EasyEDA")
+        (part "PH-6Pç«è´´"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "5dbf8dce-d71e-5ed3-b1a4-37b2cbf8ecf3"))
+    (comp
+      (ref "J2")
       (value "210-A-SMD/02")
+      (description "")
       (footprint "EasyEDA:CONN-SMD_210-A-SMD-02")
       (fields
-        (field (name "Footprint") "EasyEDA:CONN-SMD_210-A-SMD-02")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C20608465.pdf"))
-      (libsource (lib "EasyEDA") (part "210-A-SMD_02") (description ""))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "f6844375-dbfb-4657-a4d5-540db4e13029"))
-    (comp (ref "TP1")
-      (value "3V3")
-      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
-      (description "test point")
-      (fields
-        (field (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
-        (field (name "Datasheet") "")
-        (field (name "Description") "test point"))
-      (libsource (lib "Connector") (part "TestPoint") (description "test point"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "Pin* Test*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "7dac480c-7a08-4115-adc2-cac3879adcc4"))
-    (comp (ref "TP2")
-      (value "GND")
-      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
-      (description "test point")
-      (fields
-        (field (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
-        (field (name "Datasheet") "")
-        (field (name "Description") "test point"))
-      (libsource (lib "Connector") (part "TestPoint") (description "test point"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "Pin* Test*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "c18b4e7e-e6cb-4eae-9a94-7a836a174d0c"))
-    (comp (ref "TP3")
-      (value "TXD0")
-      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
-      (description "test point")
-      (fields
-        (field (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
-        (field (name "Datasheet") "")
-        (field (name "Description") "test point"))
-      (libsource (lib "Connector") (part "TestPoint") (description "test point"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "Pin* Test*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "70714884-d140-455e-a253-16577b6ce183"))
-    (comp (ref "TP4")
-      (value "RXD0")
-      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
-      (description "test point")
-      (fields
-        (field (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
-        (field (name "Datasheet") "")
-        (field (name "Description") "test point"))
-      (libsource (lib "Connector") (part "TestPoint") (description "test point"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "Pin* Test*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "6b08dbd6-5c85-489f-b8e2-f613d6494fb2"))
-    (comp (ref "R1")
+        (field
+          (name "Description"))
+        (field
+          (name "Footprint") "EasyEDA:CONN-SMD_210-A-SMD-02")
+        (field
+          (name "Datasheet") "https://www.lcsc.com/datasheet/C20608465.pdf")
+        (field
+          (name "SKiDL Tag") "UmhC4P5DJA")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:114"))
+      (libsource
+        (lib "EasyEDA")
+        (part "210-A-SMD_02"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "f8f7e24d-545f-57b0-b81c-54ab7320bd0c"))
+    (comp
+      (ref "R1")
       (value "5.1k")
-      (footprint "Resistor_SMD:R_0402_1005Metric")
       (description "Resistor")
+      (footprint "Resistor_SMD:R_0402_1005Metric")
       (fields
-        (field (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Resistor"))
-      (libsource (lib "Device") (part "R") (description "Resistor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "R_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "04e2379b-8870-4fa6-a016-4be2b3d76352"))
-    (comp (ref "R2")
+        (field
+          (name "Description") "Resistor")
+        (field
+          (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "duMzjaArQ1")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:135"))
+      (libsource
+        (lib "Device")
+        (part "R"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "c53b229c-a0ad-5238-b19c-3b19e1604fa3"))
+    (comp
+      (ref "R2")
       (value "5.1k")
-      (footprint "Resistor_SMD:R_0402_1005Metric")
       (description "Resistor")
+      (footprint "Resistor_SMD:R_0402_1005Metric")
       (fields
-        (field (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Resistor"))
-      (libsource (lib "Device") (part "R") (description "Resistor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "R_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "50f137ac-f985-4414-b86f-5eb2a8641fb0"))
-    (comp (ref "R3")
+        (field
+          (name "Description") "Resistor")
+        (field
+          (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "7a0QnsDtJL")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:137"))
+      (libsource
+        (lib "Device")
+        (part "R"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "1a5c1a9c-a528-592d-ab0e-c2259588be2c"))
+    (comp
+      (ref "R3")
       (value "10k")
-      (footprint "Resistor_SMD:R_0402_1005Metric")
       (description "Resistor")
+      (footprint "Resistor_SMD:R_0402_1005Metric")
       (fields
-        (field (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Resistor"))
-      (libsource (lib "Device") (part "R") (description "Resistor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "R_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "6a5f8ee2-e882-43c6-8d7c-423ef2911771"))
-    (comp (ref "R4")
+        (field
+          (name "Description") "Resistor")
+        (field
+          (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "_sHVsrQvvx")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:141"))
+      (libsource
+        (lib "Device")
+        (part "R"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "64cf25f4-6e52-55af-875f-429a4fa6f99a"))
+    (comp
+      (ref "R4")
       (value "100k")
+      (description "Resistor")
       (footprint "Resistor_SMD:R_0402_1005Metric")
-      (description "Resistor")
       (fields
-        (field (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Resistor"))
-      (libsource (lib "Device") (part "R") (description "Resistor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "R_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "dfdf6ee7-016c-4d6c-a5d0-0496f73e281f"))
-    (comp (ref "C1")
-      (value "10uF")
-      (footprint "Capacitor_SMD:C_0805_2012Metric")
-      (description "Unpolarized capacitor")
-      (fields
-        (field (name "Footprint") "Capacitor_SMD:C_0805_2012Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Unpolarized capacitor"))
-      (libsource (lib "Device") (part "C") (description "Unpolarized capacitor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "C_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "d9c45f0c-2f4f-45d8-965a-def290f2f638"))
-    (comp (ref "C2")
-      (value "10uF")
-      (footprint "Capacitor_SMD:C_0805_2012Metric")
-      (description "Unpolarized capacitor")
-      (fields
-        (field (name "Footprint") "Capacitor_SMD:C_0805_2012Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Unpolarized capacitor"))
-      (libsource (lib "Device") (part "C") (description "Unpolarized capacitor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "C_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "9e5de396-1065-46c2-9f07-31cc9dedd824"))
-    (comp (ref "C3")
-      (value "10uF")
-      (footprint "Capacitor_SMD:C_0805_2012Metric")
-      (description "Unpolarized capacitor")
-      (fields
-        (field (name "Footprint") "Capacitor_SMD:C_0805_2012Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Unpolarized capacitor"))
-      (libsource (lib "Device") (part "C") (description "Unpolarized capacitor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "C_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "e1ebe45a-5636-459d-9b49-09703043442b"))
-    (comp (ref "C4")
-      (value "100nF")
-      (footprint "Capacitor_SMD:C_0402_1005Metric")
-      (description "Unpolarized capacitor")
-      (fields
-        (field (name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Unpolarized capacitor"))
-      (libsource (lib "Device") (part "C") (description "Unpolarized capacitor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "C_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "d82c041e-96e2-471f-ada6-7295aced37f8"))
-    (comp (ref "C5")
-      (value "1uF")
-      (footprint "Capacitor_SMD:C_0402_1005Metric")
-      (description "Unpolarized capacitor")
-      (fields
-        (field (name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Unpolarized capacitor"))
-      (libsource (lib "Device") (part "C") (description "Unpolarized capacitor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "C_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "2008dccf-b2ea-4dc6-a392-27fd2150fe54"))
-    (comp (ref "C6")
-      (value "100nF")
-      (footprint "Capacitor_SMD:C_0402_1005Metric")
-      (description "Unpolarized capacitor")
-      (fields
-        (field (name "Footprint") "Capacitor_SMD:C_0402_1005Metric")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Unpolarized capacitor"))
-      (libsource (lib "Device") (part "C") (description "Unpolarized capacitor"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (property (name "ki_fp_filters") (value "C_*"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "317dc5a3-ee27-4b01-a620-0163e30d4cc5"))
-    (comp (ref "SW1")
+        (field
+          (name "Description") "Resistor")
+        (field
+          (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "ROHg0Qz38d")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:145"))
+      (libsource
+        (lib "Device")
+        (part "R"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "39d5a876-570a-5b01-bf8e-2430afce0434"))
+    (comp
+      (ref "SW1")
       (value "BOOT")
-      (footprint "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
       (description "Push button switch, generic, two pins")
+      (footprint "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
       (fields
-        (field (name "Footprint") "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Push button switch, generic, two pins"))
-      (libsource (lib "Switch") (part "SW_Push") (description "Push button switch, generic, two pins"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "8ca6ef0b-0fec-4b1d-9045-4562c0891378"))
-    (comp (ref "SW2")
+        (field
+          (name "Description") "Push button switch, generic, two pins")
+        (field
+          (name "Footprint") "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "pYGIxGpojV")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:173"))
+      (libsource
+        (lib "Switch")
+        (part "SW_Push"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "9cd80c73-b711-5f64-be00-ae30aa2fd976"))
+    (comp
+      (ref "SW2")
       (value "RST")
+      (description "Push button switch, generic, two pins")
       (footprint "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
-      (description "Push button switch, generic, two pins")
       (fields
-        (field (name "Footprint") "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
-        (field (name "Datasheet") "")
-        (field (name "Description") "Push button switch, generic, two pins"))
-      (libsource (lib "Switch") (part "SW_Push") (description "Push button switch, generic, two pins"))
-      (property (name "Sheetname") (value "Root"))
-      (property (name "Sheetfile") (value "circuit.kicad_sch"))
-      (sheetpath (names "/") (tstamps "/"))
-      (tstamps "ee652d34-fbcb-4c95-9530-6740ad4e0083")))
-    (libparts
-    (libpart (lib "EasyEDA") (part "ESP32-S3-MINI-1U-N4R2")
-      (docs "https://www.lcsc.com/datasheet/C22356044.pdf")
-      (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "ESP32-S3-MINI-1U-N4R2")
-        (field (name "Footprint") "EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C22356044.pdf"))
-      (pins
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "3V3") (type "passive"))
-        (pin (num "?") (name "IO0") (type "passive"))
-        (pin (num "?") (name "IO1") (type "passive"))
-        (pin (num "?") (name "IO2") (type "passive"))
-        (pin (num "?") (name "IO3") (type "passive"))
-        (pin (num "?") (name "IO4") (type "passive"))
-        (pin (num "?") (name "IO5") (type "passive"))
-        (pin (num "?") (name "IO6") (type "passive"))
-        (pin (num "?") (name "IO7") (type "passive"))
-        (pin (num "?") (name "IO8") (type "passive"))
-        (pin (num "?") (name "IO9") (type "passive"))
-        (pin (num "?") (name "IO10") (type "passive"))
-        (pin (num "?") (name "IO11") (type "passive"))
-        (pin (num "?") (name "IO12") (type "passive"))
-        (pin (num "?") (name "IO13") (type "passive"))
-        (pin (num "?") (name "IO14") (type "passive"))
-        (pin (num "?") (name "IO15") (type "passive"))
-        (pin (num "?") (name "IO16") (type "passive"))
-        (pin (num "?") (name "IO17") (type "passive"))
-        (pin (num "?") (name "IO18") (type "passive"))
-        (pin (num "?") (name "IO19") (type "passive"))
-        (pin (num "?") (name "IO20") (type "passive"))
-        (pin (num "?") (name "IO21") (type "passive"))
-        (pin (num "?") (name "IO26") (type "passive"))
-        (pin (num "?") (name "IO47") (type "passive"))
-        (pin (num "?") (name "IO33") (type "passive"))
-        (pin (num "?") (name "IO34") (type "passive"))
-        (pin (num "?") (name "IO48") (type "passive"))
-        (pin (num "?") (name "IO35") (type "passive"))
-        (pin (num "?") (name "IO36") (type "passive"))
-        (pin (num "?") (name "IO37") (type "passive"))
-        (pin (num "?") (name "IO38") (type "passive"))
-        (pin (num "?") (name "IO39") (type "passive"))
-        (pin (num "?") (name "IO40") (type "passive"))
-        (pin (num "?") (name "IO41") (type "passive"))
-        (pin (num "?") (name "IO42") (type "passive"))
-        (pin (num "?") (name "TXD0") (type "passive"))
-        (pin (num "?") (name "RXD0") (type "passive"))
-        (pin (num "?") (name "IO45") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "IO46") (type "passive"))
-        (pin (num "?") (name "EN") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))))
-    (libpart (lib "EasyEDA") (part "MAX98357AETE+T")
-      (docs "https://www.lcsc.com/datasheet/C910544.pdf")
-      (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "MAX98357AETE+T")
-        (field (name "Footprint") "EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C910544.pdf"))
-      (pins
-        (pin (num "?") (name "DIN") (type "passive"))
-        (pin (num "?") (name "GAIN_SLOT") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "~{SD_MODE}") (type "passive"))
-        (pin (num "?") (name "N.C.") (type "passive"))
-        (pin (num "?") (name "N.C.") (type "passive"))
-        (pin (num "?") (name "VDD") (type "passive"))
-        (pin (num "?") (name "VDD") (type "passive"))
-        (pin (num "?") (name "OUTP") (type "passive"))
-        (pin (num "?") (name "OUTN") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "N.C.") (type "passive"))
-        (pin (num "?") (name "N.C.") (type "passive"))
-        (pin (num "?") (name "LRCLK") (type "passive"))
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "BCLK") (type "passive"))
-        (pin (num "?") (name "EP") (type "passive"))))
-    (libpart (lib "EasyEDA") (part "AMS1117-3.3")
-      (docs "https://lcsc.com/product-detail/Low-Dropout-Regulators-LDO_AMS_AMS1117-3-3_AMS1117-3-3_C6186.html")
-      (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "AMS1117-3.3")
-        (field (name "Footprint") "EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR")
-        (field (name "Datasheet") "https://lcsc.com/product-detail/Low-Dropout-Regulators-LDO_AMS_AMS1117-3-3_AMS1117-3-3_C6186.html"))
-      (pins
-        (pin (num "?") (name "GND") (type "passive"))
-        (pin (num "?") (name "VOUT") (type "passive"))
-        (pin (num "?") (name "VIN") (type "passive"))
-        (pin (num "?") (name "VOUT") (type "passive"))))
-    (libpart (lib "EasyEDA") (part "PH-6P立贴")
-      (docs "https://www.lcsc.com/datasheet/C64659.pdf")
-      (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "PH-6P立贴")
-        (field (name "Footprint") "EasyEDA:CONN-SMD_6P-P2.0-L14.0-W5.4")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C64659.pdf"))
-      (pins
-        (pin (num "?") (name "1") (type "passive"))
-        (pin (num "?") (name "2") (type "passive"))
-        (pin (num "?") (name "3") (type "passive"))
-        (pin (num "?") (name "4") (type "passive"))
-        (pin (num "?") (name "5") (type "passive"))
-        (pin (num "?") (name "6") (type "passive"))
-        (pin (num "?") (name "7") (type "passive"))
-        (pin (num "?") (name "8") (type "passive"))))
-    (libpart (lib "EasyEDA") (part "210-A-SMD_02")
-      (docs "https://www.lcsc.com/datasheet/C20608465.pdf")
-      (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "210-A-SMD/02")
-        (field (name "Footprint") "EasyEDA:CONN-SMD_210-A-SMD-02")
-        (field (name "Datasheet") "https://www.lcsc.com/datasheet/C20608465.pdf"))
-      (pins
-        (pin (num "?") (name "1") (type "passive"))
-        (pin (num "?") (name "2") (type "passive"))))
-    (libpart (lib "Connector") (part "TestPoint")
+        (field
+          (name "Description") "Push button switch, generic, two pins")
+        (field
+          (name "Footprint") "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "PEbarW1F2O")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:177"))
+      (libsource
+        (lib "Switch")
+        (part "SW_Push"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "a0ee33b5-33a7-5057-9514-61c5c56ccf7e"))
+    (comp
+      (ref "TP1")
+      (value "3V3")
       (description "test point")
-      (docs "~")
-      (footprints
-        (fp "Pin*")
-        (fp "Test*"))
+      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
       (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "3V3")
-        (field (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
-        (field (name "Datasheet") ""))
-      (pins
-        (pin (num "?") (name "1") (type "passive"))))
-    (libpart (lib "Device") (part "R")
-      (description "Resistor")
-      (docs "~")
-      (footprints
-        (fp "R_*"))
+        (field
+          (name "Description") "test point")
+        (field
+          (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "xNDKzj1cHA")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:123"))
+      (libsource
+        (lib "Connector")
+        (part "TestPoint"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "4660bdc6-dd55-55f2-8f86-6ea6ebccf490"))
+    (comp
+      (ref "TP2")
+      (value "GND")
+      (description "test point")
+      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
       (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "5.1k")
-        (field (name "Footprint") "Resistor_SMD:R_0402_1005Metric")
-        (field (name "Datasheet") ""))
-      (pins
-        (pin (num "?") (name "") (type "passive"))
-        (pin (num "?") (name "") (type "passive"))))
-    (libpart (lib "Device") (part "C")
-      (description "Unpolarized capacitor")
-      (docs "~")
-      (footprints
-        (fp "C_*"))
+        (field
+          (name "Description") "test point")
+        (field
+          (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "7nYMopcfes")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:125"))
+      (libsource
+        (lib "Connector")
+        (part "TestPoint"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "432aded5-307d-53bf-8eb5-10042f6bedcb"))
+    (comp
+      (ref "TP3")
+      (value "TXD0")
+      (description "test point")
+      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
       (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "10uF")
-        (field (name "Footprint") "Capacitor_SMD:C_0805_2012Metric")
-        (field (name "Datasheet") ""))
-      (pins
-        (pin (num "?") (name "") (type "passive"))
-        (pin (num "?") (name "") (type "passive"))))
-    (libpart (lib "Switch") (part "SW_Push")
-      (description "Push button switch, generic, two pins")
-      (docs "~")
+        (field
+          (name "Description") "test point")
+        (field
+          (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "Yt8gyphhuu")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:127"))
+      (libsource
+        (lib "Connector")
+        (part "TestPoint"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "d1cd3bbc-3177-5a96-87eb-27cf992b4e53"))
+    (comp
+      (ref "TP4")
+      (value "RXD0")
+      (description "test point")
+      (footprint "TestPoint:TestPoint_Pad_D1.5mm")
       (fields
-        (field (name "Reference") "U")
-        (field (name "Value") "BOOT")
-        (field (name "Footprint") "Button_Switch_SMD:SW_SPST_CK_RS282G05A3")
-        (field (name "Datasheet") ""))
-      (pins
-        (pin (num "?") (name "1") (type "passive"))
-        (pin (num "?") (name "2") (type "passive")))))
-    (libraries
-    (library (logical "Connector")
-      (uri "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols/Connector.kicad_sym"))
-    (library (logical "Device")
-      (uri "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols/Device.kicad_sym"))
-    (library (logical "EasyEDA")
-      (uri "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols/EasyEDA.kicad_sym"))
-    (library (logical "Switch")
-      (uri "/Applications/KiCad/KiCad.app/Contents/SharedSupport/symbols/Switch.kicad_sym")))
-    (nets
-    (net (code "1") (name "GND")
-          (node (ref "U1") (pin "65") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "64") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "63") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "62") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "61") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "60") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "59") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "58") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "57") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "56") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "55") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "54") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "53") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "52") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "51") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "50") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "49") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "48") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "47") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "46") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "43") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "42") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "2") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U1") (pin "1") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U2") (pin "3") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U2") (pin "11") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U2") (pin "15") (pintype "passive") (pinfunction "GND"))
-          (node (ref "U2") (pin "17") (pintype "passive") (pinfunction "EP"))
-          (node (ref "U3") (pin "1") (pintype "passive") (pinfunction "GND"))
-          (node (ref "J1") (pin "8") (pintype "passive") (pinfunction "8"))
-          (node (ref "J1") (pin "7") (pintype "passive") (pinfunction "7"))
-          (node (ref "J1") (pin "1") (pintype "passive") (pinfunction "1"))
-          (node (ref "TP2") (pin "1") (pintype "passive") (pinfunction "1"))
-          (node (ref "R1") (pin "2") (pintype "passive"))
-          (node (ref "R2") (pin "2") (pintype "passive"))
-          (node (ref "C1") (pin "2") (pintype "passive"))
-          (node (ref "C2") (pin "2") (pintype "passive"))
-          (node (ref "C3") (pin "2") (pintype "passive"))
-          (node (ref "C4") (pin "2") (pintype "passive"))
-          (node (ref "C5") (pin "2") (pintype "passive"))
-          (node (ref "C6") (pin "2") (pintype "passive"))
-          (node (ref "SW1") (pin "2") (pintype "passive") (pinfunction "2"))
-          (node (ref "SW2") (pin "2") (pintype "passive") (pinfunction "2")))
-    (net (code "2") (name "EN")
-          (node (ref "U1") (pin "45") (pintype "passive") (pinfunction "EN"))
-          (node (ref "R3") (pin "2") (pintype "passive"))
-          (node (ref "SW2") (pin "1") (pintype "passive") (pinfunction "1")))
-    (net (code "3") (name "UART_RX")
-          (node (ref "U1") (pin "40") (pintype "passive") (pinfunction "RXD0"))
-          (node (ref "TP4") (pin "1") (pintype "passive") (pinfunction "1")))
-    (net (code "4") (name "UART_TX")
-          (node (ref "U1") (pin "39") (pintype "passive") (pinfunction "TXD0"))
-          (node (ref "TP3") (pin "1") (pintype "passive") (pinfunction "1")))
-    (net (code "5") (name "USB_DP")
-          (node (ref "U1") (pin "24") (pintype "passive") (pinfunction "IO20"))
-          (node (ref "J1") (pin "2") (pintype "passive") (pinfunction "2")))
-    (net (code "6") (name "USB_DM")
-          (node (ref "U1") (pin "23") (pintype "passive") (pinfunction "IO19"))
-          (node (ref "J1") (pin "3") (pintype "passive") (pinfunction "3")))
-    (net (code "7") (name "I2S_LRCLK")
-          (node (ref "U1") (pin "10") (pintype "passive") (pinfunction "IO6"))
-          (node (ref "U2") (pin "14") (pintype "passive") (pinfunction "LRCLK")))
-    (net (code "8") (name "I2S_BCLK")
-          (node (ref "U1") (pin "9") (pintype "passive") (pinfunction "IO5"))
-          (node (ref "U2") (pin "16") (pintype "passive") (pinfunction "BCLK")))
-    (net (code "9") (name "I2S_DOUT")
-          (node (ref "U1") (pin "8") (pintype "passive") (pinfunction "IO4"))
-          (node (ref "U2") (pin "1") (pintype "passive") (pinfunction "DIN")))
-    (net (code "10") (name "GPIO0")
-          (node (ref "U1") (pin "4") (pintype "passive") (pinfunction "IO0"))
-          (node (ref "SW1") (pin "1") (pintype "passive") (pinfunction "1")))
-    (net (code "11") (name "+3.3V")
-          (node (ref "U1") (pin "3") (pintype "passive") (pinfunction "3V3"))
-          (node (ref "U3") (pin "2") (pintype "passive") (pinfunction "VOUT"))
-          (node (ref "U3") (pin "4") (pintype "passive") (pinfunction "VOUT"))
-          (node (ref "TP1") (pin "1") (pintype "passive") (pinfunction "1"))
-          (node (ref "R3") (pin "1") (pintype "passive"))
-          (node (ref "R4") (pin "1") (pintype "passive"))
-          (node (ref "C2") (pin "1") (pintype "passive"))
-          (node (ref "C3") (pin "1") (pintype "passive"))
-          (node (ref "C4") (pin "1") (pintype "passive")))
-    (net (code "12") (name "SD_MODE")
-          (node (ref "U2") (pin "4") (pintype "passive") (pinfunction "~{SD_MODE}"))
-          (node (ref "R4") (pin "2") (pintype "passive")))
-    (net (code "13") (name "+5V")
-          (node (ref "U2") (pin "7") (pintype "passive") (pinfunction "VDD"))
-          (node (ref "U2") (pin "8") (pintype "passive") (pinfunction "VDD"))
-          (node (ref "U3") (pin "3") (pintype "passive") (pinfunction "VIN"))
-          (node (ref "J1") (pin "6") (pintype "passive") (pinfunction "6"))
-          (node (ref "C1") (pin "1") (pintype "passive"))
-          (node (ref "C5") (pin "1") (pintype "passive"))
-          (node (ref "C6") (pin "1") (pintype "passive")))
-    (net (code "14") (name "SPKR_P")
-          (node (ref "U2") (pin "9") (pintype "passive") (pinfunction "OUTP"))
-          (node (ref "J2") (pin "1") (pintype "passive") (pinfunction "1")))
-    (net (code "15") (name "SPKR_N")
-          (node (ref "U2") (pin "10") (pintype "passive") (pinfunction "OUTN"))
-          (node (ref "J2") (pin "2") (pintype "passive") (pinfunction "2")))
-    (net (code "16") (name "CC1")
-          (node (ref "J1") (pin "5") (pintype "passive") (pinfunction "5"))
-          (node (ref "R1") (pin "1") (pintype "passive")))
-    (net (code "17") (name "CC2")
-          (node (ref "J1") (pin "4") (pintype "passive") (pinfunction "4"))
-          (node (ref "R2") (pin "1") (pintype "passive")))))
+        (field
+          (name "Description") "test point")
+        (field
+          (name "Footprint") "TestPoint:TestPoint_Pad_D1.5mm")
+        (field
+          (name "Datasheet"))
+        (field
+          (name "SKiDL Tag") "9cpa_rp_h7")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:129"))
+      (libsource
+        (lib "Connector")
+        (part "TestPoint"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "9d7b7490-6052-5e1c-8598-5f20e2da89c6"))
+    (comp
+      (ref "U1")
+      (value "ESP32-S3-MINI-1U-N4R2")
+      (description "")
+      (footprint "EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8")
+      (fields
+        (field
+          (name "Description"))
+        (field
+          (name "Footprint") "EasyEDA:BULETM-SMD_ESPRESSIF_ESP32-S3-MINI-1U-N8")
+        (field
+          (name "Datasheet") "https://www.lcsc.com/datasheet/C22356044.pdf")
+        (field
+          (name "SKiDL Tag") "IcxdNjwOKg")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:77"))
+      (libsource
+        (lib "EasyEDA")
+        (part "ESP32-S3-MINI-1U-N4R2"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "1233ee62-7187-5fc1-985e-3df8940969bd"))
+    (comp
+      (ref "U2")
+      (value "MAX98357AETE+T")
+      (description "")
+      (footprint "EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5")
+      (fields
+        (field
+          (name "Description"))
+        (field
+          (name "Footprint") "EasyEDA:TQFN-16_L3.0-W3.0-P0.50-BL-EP1.5")
+        (field
+          (name "Datasheet") "https://www.lcsc.com/datasheet/C910544.pdf")
+        (field
+          (name "SKiDL Tag") "T5jLqhZ9CK")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:85"))
+      (libsource
+        (lib "EasyEDA")
+        (part "MAX98357AETE+T"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "65a3ddbc-4c7a-573a-9fa0-82bdcf1bec3b"))
+    (comp
+      (ref "U3")
+      (value "AMS1117-3.3")
+      (description "")
+      (footprint "EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR")
+      (fields
+        (field
+          (name "Description"))
+        (field
+          (name "Footprint") "EasyEDA:SOT-223-3_L6.5-W3.4-P2.30-LS7.0-BR")
+        (field
+          (name "Datasheet") "https://lcsc.com/product-detail/Low-Dropout-Regulators-LDO_AMS_AMS1117-3-3_AMS1117-3-3_C6186.html")
+        (field
+          (name "SKiDL Tag") "KoPQNa8vHY")
+        (field
+          (name "SKiDL Line") "speakeasy_board.py:93"))
+      (libsource
+        (lib "EasyEDA")
+        (part "AMS1117-3.3"))
+      (sheetpath
+        (names "/speakeasy_board1/")
+        (tstamps "/47e42351-1e55-5035-a4cd-2c39ade60db0/"))
+      (component_classes)
+      (tstamps "3f11c90a-0781-5087-9015-cc814600c2f4")))
+  (nets
+    (net
+      (code 1)
+      (name "+3.3V")
+      (class "Default")
+      (node
+        (ref "C2")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C3")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C4")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "R3")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "R4")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "TP1")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "U1")
+        (pin "3")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U3")
+        (pin "2")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U3")
+        (pin "4")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 2)
+      (name "+5V")
+      (class "Default")
+      (node
+        (ref "C1")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C5")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C6")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "J1")
+        (pin "6")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "7")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "8")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U3")
+        (pin "3")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 3)
+      (name "CC1")
+      (class "Default")
+      (node
+        (ref "J1")
+        (pin "5")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "R1")
+        (pin "1")
+        (pintype "PASSIVE")))
+    (net
+      (code 4)
+      (name "CC2")
+      (class "Default")
+      (node
+        (ref "J1")
+        (pin "4")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "R2")
+        (pin "1")
+        (pintype "PASSIVE")))
+    (net
+      (code 5)
+      (name "EN")
+      (class "Default")
+      (node
+        (ref "R3")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "SW2")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "U1")
+        (pin "45")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 6)
+      (name "GND")
+      (class "Default")
+      (node
+        (ref "C1")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C2")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C3")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C4")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C5")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "C6")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "J1")
+        (pin "1")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "J1")
+        (pin "7")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "J1")
+        (pin "8")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "R1")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "R2")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "SW1")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "SW2")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "TP2")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "U1")
+        (pin "1")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "2")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "42")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "43")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "46")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "47")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "48")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "49")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "50")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "51")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "52")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "53")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "54")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "55")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "56")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "57")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "58")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "59")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "60")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "61")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "62")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "63")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "64")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "65")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "11")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "15")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "17")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "3")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U3")
+        (pin "1")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 7)
+      (name "GPIO0")
+      (class "Default")
+      (node
+        (ref "SW1")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "U1")
+        (pin "4")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 8)
+      (name "I2S_BCLK")
+      (class "Default")
+      (node
+        (ref "U1")
+        (pin "9")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "16")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 9)
+      (name "I2S_DOUT")
+      (class "Default")
+      (node
+        (ref "U1")
+        (pin "8")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "1")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 10)
+      (name "I2S_LRCLK")
+      (class "Default")
+      (node
+        (ref "U1")
+        (pin "10")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "14")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 11)
+      (name "SD_MODE")
+      (class "Default")
+      (node
+        (ref "R4")
+        (pin "2")
+        (pintype "PASSIVE"))
+      (node
+        (ref "U2")
+        (pin "4")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 12)
+      (name "SPKR_N")
+      (class "Default")
+      (node
+        (ref "J2")
+        (pin "2")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "10")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 13)
+      (name "SPKR_P")
+      (class "Default")
+      (node
+        (ref "J2")
+        (pin "1")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U2")
+        (pin "9")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 14)
+      (name "UART_RX")
+      (class "Default")
+      (node
+        (ref "TP4")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "U1")
+        (pin "40")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 15)
+      (name "UART_TX")
+      (class "Default")
+      (node
+        (ref "TP3")
+        (pin "1")
+        (pintype "PASSIVE"))
+      (node
+        (ref "U1")
+        (pin "39")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 16)
+      (name "USB_DM")
+      (class "Default")
+      (node
+        (ref "J1")
+        (pin "3")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "23")
+        (pintype "UNSPECIFIED")))
+    (net
+      (code 17)
+      (name "USB_DP")
+      (class "Default")
+      (node
+        (ref "J1")
+        (pin "2")
+        (pintype "UNSPECIFIED"))
+      (node
+        (ref "U1")
+        (pin "24")
+        (pintype "UNSPECIFIED")))))

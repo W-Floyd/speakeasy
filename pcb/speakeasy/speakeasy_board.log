@@ -1,0 +1,59 @@
+WARNING: KICAD8_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap_external>:1023=>/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap>:488]
+WARNING: KICAD6_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap_external>:1023=>/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap>:488]
+WARNING: KICAD7_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap_external>:1023=>/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap>:488]
+WARNING: KICAD9_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap_external>:1023=>/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap>:488]
+WARNING: KICAD_SYMBOL_DIR environment variable is missing, so the default KiCad symbol libraries won't be searched. @ [/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap_external>:1023=>/Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap>:488]
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: fp-lib-table file was not found. Component footprints are not available.
+WARNING: Missing tag on ESP32-S3-MINI-1U-N4R2 instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:77.
+WARNING: Random tag IcxdNjwOKg generated for ESP32-S3-MINI-1U-N4R2.
+WARNING: Missing tag on MAX98357AETE+T instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:85.
+WARNING: Random tag T5jLqhZ9CK generated for MAX98357AETE+T.
+WARNING: Missing tag on AMS1117-3.3 instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:93.
+WARNING: Random tag KoPQNa8vHY generated for AMS1117-3.3.
+WARNING: Missing tag on PH-6Pç«è´´ instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:106.
+WARNING: Random tag QbnR0wpa79 generated for PH-6Pç«è´´.
+WARNING: Missing tag on 210-A-SMD_02 instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:114.
+WARNING: Random tag UmhC4P5DJA generated for 210-A-SMD_02.
+WARNING: Missing tag on TestPoint instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:123.
+WARNING: Random tag xNDKzj1cHA generated for TestPoint.
+WARNING: Missing tag on TestPoint instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:125.
+WARNING: Random tag 7nYMopcfes generated for TestPoint.
+WARNING: Missing tag on TestPoint instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:127.
+WARNING: Random tag Yt8gyphhuu generated for TestPoint.
+WARNING: Missing tag on TestPoint instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:129.
+WARNING: Random tag 9cpa_rp_h7 generated for TestPoint.
+WARNING: Missing tag on R instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:135.
+WARNING: Random tag duMzjaArQ1 generated for R.
+WARNING: Missing tag on R instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:137.
+WARNING: Random tag 7a0QnsDtJL generated for R.
+WARNING: Missing tag on R instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:141.
+WARNING: Random tag _sHVsrQvvx generated for R.
+WARNING: Missing tag on R instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:145.
+WARNING: Random tag ROHg0Qz38d generated for R.
+WARNING: Missing tag on C instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:149.
+WARNING: Random tag AfmPd_faie generated for C.
+WARNING: Missing tag on C instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:153.
+WARNING: Random tag 9l6TzIqJF4 generated for C.
+WARNING: Missing tag on C instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:157.
+WARNING: Random tag sP7J8qSscN generated for C.
+WARNING: Missing tag on C instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:161.
+WARNING: Random tag 1SjnSKP6SZ generated for C.
+WARNING: Missing tag on C instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:165.
+WARNING: Random tag gsv96NYVG8 generated for C.
+WARNING: Missing tag on C instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:169.
+WARNING: Random tag DF6VkY8wqQ generated for C.
+WARNING: Missing tag on SW_Push instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:173.
+WARNING: Random tag pYGIxGpojV generated for SW_Push.
+WARNING: Missing tag on SW_Push instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:177.
+WARNING: Random tag PEbarW1F2O generated for SW_Push.
+WARNING: Missing tag on  instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/<frozen importlib._bootstrap>:488.
+WARNING: Missing tag on speakeasy_board1 instantiated at /Users/william/Documents/Personal/git/speakeasy/pcb/speakeasy/circuit-synth/speakeasy_board.py:544.
+INFO: 48 warnings found while generating netlist.
+INFO: 0 errors found while generating netlist.
+
+INFO: 48 warnings found while generating XML.
+INFO: 0 errors found while generating XML.
+
