@@ -1,0 +1,13 @@
+G04 #@! TF.GenerationSoftware,KiCad,Pcbnew,10.0.3*
+G04 #@! TF.ProjectId,Speakeasy Lowcost,53706561-6b65-4617-9379-204c6f77636f,rev?*
+G04 #@! TF.SameCoordinates,Original*
+G04 #@! TF.FileFunction,Paste,Bot*
+G04 #@! TF.FilePolarity,Positive*
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+%MOMM*%
+%LPD*%
+G01*
+G04 APERTURE LIST*
+G04 APERTURE END LIST*
+M02*

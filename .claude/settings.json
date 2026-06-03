@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:community.home-assistant.io)",
+      "WebFetch(domain:esphome.io)",
+      "WebFetch(domain:docs.espressif.com)",
+      "Bash(gh issue view *)",
+      "Bash(gh pr view *)",
+      "Read(//opt/homebrew/Cellar/esphome/2026.5.1/libexec/lib/python3.14/site-packages/esphome/**)"
+    ]
+  }
+}

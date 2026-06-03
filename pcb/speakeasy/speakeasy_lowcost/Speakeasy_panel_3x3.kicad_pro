@@ -259,13 +259,12 @@
   "cvpcb": {
     "equivalence_files": []
   },
-  "erc": {},
   "libraries": {
     "pinned_footprint_libs": [],
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "Speakeasy.kicad_pro",
+    "filename": "Speakeasy_panel_3x3.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -281,12 +280,12 @@
         "microvia_drill": 0.1,
         "name": "Default",
         "pcb_color": "rgba(0, 0, 0, 0.000)",
-        "priority": -1,
+        "priority": 2147483647,
         "schematic_color": "rgba(0, 0, 0, 0.000)",
-        "track_width": 0.25,
+        "track_width": 0.2,
         "tuning_profile": "",
-        "via_diameter": 0.8,
-        "via_drill": 0.4,
+        "via_diameter": 0.6,
+        "via_drill": 0.3,
         "wire_width": 6
       }
     ],
@@ -308,57 +307,18 @@
     "page_layout_descr_file": ""
   },
   "schematic": {
-    "annotate_start_num": 0,
     "bus_aliases": {},
-    "drawing": {
-      "default_line_thickness": 6.0,
-      "default_text_size": 50.0,
-      "field_names": [],
-      "intersheets_ref_own_page": false,
-      "intersheets_ref_prefix": "",
-      "intersheets_ref_short": false,
-      "intersheets_ref_show": false,
-      "intersheets_ref_suffix": "",
-      "junction_size_choice": 3,
-      "label_size_ratio": 0.25,
-      "pin_symbol_size": 0.0,
-      "text_offset_ratio": 0.08
-    },
     "legacy_lib_dir": "",
     "legacy_lib_list": [],
-    "meta": {
-      "version": 1
-    },
-    "net_format_name": "",
-    "ngspice": {
-      "fix_include_paths": true,
-      "fix_passive_vals": false,
-      "meta": {
-        "version": 0
-      },
-      "model_mode": 0,
-      "workbook_filename": ""
-    },
-    "page_layout_descr_file": "",
-    "plot_directory": "",
-    "spice_adjust_passive_values": false,
-    "spice_external_command": "spice \"%I\"",
-    "subpart_first_id": 65,
-    "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "Speakeasy.kicad_sch",
-        "name": "Speakeasy",
+        "filename": "Speakeasy_panel_3x3.kicad_sch",
+        "name": "Speakeasy_panel_3x3",
         "uuid": "00000000-0000-0000-0000-000000000000"
       }
     ]
   },
-  "sheets": [
-    [
-      "1877f1a6-e8c7-4409-8ffa-15d1a5c66caa",
-      ""
-    ]
-  ],
+  "sheets": [],
   "text_variables": {},
   "tuning_profiles": {
     "meta": {

@@ -15,6 +15,8 @@ esp32:
   framework:
     type: esp-idf
     sdkconfig_options:
+      # Options: 0=NONE, 1=ERROR, 2=WARN, 3=INFO, 4=DEBUG, 5=VERBOSE
+      CONFIG_LOG_DEFAULT_LEVEL: "4"
       CONFIG_ESP32S3_DATA_CACHE_64KB: "y"
       CONFIG_ESP32S3_DATA_CACHE_LINE_64B: "y"
       CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB: "y"
@@ -31,7 +33,7 @@ esp32:
       CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "64"
 
 logger:
-  level: info
+  level: debug
 
 api:
 

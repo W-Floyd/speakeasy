@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(jlc-fast search *)",
+      "WebFetch(domain:jlcpcb.com)",
+      "Bash(python3 circuit-synth/lookup_part.py C5188434)",
+      "Bash(python3 circuit-synth/import_part.py C5188434)",
+      "Read(//Users/william/Documents/Personal/git/speakeasy/pcb/circuit-synth-local/src/circuit_synth/kicad/sch_gen/**)",
+      "Read(//Users/william/Documents/Personal/git/speakeasy/pcb/circuit-synth-local/src/circuit_synth/component_placement/**)",
+      "Read(//Users/william/Documents/Personal/git/speakeasy/pcb/circuit-synth-local/src/circuit_synth/core/**)",
+      "Read(//Users/william/Documents/Personal/git/speakeasy/pcb/circuit-synth-local/src/circuit_synth/kicad/schematic/**)",
+      "Read(//Users/william/Documents/Personal/git/speakeasy/pcb/circuit-synth-local/src/circuit_synth/kicad/core/**)",
+      "Read(//Users/william/Documents/Personal/git/speakeasy/pcb/circuit-synth-local/src/circuit_synth/kicad/**)",
+      "Bash(python circuit-synth/lookup_part.py C11702)",
+      "Read(//Users/william/Downloads/**)"
+    ],
+    "additionalDirectories": [
+      "/Users/william/Documents/Personal/git/speakeasy/pcb/circuit-synth-local/src/circuit_synth/kicad/sch_gen"
+    ]
+  }
+}

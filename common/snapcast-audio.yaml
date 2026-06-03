@@ -3,9 +3,9 @@ substitutions:
   snapcast_server_port: "1704"
 
 external_components:
-  - source: github://pr#14389
-    components: [ snapclient ]
-    refresh: 24h
+  - source: github://W-Floyd/esphome@snapclient2
+    components: [snapclient]
+    refresh: 0s # Forces ESPHome to check for new branch commits on every compile
 
 media_player:
   - platform: snapclient
@@ -14,3 +14,4 @@ media_player:
     hostname: ${snapcast_server_ip}
     port: ${snapcast_server_port}
     i2s_dout_pin: ${i2s_dout_pin}
+    volume_curve_db_range: 40

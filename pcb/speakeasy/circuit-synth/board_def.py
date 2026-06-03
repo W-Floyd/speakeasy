@@ -25,8 +25,8 @@ Design notes:
 - J2 is the 2-pin SMD screw terminal for the speaker
 """
 
-from circuit_synth import Component, Net, circuit
 from board_helpers import component_from_lcsc, connect
+from circuit_synth import Component, Net, circuit
 
 
 @circuit(name="Speakeasy")
@@ -53,17 +53,45 @@ def speakeasy_board():
 
     # M3 plated through-hole mounting holes (3.2mm drill, copper-ringed, tied to GND)
     _mh_fp = "MountingHole:MountingHole_3.2mm_M3_Pad_Via"
-    mh1 = Component(symbol="Mechanical:MountingHole_Pad", ref="H1", value="MountingHole", footprint=_mh_fp)
-    mh2 = Component(symbol="Mechanical:MountingHole_Pad", ref="H2", value="MountingHole", footprint=_mh_fp)
-    mh3 = Component(symbol="Mechanical:MountingHole_Pad", ref="H3", value="MountingHole", footprint=_mh_fp)
-    mh4 = Component(symbol="Mechanical:MountingHole_Pad", ref="H4", value="MountingHole", footprint=_mh_fp)
+    mh1 = Component(
+        symbol="Mechanical:MountingHole_Pad",
+        ref="H1",
+        value="MountingHole",
+        footprint=_mh_fp,
+    )
+    mh2 = Component(
+        symbol="Mechanical:MountingHole_Pad",
+        ref="H2",
+        value="MountingHole",
+        footprint=_mh_fp,
+    )
+    mh3 = Component(
+        symbol="Mechanical:MountingHole_Pad",
+        ref="H3",
+        value="MountingHole",
+        footprint=_mh_fp,
+    )
+    mh4 = Component(
+        symbol="Mechanical:MountingHole_Pad",
+        ref="H4",
+        value="MountingHole",
+        footprint=_mh_fp,
+    )
 
     # UART test pads — probe points for 3V3, GND, TXD0, RXD0
     _tp_fp = "TestPoint:TestPoint_Pad_D1.5mm"
-    tp_3v3 = Component(symbol="Connector:TestPoint", ref="TP1", value="3V3",  footprint=_tp_fp)
-    tp_gnd = Component(symbol="Connector:TestPoint", ref="TP2", value="GND",  footprint=_tp_fp)
-    tp_tx  = Component(symbol="Connector:TestPoint", ref="TP3", value="TXD0", footprint=_tp_fp)
-    tp_rx  = Component(symbol="Connector:TestPoint", ref="TP4", value="RXD0", footprint=_tp_fp)
+    tp_3v3 = Component(
+        symbol="Connector:TestPoint", ref="TP1", value="3V3", footprint=_tp_fp
+    )
+    tp_gnd = Component(
+        symbol="Connector:TestPoint", ref="TP2", value="GND", footprint=_tp_fp
+    )
+    tp_tx = Component(
+        symbol="Connector:TestPoint", ref="TP3", value="TXD0", footprint=_tp_fp
+    )
+    tp_rx = Component(
+        symbol="Connector:TestPoint", ref="TP4", value="RXD0", footprint=_tp_fp
+    )
 
     # ── Passive components ─────────────────────────────────────────────────
 
@@ -72,7 +100,7 @@ def speakeasy_board():
     r_cc2 = component_from_lcsc("C25905", ref="R2", value="5.1k")
 
     # EN pullup — supplements ESP32 module internal pullup for clean power-on reset
-    r_en  = component_from_lcsc("C25744", ref="R3", value="10k")
+    r_en = component_from_lcsc("C25744", ref="R3", value="10k")
 
     # MAX98357A SD_MODE 2-resistor GPIO network for runtime L/R/Stereo/Shutdown:
     #   IO7 (GPIO_A) → 1kΩ  → SD_MODE  (low-Z drive:  Stereo when HIGH, Shutdown when LOW)
@@ -82,16 +110,16 @@ def speakeasy_board():
     r_sd_b = component_from_lcsc("C25741", ref="R5", value="100k")
 
     # LDO input bulk cap (+5V rail, near U3 input)
-    c_ldo_in   = component_from_lcsc("C19702", ref="C1", value="10uF")
+    c_ldo_in = component_from_lcsc("C19702", ref="C1", value="10uF")
 
     # LDO output cap (+3.3V rail — required for AMS1117 stability: min 10uF)
-    c_ldo_out  = component_from_lcsc("C15525", ref="C2", value="10uF")
+    c_ldo_out = component_from_lcsc("C15525", ref="C2", value="10uF")
 
     # ESP32 +3.3V high-frequency bypass
     c_esp_bypass = component_from_lcsc("C1525", ref="C3", value="100nF")
 
     # MAX98357A VDD bulk decoupling (+5V rail, near U2)
-    c_dac_bulk   = component_from_lcsc("C52923", ref="C5", value="1uF")
+    c_dac_bulk = component_from_lcsc("C52923", ref="C5", value="1uF")
 
     # MAX98357A VDD high-frequency bypass (as close to chip as possible)
     c_dac_bypass = component_from_lcsc("C1525", ref="C6", value="100nF")
@@ -100,31 +128,31 @@ def speakeasy_board():
     boot_btn = component_from_lcsc("C720477", ref="SW1", value="BOOT")
 
     # Reset button: pulls EN low to reset the ESP32
-    rst_btn  = component_from_lcsc("C720477", ref="SW2", value="RST")
+    rst_btn = component_from_lcsc("C720477", ref="SW2", value="RST")
 
     # ── Nets ───────────────────────────────────────────────────────────────
 
-    vbus    = Net("+5V")    # 5V from panel-mount USB-C
-    vcc_3v3 = Net("+3.3V") # 3.3V regulated (ESP32 supply)
-    gnd     = Net("GND")
+    vbus = Net("+5V")  # 5V from panel-mount USB-C
+    vcc_3v3 = Net("+3.3V")  # 3.3V regulated (ESP32 supply)
+    gnd = Net("GND")
 
-    usb_dp  = Net("USB_DP")    # USB D+  → ESP32 USB_D+
-    usb_dm  = Net("USB_DM")    # USB D-  → ESP32 USB_D-
+    usb_dp = Net("USB_DP")  # USB D+  → ESP32 USB_D+
+    usb_dm = Net("USB_DM")  # USB D-  → ESP32 USB_D-
 
     cc1 = Net("CC1")
     cc2 = Net("CC2")
 
-    i2s_bclk  = Net("I2S_BCLK")   # IO5
+    i2s_bclk = Net("I2S_BCLK")  # IO5
     i2s_lrclk = Net("I2S_LRCLK")  # IO6
-    i2s_dout  = Net("I2S_DOUT")   # IO4
+    i2s_dout = Net("I2S_DOUT")  # IO4
 
-    en_net    = Net("EN")
-    gpio0     = Net("GPIO0")
-    sd_mode   = Net("SD_MODE")
-    sd_ctrl_a = Net("SD_CTRL_A")   # IO7 → 1kΩ → SD_MODE (Stereo/Shutdown)
-    sd_ctrl_b = Net("SD_CTRL_B")   # IO8 → 100kΩ → SD_MODE (Left)
-    uart_tx   = Net("UART_TX")     # ESP TXD0 → dongle RX
-    uart_rx   = Net("UART_RX")     # ESP RXD0 ← dongle TX
+    en_net = Net("EN")
+    gpio0 = Net("GPIO0")
+    sd_mode = Net("SD_MODE")
+    sd_ctrl_a = Net("SD_CTRL_A")  # IO7 → 1kΩ → SD_MODE (Stereo/Shutdown)
+    sd_ctrl_b = Net("SD_CTRL_B")  # IO8 → 100kΩ → SD_MODE (Left)
+    uart_tx = Net("UART_TX")  # ESP TXD0 → dongle RX
+    uart_rx = Net("UART_RX")  # ESP RXD0 ← dongle TX
 
     spkr_p = Net("SPKR_P")
     spkr_n = Net("SPKR_N")
@@ -149,15 +177,15 @@ def speakeasy_board():
 
     # ── LDO: VBUS → 3.3V ──────────────────────────────────────────────────
 
-    connect(ldo, "VIN",   vbus)
-    connect(ldo, "OUT",   vcc_3v3)
+    connect(ldo, "VIN", vbus)
+    connect(ldo, "OUT", vcc_3v3)
     connect(ldo, "OUT_S", vcc_3v3)
-    connect(ldo, "EN",    vbus)
-    connect(ldo, "PGND",  gnd)
-    connect(ldo, "AGND",  gnd)
+    connect(ldo, "EN", vbus)
+    connect(ldo, "PGND", gnd)
+    connect(ldo, "AGND", gnd)
 
-    c_ldo_in[1]  += vbus
-    c_ldo_in[2]  += gnd
+    c_ldo_in[1] += vbus
+    c_ldo_in[2] += gnd
     c_ldo_out[1] += vcc_3v3
     c_ldo_out[2] += gnd
 
@@ -165,7 +193,7 @@ def speakeasy_board():
 
     connect(esp32, "3V3", vcc_3v3)
     connect(esp32, "GND", gnd)
-    esp32["EN"]     += en_net
+    esp32["EN"] += en_net
 
     # Native USB peripheral (no CH340/CP2102 needed)
     # ESP32-S3 MINI: IO20 = USB D+, IO19 = USB D-
@@ -193,8 +221,8 @@ def speakeasy_board():
     c_esp_bypass[2] += gnd
 
     # Reset circuit: pullup + momentary button to GND
-    r_en[1]    += vcc_3v3
-    r_en[2]    += en_net
+    r_en[1] += vcc_3v3
+    r_en[2] += en_net
     rst_btn[1] += en_net
     rst_btn[2] += gnd
 
@@ -204,15 +232,15 @@ def speakeasy_board():
 
     # ── MAX98357A ──────────────────────────────────────────────────────────
 
-    dac["VDD"]          += vbus      # +5V → up to 3.2W into 4Ω load
-    dac["GND"]          += gnd
-    dac["EP"]           += gnd       # exposed thermal pad
-    dac["BCLK"]         += i2s_bclk
-    dac["LRCLK"]        += i2s_lrclk
-    dac["DIN"]          += i2s_dout
-    dac["~{SD_MODE}"]   += sd_mode   # pin 4; pulled high → left-channel/enable
-    dac["OUTP"]         += spkr_p
-    dac["OUTN"]         += spkr_n
+    dac["VDD"] += vbus  # +5V → up to 3.2W into 4Ω load
+    dac["GND"] += gnd
+    dac["EP"] += gnd  # exposed thermal pad
+    dac["BCLK"] += i2s_bclk
+    dac["LRCLK"] += i2s_lrclk
+    dac["DIN"] += i2s_dout
+    dac["~{SD_MODE}"] += sd_mode  # pin 4; pulled high → left-channel/enable
+    dac["OUTP"] += spkr_p
+    dac["OUTN"] += spkr_n
 
     # SD_MODE GPIO control network (see component declaration for truth table)
     r_sd_a[1] += sd_ctrl_a
@@ -221,8 +249,8 @@ def speakeasy_board():
     r_sd_b[2] += sd_mode
 
     # VDD decoupling (Class D switching; place these as close as possible)
-    c_dac_bulk[1]   += vbus
-    c_dac_bulk[2]   += gnd
+    c_dac_bulk[1] += vbus
+    c_dac_bulk[2] += gnd
     c_dac_bypass[1] += vbus
     c_dac_bypass[2] += gnd
 
@@ -235,8 +263,8 @@ def speakeasy_board():
 
     tp_3v3[1] += vcc_3v3
     tp_gnd[1] += gnd
-    tp_tx[1]  += uart_tx
-    tp_rx[1]  += uart_rx
+    tp_tx[1] += uart_tx
+    tp_rx[1] += uart_rx
 
     mh1[1] += gnd
     mh2[1] += gnd
