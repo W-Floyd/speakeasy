@@ -29,14 +29,38 @@
   "fab_quotes": {
     "1x1": [
       {
-        "qty": 10, "price": 166.77,
-        "_note": "SMT026060161104-Y45: PCBA, 10 boards. Grand total $259.51 = $166.77 merch - $20 promo + $46.31 DHL freight + $51.37 import duty (30.8%) + $13.84 sales tax (8.3%) + $1.22 payment fee. DDP = JLCPCB handles customs clearance but duty is still your cost."
+        "qty": 10, "price": 279.51,
+        "order_id": "SMT026060161104-Y45",
+        "breakdown": {
+          "merch":             166.77,
+          "promo":             -20.00,
+          "freight":            46.31,
+          "import_duty":        51.37,
+          "import_duty_rate":   0.308,
+          "sales_tax":          13.84,
+          "sales_tax_rate":     0.083,
+          "payment_fee":         1.22,
+          "grand_total":       259.51
+        }
       }
     ],
     "2x2": [
-      {"qty": 5,  "price": 405.78},
-      {"qty": 10, "price": 653.24},
-      {"qty": 20, "price": 772.23, "_note": "Grand total $1215.89 = $772.23 merch + $94.94 ship + $270.29 duty (35%) + $5.69 payment (0.74%) + $72.74 sales tax (9.4%)"}
+      {"qty": 5,  "price": 405.78,  "tax_free": false},
+      {"qty": 10, "price": 653.24,  "tax_free": false},
+      {
+        "qty": 20, "price": 1215.89,
+        "breakdown": {
+          "merch":             772.23,
+          "freight":            94.94,
+          "import_duty":       270.29,
+          "import_duty_rate":   0.35,
+          "sales_tax":          72.74,
+          "sales_tax_rate":     0.094,
+          "payment_fee":         5.69,
+          "payment_fee_rate":   0.0074,
+          "grand_total":      1215.89
+        }
+      }
     ],
     "2x3": [],
     "3x3": [

@@ -29,8 +29,9 @@ SEGMENT_COLORS = [
     "#60a5fa",  # Components
     "#34d399",  # Assembly
     "#fbbf24",  # PCB bare board
-    "#fb923c",  # Import duty
+    "#fb923c",  # Duty & fees
     "#38bdf8",  # Shipping
+    "#a78bfa",  # Sales tax (top)
 ]
 
 
@@ -78,6 +79,9 @@ def generate_report(report_data: dict, output_path: Path) -> None:
     n_extended     = meta.get("n_extended", 0)
     standard_only  = meta.get("standard_only", [])
     duty_rate      = meta.get("import_duty_rate", 0.0)
+    sales_tax_rate = meta.get("sales_tax_rate", 0.0)
+    tax_rate       = meta.get("landed_rate", 1.0 + duty_rate) - 1.0
+    cogs_rate      = meta.get("cogs_rate", 1.0 + duty_rate) - 1.0
     bm_per_board   = meta.get("bm_per_board")
     eng_fee        = meta.get("eng_fee")
 
@@ -122,8 +126,9 @@ def generate_report(report_data: dict, output_path: Path) -> None:
                 "PCB bare board":  bb.get("pcb_per_board") or 0.0,
                 "Extended fees":   bb.get("ext_fee_per_board") or 0.0,
                 "Standard base":   bb.get("std_base_per_board") or 0.0,
-                "Import duty":     (bb.get("pcba_price_total") or 0.0) / (bb.get("total_boards") or 1) * duty_rate,
+                "Duty & fees":     (bb.get("pcba_price_total") or 0.0) / (bb.get("total_boards") or 1) * (meta.get("cogs_rate", 1.0 + duty_rate) - 1.0),
                 "Shipping":        (bb.get("ship_cost") or 0.0) / (bb.get("total_boards") or 1),
+                "Sales tax":       (bb.get("pcba_price_total") or 0.0) / (bb.get("total_boards") or 1) * meta.get("sales_tax_rate", 0.0),
             }
             if any(segments.values()):
                 dominant_label = max(segments, key=segments.get)
@@ -134,18 +139,18 @@ def generate_report(report_data: dict, output_path: Path) -> None:
     landed_table_rows = []
     for qty in quantities:
         row = {"qty": qty, "cells": []}
-        row_vals = []
+        cogs_vals = []
         for v in variants:
             bb = bom_breakdown.get(qty, {}).get(v)
             if bb:
                 lp  = bb.get("landed_per_board")
+                cp  = bb.get("cogs_per_board")
                 est = fab_results.get(qty, {}).get(v, (None, 1, False))[2]
             else:
-                lp, est = None, False
-            row_vals.append(lp)
-            row["cells"].append({"val": lp, "est": est})
-        # find min (not None)
-        valid = [v for v in row_vals if v is not None]
+                lp, cp, est = None, None, False
+            cogs_vals.append(cp if cp is not None else lp)
+            row["cells"].append({"val": lp, "cogs": cp, "est": est})
+        valid = [x for x in cogs_vals if x is not None]
         row["min_val"] = min(valid) if valid else None
         landed_table_rows.append(row)
 
@@ -181,19 +186,38 @@ def generate_report(report_data: dict, output_path: Path) -> None:
     line_datasets = []
     for v in variants:
         color = VARIANT_COLORS.get(v, "#ffffff")
-        points = []
+        points   = []
+        verified = []
         for qty in quantities:
-            bb = bom_breakdown.get(qty, {}).get(v)
-            lp = bb.get("landed_per_board") if bb else None
+            bb  = bom_breakdown.get(qty, {}).get(v)
+            lp  = bb.get("landed_per_board") if bb else None
+            est = bb.get("pcba_estimated", True) if bb else True
             points.append(lp)
+            verified.append(not est)
         line_datasets.append({
             "label":           v,
             "data":            points,
+            "verified":        verified,
             "borderColor":     color,
-            "backgroundColor": color + "33",
+            "backgroundColor": color + "22",
+            "borderDash":      [5, 4],
             "tension":         0.3,
             "spanGaps":        True,
         })
+        if sales_tax_rate:
+            cogs_points = []
+            for qty in quantities:
+                bb = bom_breakdown.get(qty, {}).get(v)
+                cogs_points.append(bb.get("cogs_per_board") if bb else None)
+            line_datasets.append({
+                "label":           f"{v} COGS",
+                "data":            cogs_points,
+                "verified":        verified,
+                "borderColor":     color,
+                "backgroundColor": color + "33",
+                "tension":         0.3,
+                "spanGaps":        True,
+            })
 
     # ── Stacked bar and pie chart: data by qty selector ────────────────────────
     # We'll pass the full breakdown dict to JS and let it rebuild on selector change.
@@ -235,6 +259,9 @@ def generate_report(report_data: dict, output_path: Path) -> None:
         n_extended=n_extended,
         standard_only=standard_only,
         duty_rate=duty_rate,
+        tax_rate=tax_rate,
+        cogs_rate=cogs_rate,
+        sales_tax_rate=sales_tax_rate,
         bm_per_board=bm_per_board,
         eng_fee=eng_fee,
         preferred=preferred,
@@ -263,7 +290,7 @@ def generate_report(report_data: dict, output_path: Path) -> None:
 
 def _build_html(
     today, pcb_w, pcb_l, assembly_type, n_extended, standard_only,
-    duty_rate, bm_per_board, eng_fee, preferred,
+    duty_rate, tax_rate, cogs_rate, sales_tax_rate, bm_per_board, eng_fee, preferred,
     variants, quantities, median_qty,
     best_landed_val, best_landed_cfg,
     best_pcba_val, best_pcba_cfg,
@@ -272,8 +299,8 @@ def _build_html(
     line_datasets, bom_breakdown_js, bom_lines_display,
 ) -> str:
 
-    dim_str  = f"{pcb_w} × {pcb_l} mm" if pcb_w and pcb_l else "unknown"
-    duty_str = f"{duty_rate*100:.1f}%" if duty_rate else "0%"
+    dim_str       = f"{pcb_w} × {pcb_l} mm" if pcb_w and pcb_l else "unknown"
+    tax_seg_label = "Duty &amp; taxes"
 
     # Serialise all Python data to JS-safe JSON strings once
     js_variants        = _js(variants)
@@ -282,7 +309,10 @@ def _build_html(
     js_line_datasets   = _js(line_datasets)
     js_bom_breakdown   = _js(bom_breakdown_js)
     js_bom_lines       = _js(bom_lines_display)
-    js_duty_rate       = _js(duty_rate)
+    js_tax_rate        = _js(tax_rate)
+    js_cogs_rate       = _js(cogs_rate)
+    js_sales_tax_rate  = _js(sales_tax_rate)
+    js_has_cogs        = _js(bool(sales_tax_rate))
     js_preferred       = _js(preferred)
 
     # ── Landed table HTML ──────────────────────────────────────────────────────
@@ -291,17 +321,28 @@ def _build_html(
     for row in landed_table_rows:
         cells_html = ""
         for i, cell in enumerate(row["cells"]):
-            val = cell["val"]
-            est = cell["est"]
-            is_min = (val is not None and row["min_val"] is not None
-                      and abs(val - row["min_val"]) < 1e-6)
-            if val is None:
+            val  = cell["val"]   # landed
+            cogs = cell.get("cogs")
+            est  = cell["est"]
+            primary = cogs if cogs is not None else val
+            is_min = (primary is not None and row["min_val"] is not None
+                      and abs(primary - row["min_val"]) < 1e-6)
+            if primary is None:
                 cell_str = "—"
                 cls = "cell-missing"
+            elif est:
+                p_s = f"~${primary:.2f}"
+                tax_s = (f"<span class='landed-parens'>(~${val:.2f})</span>"
+                         if sales_tax_rate and val is not None else "")
+                cell_str = f"{p_s}{tax_s}"
+                cls = "cell-best cell-est" if is_min else "cell-est"
             else:
-                prefix = "~" if est else ""
-                cell_str = f"{prefix}${val:.2f}"
-                cls = "cell-best" if is_min else ("cell-est" if est else "")
+                badge = "<span class='verified-badge'>✓</span>"
+                p_s = f"${primary:.2f}"
+                tax_s = (f"<span class='landed-parens'>(${val:.2f})</span>"
+                         if sales_tax_rate and val is not None else "")
+                cell_str = f"{p_s}{tax_s}{badge}"
+                cls = "cell-best" if is_min else "cell-verified"
             cells_html += f'<td class="{cls}">{cell_str}</td>'
         landed_tbody += f"<tr><td class='col-qty'>{row['qty']}</td>{cells_html}</tr>\n"
 
@@ -315,10 +356,11 @@ def _build_html(
             est = cell["est"]
             if val is None:
                 cell_str, cls = "—", "cell-missing"
+            elif est:
+                cell_str, cls = f"~${val:.2f}", "cell-est"
             else:
-                prefix = "~" if est else ""
-                cell_str = f"{prefix}${val:.2f}"
-                cls = "cell-est" if est else ""
+                badge = "<span class='verified-badge'>✓</span>"
+                cell_str, cls = f"${val:.2f}{badge}", "cell-verified"
             cells_html += f'<td class="{cls}">{cell_str}</td>'
         pcba_tbody += f"<tr><td class='col-qty'>{row['qty']}</td>{cells_html}</tr>\n"
 
@@ -331,10 +373,11 @@ def _build_html(
             est = cell["est"]
             if val is None:
                 cell_str, cls = "—", "cell-missing"
+            elif est:
+                cell_str, cls = f"~${val:.2f}", "cell-est"
             else:
-                prefix = "~" if est else ""
-                cell_str = f"{prefix}${val:.2f}"
-                cls = "cell-est" if est else ""
+                badge = "<span class='verified-badge'>✓</span>"
+                cell_str, cls = f"${val:.2f}{badge}", "cell-verified"
             cells_html += f'<td class="{cls}">{cell_str}</td>'
         pcb_tbody += f"<tr><td class='col-qty'>{row['qty']}</td>{cells_html}</tr>\n"
 
@@ -365,6 +408,17 @@ def _build_html(
             f"<td>{lib_badge}</td>"
             f"<td class='num mono'>{unit_str}</td>"
             f"<td class='num mono'>{line_str}</td>"
+            f"</tr>\n"
+        )
+
+    if bom_lines_display:
+        tots = [l.get("line_total") for l in bom_lines_display]
+        bom_total = sum(t for t in tots if t is not None)
+        bom_total_str = f"${bom_total:.4f}" if all(t is not None for t in tots) else f"~${bom_total:.4f}"
+        bom_tbody += (
+            f"<tr class='bom-total'>"
+            f"<td colspan='5' style='text-align:right;color:#64748b;padding-right:14px'>Components / board</td>"
+            f"<td class='num mono'>{bom_total_str}</td>"
             f"</tr>\n"
         )
 
@@ -478,12 +532,16 @@ def _build_html(
   .cell-best {{ color: #34d399; font-weight: 700; }}
   .cell-est  {{ color: #94a3b8; }}
   .cell-missing {{ color: #374151; }}
+  .cell-verified {{ color: #e2e8f0; }}
+  .verified-badge {{ color: #34d399; font-size: 0.68rem; margin-left: 3px; opacity: 0.75; }}
+  .landed-parens {{ color: #475569; font-size: 0.82em; margin-left: 3px; }}
   .num  {{ text-align: right; }}
   .mono {{ font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: 0.83rem; }}
 
   /* ── BOM table variants ── */
   .bom-extended {{ background: #1a1400; }}
   .bom-extended:hover {{ background: #211900; }}
+  .bom-total td {{ border-top: 1px solid #334155; color: #e2e8f0; font-weight: 600; padding-top: 10px; }}
   .badge-ext  {{ background: #78350f; color: #fcd34d; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }}
   .badge-basic{{ background: #1e293b; color: #64748b;  border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }}
   .badge-warn {{ background: #7c2d12; color: #fca5a5; border-radius: 4px; padding: 1px 6px; font-size: 0.72rem; font-weight: 600; }}
@@ -565,7 +623,8 @@ def _build_html(
       <div class="meta-item"><span class="meta-label">PCB size</span><span class="meta-value">{dim_str}</span></div>
       <div class="meta-item"><span class="meta-label">Assembly</span><span class="meta-value">{assembly_type}</span></div>
       <div class="meta-item"><span class="meta-label">Extended parts</span><span class="meta-value">{n_extended}</span></div>
-      <div class="meta-item"><span class="meta-label">Import duty</span><span class="meta-value">{duty_str}</span></div>
+      {'<div class="meta-item"><span class="meta-label">Import duty</span><span class="meta-value">' + f'{duty_rate*100:.1f}%' + '</span></div>' if duty_rate else ''}
+      {'<div class="meta-item"><span class="meta-label">Sales tax</span><span class="meta-value">' + f'{sales_tax_rate*100:.1f}%' + '</span></div>' if sales_tax_rate else ''}
       {'<div class="meta-item"><span class="meta-label">Shipping</span><span class="meta-value">' + preferred + '</span></div>' if preferred else ''}
       {'<div class="meta-item"><span class="meta-label">Standard-only parts</span><span class="meta-value">' + ", ".join(standard_only) + '</span></div>' if standard_only else ''}
       <div class="meta-item"><span class="meta-label">Generated</span><span class="meta-value">{today}</span></div>
@@ -597,9 +656,9 @@ def _build_html(
   </div>
 </div>
 
-<!-- ═══════════════════ LANDED COST TABLE ═══════════════════ -->
+<!-- ═══════════════════ COST TABLE ═══════════════════ -->
 <div class="section">
-  <h2>Landed Cost per Board ($/board)</h2>
+  <h2>{'COGS per Board — taxed in parens' if sales_tax_rate else 'Landed Cost per Board'} ($/board)</h2>
   <div class="table-wrap">
     <table>
       <thead><tr><th>Panels</th>{landed_thead_cells}</tr></thead>
@@ -609,10 +668,10 @@ def _build_html(
     </table>
   </div>
   <p class="table-note">
-    <span style="color:#34d399">Green</span> = lowest in row &nbsp;|&nbsp;
-    <span style="color:#94a3b8">Grey</span> = estimated from model &nbsp;|&nbsp;
-    — = no data &nbsp;|&nbsp;
-    ~ prefix = estimated
+    <span style="color:#34d399">Green</span> = lowest COGS in row &nbsp;|&nbsp;
+    <span style="color:#e2e8f0">White</span> <span class="verified-badge" style="opacity:1">✓</span> = verified JLCPCB quote &nbsp;|&nbsp;
+    <span style="color:#94a3b8">Grey ~</span> = model estimate &nbsp;|&nbsp;
+    <span class="landed-parens" style="font-size:1em">(parens)</span> = full landed incl. sales tax
   </p>
 </div>
 
@@ -742,7 +801,10 @@ def _build_html(
   const LINE_DATASETS  = {js_line_datasets};
   const BOM_BREAKDOWN  = {js_bom_breakdown};
   const BOM_LINES_ALL  = {js_bom_lines};
-  const DUTY_RATE      = {js_duty_rate};
+  const TAX_RATE       = {js_tax_rate};
+  const COGS_RATE      = {js_cogs_rate};
+  const SALES_TAX_RATE = {js_sales_tax_rate};
+  const HAS_COGS       = {js_has_cogs};
   const PREFERRED_SHIP = {js_preferred};
 
   const VARIANT_COLORS = {{
@@ -756,16 +818,18 @@ def _build_html(
     "#60a5fa", // Components
     "#34d399", // Assembly
     "#fbbf24", // PCB bare board
-    "#fb923c", // Import duty
+    "#fb923c", // Duty & fees
     "#38bdf8", // Shipping
+    "#a78bfa", // Sales tax (top)
   ];
 
   const SEG_LABELS = [
     "Components",
     "Assembly",
     "PCB bare board",
-    "Import duty",
+    "Duty & fees",
     "Shipping",
+    "Sales tax",
   ];
 
   // ── Chart defaults ─────────────────────────────────────────────────────────
@@ -786,6 +850,17 @@ def _build_html(
       title: {{ display: !!title, text: title, color: "#64748b", font: {{ size: 11 }} }},
     }};
   }}
+
+  // Apply per-point verified styling and dashed lines before handing datasets to Chart.js
+  LINE_DATASETS.forEach(ds => {{
+    const ver = ds.verified || [];
+    const isCogs = ds.label.endsWith(" COGS");
+    ds.pointRadius          = isCogs ? ver.map(v => v ? 6 : 3) : [];
+    ds.pointHoverRadius     = isCogs ? ver.map(v => v ? 8 : 5) : [];
+    ds.pointBackgroundColor = isCogs ? ver.map(v => v ? ds.borderColor : "transparent") : "transparent";
+    ds.pointBorderColor     = ds.borderColor;
+    ds.pointBorderWidth     = isCogs ? ver.map(v => v ? 2 : 1.5) : 0;
+  }});
 
   // ── Line chart ─────────────────────────────────────────────────────────────
   const lineCtx = document.getElementById("lineChart").getContext("2d");
@@ -855,8 +930,9 @@ def _build_html(
           case 0: return bb.component_cost_per_board ?? 0;
           case 1: return bb.assembly_cost_per_board ?? 0;
           case 2: return bb.pcb_per_board ?? 0;
-          case 3: return (pcbaTotal != null) ? (pcbaTotal / boards) * DUTY_RATE : 0;
+          case 3: return (pcbaTotal != null) ? (pcbaTotal / boards) * COGS_RATE : 0;
           case 4: return (bb.ship_cost != null) ? bb.ship_cost / boards : 0;
+          case 5: return (bb.cogs_per_board != null) ? bb.cogs_per_board * SALES_TAX_RATE : 0;
           default: return 0;
         }}
       }}),
@@ -889,10 +965,25 @@ def _build_html(
           borderWidth: 1,
           titleColor: "#e2e8f0",
           bodyColor: "#94a3b8",
+          footerColor: "#e2e8f0",
+          footerFont: {{ weight: "600" }},
           callbacks: {{
             label: ctx => {{
               const v = ctx.raw;
               return v == null || v === 0 ? null : `${{ctx.dataset.label}}: $${{v.toFixed(4)}}/board`;
+            }},
+            footer: items => {{
+              if (!items.length) return [];
+              const qtyKey = String(parseInt(document.getElementById("qtySelector").value, 10));
+              const variant = items[0].label;
+              const bb = BOM_BREAKDOWN[qtyKey]?.[variant];
+              if (!bb) return [];
+              const lines = [];
+              if (bb.cogs_per_board != null && HAS_COGS)
+                lines.push(`COGS:   $${{bb.cogs_per_board.toFixed(2)}}/board`);
+              if (bb.landed_per_board != null)
+                lines.push(`Landed: $${{bb.landed_per_board.toFixed(2)}}/board`);
+              return lines;
             }},
           }},
         }},
@@ -1025,6 +1116,13 @@ def _build_html(
         <td class="num mono">${{ltStr}}</td>
       </tr>`;
     }});
+    const total   = bb.line_items.reduce((s, li) => s + (li.line_total ?? 0), 0);
+    const hasAll  = bb.line_items.every(li => li.line_total != null);
+    const totStr  = `${{hasAll ? "" : "~"}}$${{total.toFixed(4)}}`;
+    html += `<tr class="bom-total">
+      <td colspan="5" style="text-align:right;color:#64748b;padding-right:14px">Components / board</td>
+      <td class="num mono">${{totStr}}</td>
+    </tr>`;
     tbody.innerHTML = html;
   }}
 

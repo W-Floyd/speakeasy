@@ -15,309 +15,109 @@ Usage:
 """
 
 import argparse
-import base64
-import hashlib
-import hmac
 import json
-import math
-import random
-import re
-import string
-import time
-import urllib.error
-import urllib.request
 from pathlib import Path
 
+from api import API_BASE, QUOTE_URI, auth_header, get_quote_live
 from bom import (
-    BomLine, assembly_summary, bom_cost_per_board, compute_assembly_cost,
-    fetch_component_prices, load_bom, load_bom_from_csv, print_bom_breakdown,
+    BomLine,
+    assembly_summary,
+    bom_cost_per_board,
+    compute_assembly_cost,
+    fetch_component_prices,
+    load_bom,
+    load_bom_from_csv,
+    print_bom_breakdown,
 )
+from display import COL_W, fmt_cpu, fmt_price, print_table
+from fab_model import estimate_fab, fit_fab_model, interpolate_variant_models
+from pcb_cost import fit_pcb_model, parse_variant, read_pcb_dimensions
+from shipping import panel_weight_g, shipping_cost
 
 # ── Paths ──────────────────────────────────────────────────────────────────────
-SCRIPT_DIR       = Path(__file__).parent
+SCRIPT_DIR = Path(__file__).parent
 CREDENTIALS_FILE = SCRIPT_DIR / "credentials.json"
-DEFAULT_DATA     = SCRIPT_DIR / "quotes_data.json"
-PRICE_CACHE      = SCRIPT_DIR / "component_prices_cache.json"
-PCB_FILE         = SCRIPT_DIR.parent / "speakeasy" / "Speakeasy.kicad_pcb"
-JLCPCB_BOM_CSV   = SCRIPT_DIR.parent / "speakeasy" / "speakeasy_jlcpcb_bom.csv"
+DEFAULT_DATA = SCRIPT_DIR / "quotes_data.json"
+PRICE_CACHE = SCRIPT_DIR / "component_prices_cache.json"
+PCB_FILE = SCRIPT_DIR.parent / "speakeasy" / "Speakeasy.kicad_pcb"
+JLCPCB_BOM_CSV = SCRIPT_DIR.parent / "speakeasy" / "speakeasy_jlcpcb_bom.csv"
 
-# ── JLCPCB API ─────────────────────────────────────────────────────────────────
-API_BASE  = "https://open.jlcpcb.com"
-QUOTE_URI = "/overseas/openapi/pcb/calculate"
-
-# ── PCB defaults (standard 2-layer green HASL board) ──────────────────────────
-DEFAULT_LAYERS         = 2
-DEFAULT_THICKNESS      = 1.6
-DEFAULT_COLOR          = 1      # green
-DEFAULT_SURFACE_FINISH = 1      # HASL
-DEFAULT_COPPER_WEIGHT  = 1.0    # oz
-
-DEFAULT_VARIANTS   = ["1x1", "2x2", "2x3", "3x3"]
+DEFAULT_VARIANTS = ["1x1", "2x2", "2x3", "3x3"]
 DEFAULT_QUANTITIES = [5, 10, 15, 20, 25]
-
-
-# ── KiCad dimension parser ─────────────────────────────────────────────────────
-
-def read_pcb_dimensions(pcb_path: Path) -> tuple[float, float]:
-    """Return (width_mm, height_mm) from the Edge.Cuts bounding box."""
-    text = pcb_path.read_text(errors="replace")
-    xs, ys = [], []
-    for block in re.findall(
-        r'\((?:gr_line|gr_arc|gr_rect|gr_poly)\b[^()]*(?:\([^()]*\)[^()]*)*\)',
-        text, re.DOTALL
-    ):
-        if '"Edge.Cuts"' not in block:
-            continue
-        for m in re.finditer(r'\((?:start|end|xy)\s+([\d.+-]+)\s+([\d.+-]+)', block):
-            xs.append(float(m.group(1)))
-            ys.append(float(m.group(2)))
-    if not xs:
-        # Wider fallback: grab any coordinate near an Edge.Cuts keyword
-        for m in re.finditer(r'\((?:start|end)\s+([\d.+-]+)\s+([\d.+-]+)', text):
-            ctx = text[max(0, m.start()-120):m.start()+120]
-            if "Edge.Cuts" in ctx:
-                xs.append(float(m.group(1)))
-                ys.append(float(m.group(2)))
-    if not xs:
-        raise ValueError(f"Could not parse Edge.Cuts from {pcb_path}")
-    return round(max(xs) - min(xs), 3), round(max(ys) - min(ys), 3)
-
-
-# ── Auth / signing ─────────────────────────────────────────────────────────────
-
-def _nonce(length: int = 32) -> str:
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
-
-
-def _sign(s: str, secret_key: str) -> str:
-    mac = hmac.new(secret_key.encode(), s.encode(), hashlib.sha256)
-    return base64.b64encode(mac.digest()).decode()
-
-
-def _auth_header(method, path, body, app_id, access_key, secret_key) -> str:
-    nonce = _nonce()
-    ts    = int(time.time())
-    sig   = _sign(f"{method}\n{path}\n{ts}\n{nonce}\n{body}\n", secret_key)
-    return (f'JOP appid="{app_id}",accesskey="{access_key}",'
-            f'nonce="{nonce}",timestamp="{ts}",signature="{sig}"')
-
-
-# ── Live API quote ─────────────────────────────────────────────────────────────
-
-def get_quote_live(cols, rows, qty, pcb_w, pcb_l, app_id, access_key, secret_key,
-                   country=None, postcode=None, city=None
-                   ) -> tuple[float | None, list[dict]]:
-    """
-    Returns (fab_price, ship_options) where ship_options is a list of:
-      {"method": str, "display": str, "cost": float, "days": str}
-    Ship options are only populated when country/postcode are provided.
-    """
-    panel_flag = 0 if (cols == 1 and rows == 1) else 1
-    pcb_param  = {
-        "layer": DEFAULT_LAYERS, "width": pcb_w, "length": pcb_l,
-        "qty": qty, "thickness": DEFAULT_THICKNESS,
-        "pcbColor": DEFAULT_COLOR, "surfaceFinish": DEFAULT_SURFACE_FINISH,
-        "copperWeight": DEFAULT_COPPER_WEIGHT, "panelFlag": panel_flag,
-    }
-    if panel_flag == 1:
-        pcb_param["panelByJLCPCB_X"] = cols
-        pcb_param["panelByJLCPCB_Y"] = rows
-    payload: dict = {"orderType": 1, "pcbParam": pcb_param}
-    if country:
-        payload["country"] = country
-    if postcode:
-        payload["postCode"] = postcode
-    if city:
-        payload["city"] = city
-    body = json.dumps(payload, separators=(",", ":"))
-    auth = _auth_header("POST", QUOTE_URI, body, app_id, access_key, secret_key)
-    req  = urllib.request.Request(
-        f"{API_BASE}{QUOTE_URI}", data=body.encode(),
-        headers={"Content-Type": "application/json", "Authorization": auth},
-        method="POST",
-    )
-    try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            result = json.loads(resp.read().decode())
-    except urllib.error.HTTPError as e:
-        print(f"    HTTP {e.code}: {e.read().decode()[:200]}")
-        return None, []
-    except Exception as e:
-        print(f"    Request failed: {e}")
-        return None, []
-    if result.get("code") != 0:
-        print(f"    API error {result.get('code')}: {result.get('message')}")
-        return None, []
-    data      = result.get("data") or {}
-    price_str = data.get("priceWithoutFreight")
-    fab_price = float(price_str) if price_str is not None else None
-    ship_opts = [
-        {
-            "method":  s.get("options", ""),
-            "display": s.get("showOptions", s.get("options", "")),
-            "cost":    float(s["cost"]) if s.get("cost") not in (None, "") else None,
-            "days":    s.get("day", ""),
-        }
-        for s in (data.get("shipList") or [])
-    ]
-    return fab_price, ship_opts
-
-
-# ── Offline estimation ─────────────────────────────────────────────────────────
-#
-# Pricing model per variant:  price = setup_fee + marginal_cost * qty
-#
-# With 1 known point (qty0, p0):
-#   We solve for marginal_cost by assuming setup_fee is proportional to the
-#   per-panel cost at qty0:  setup_fee ≈ marginal_cost * SETUP_PANELS_EQUIV
-#   (i.e. the setup fee is equivalent to ~N free panels worth of material)
-#   This gives: p0 = m*(SETUP_PANELS_EQUIV + qty0)  →  m = p0 / (SETUP_PANELS_EQUIV + qty0)
-#
-# With 2+ known points: ordinary least-squares fit.
-#
-SETUP_PANELS_EQUIV = 3   # tunable; JLCPCB setup fee ≈ cost of ~3 panels of material
-
-# ── Shipping estimation ────────────────────────────────────────────────────────
-#
-# PCB weight: FR4 density ~1.85 g/cm³, plus ~30% for copper/silkscreen/mask.
-# Packaging adds a flat ~80g.
-FR4_DENSITY_G_CM3 = 1.85
-COPPER_FACTOR     = 1.30
-PACKAGING_G       = 80.0
-
-def _panel_weight_g(pcb_w: float, pcb_l: float, qty_panels: int,
-                    cols: int, rows: int) -> float:
-    """Estimate total shipment weight in grams."""
-    # Panel dimensions: boards + 2mm gaps + 6mm rails (top+bottom) per panel_preset.json
-    panel_w = pcb_w * cols + 2.0 * (cols - 1)
-    panel_l = pcb_l * rows + 2.0 * (rows - 1) + 2 * (5.0 + 6.0)  # vspace + rail width
-    if cols == 1 and rows == 1:
-        panel_w, panel_l = pcb_w, pcb_l   # no rails for single boards
-    volume_cm3 = (panel_w * panel_l * DEFAULT_THICKNESS) / 1000.0
-    board_g    = volume_cm3 * FR4_DENSITY_G_CM3 * COPPER_FACTOR
-    return board_g * qty_panels + PACKAGING_G
-
-
-def _shipping_cost(methods: list[dict], weight_g: float, preferred: str | None
-                   ) -> list[dict]:
-    """
-    Look up shipping cost from offline tier table for a given weight.
-    methods: from quotes_data.json "shipping.methods"
-      Each method: {"name": str, "tiers": [{"max_weight_g": N, "cost": X}, ...]}
-    Returns list of {"display": str, "cost": float | None, "days": str}
-    sorted cheapest-first.
-    """
-    results = []
-    for m in methods:
-        cost = None
-        for tier in sorted(m.get("tiers", []), key=lambda t: t["max_weight_g"]):
-            if weight_g <= tier["max_weight_g"]:
-                cost = tier["cost"]
-                break
-        if cost is None and m.get("tiers"):
-            # Heavier than all tiers — use the last (heaviest) tier
-            cost = max(m["tiers"], key=lambda t: t["max_weight_g"])["cost"]
-        results.append({
-            "display": m.get("name", ""),
-            "cost":    cost,
-            "days":    m.get("days", ""),
-        })
-    results.sort(key=lambda r: (r["cost"] is None, r["cost"] or 0))
-    return results
-
-def _fit_fab_model(known: list[tuple[int, float]]) -> tuple[float, float]:
-    """Return (setup_fee, marginal_cost) from known [(qty, price)] pairs."""
-    if len(known) == 0:
-        return 0.0, 0.0
-    if len(known) == 1:
-        qty0, p0 = known[0]
-        m = p0 / (SETUP_PANELS_EQUIV + qty0)
-        return m * SETUP_PANELS_EQUIV, m
-    # OLS: price = a + b*qty  →  minimise sum of (a + b*qi - pi)^2
-    n     = len(known)
-    sum_q = sum(q for q, _ in known)
-    sum_p = sum(p for _, p in known)
-    sum_qq= sum(q*q for q, _ in known)
-    sum_qp= sum(q*p for q, p in known)
-    denom = n * sum_qq - sum_q * sum_q
-    if abs(denom) < 1e-9:          # all same qty — just average
-        return 0.0, sum_p / sum_q
-    b = (n * sum_qp - sum_q * sum_p) / denom
-    a = (sum_p - b * sum_q) / n
-    return max(a, 0.0), max(b, 0.0)   # clamp negatives from noisy fits
-
-
-def _estimate_fab(setup_fee: float, marginal: float, qty: int) -> float:
-    return setup_fee + marginal * qty
-
-
-
-# ── Output helpers ─────────────────────────────────────────────────────────────
-
-COL_W = 13
-
-def _fmt_price(price: float | None, estimated: bool = False) -> str:
-    if price is None:
-        return f"{'—':>{COL_W}}"
-    marker = "~" if estimated else " "
-    return f"{marker}${price:>{COL_W-2}.2f}"
-
-def _fmt_cpu(price: float | None, boards: int, estimated: bool = False) -> str:
-    if price is None or boards == 0:
-        return f"{'—':>{COL_W}}"
-    marker = "~" if estimated else " "
-    return f"{marker}${price/boards:>{COL_W-2}.2f}"
-
-
-def _print_table(title: str, variants, quantities, fmt_fn):
-    sep = "  "
-    hdr = f"{'Qty':>5}{sep}" + sep.join(f"{v:>{COL_W}}" for v, *_ in variants)
-    bar = "═" * len(hdr)
-    print(f"\n{bar}\n{title}\n{bar}")
-    print(hdr)
-    print("─" * len(hdr))
-    for qty in quantities:
-        cells = sep.join(fmt_fn(qty, v) for v, *_ in variants)
-        print(f"{qty:>5}{sep}{cells}")
-    print(f"  ~ = estimated from model")
-
-
-# ── Main ───────────────────────────────────────────────────────────────────────
-
-def parse_variant(v: str) -> tuple[int, int]:
-    parts = v.lower().split("x")
-    if len(parts) != 2:
-        raise ValueError(f"Invalid variant '{v}' — use COLSxROWS")
-    return int(parts[0]), int(parts[1])
 
 
 def main():
     ap = argparse.ArgumentParser(description="JLCPCB panel price optimizer")
-    ap.add_argument("--offline",    action="store_true",
-                    help="estimate from quotes_data.json instead of calling the API")
-    ap.add_argument("--data",       type=Path, default=DEFAULT_DATA,
-                    metavar="FILE", help="path to quotes/component data JSON (offline mode)")
-    ap.add_argument("--qty",          nargs="+", type=int, default=DEFAULT_QUANTITIES,
-                    metavar="N",      help="panel quantities to evaluate")
-    ap.add_argument("--variants",     nargs="+",           default=DEFAULT_VARIANTS,
-                    metavar="CxR",    help="panel variants e.g. 1x1 2x2 2x3 3x3")
-    ap.add_argument("--pcb-width",    type=float, default=None, metavar="MM")
-    ap.add_argument("--pcb-length",   type=float, default=None, metavar="MM")
-    ap.add_argument("--fetch-prices", action="store_true",
-                    help="hit the JLCPCB component API to refresh BOM prices")
-    ap.add_argument("--bom",          action="store_true",
-                    help="print BOM breakdown only (no panel table)")
-    ap.add_argument("--country",  default=None, metavar="CC",
-                    help="destination country code for shipping estimate (e.g. US)")
-    ap.add_argument("--postcode", default=None, metavar="ZIP",
-                    help="destination postcode for shipping estimate")
-    ap.add_argument("--city",     default=None, metavar="CITY",
-                    help="destination city for shipping estimate")
-    ap.add_argument("--html",     type=Path, default=None, metavar="FILE",
-                    help="write HTML report to FILE (e.g. report.html)")
+    ap.add_argument(
+        "--offline",
+        action="store_true",
+        help="estimate from quotes_data.json instead of calling the API",
+    )
+    ap.add_argument(
+        "--data",
+        type=Path,
+        default=DEFAULT_DATA,
+        metavar="FILE",
+        help="path to quotes/component data JSON (offline mode)",
+    )
+    ap.add_argument(
+        "--qty",
+        nargs="+",
+        type=int,
+        default=DEFAULT_QUANTITIES,
+        metavar="N",
+        help="panel quantities to evaluate",
+    )
+    ap.add_argument(
+        "--variants",
+        nargs="+",
+        default=DEFAULT_VARIANTS,
+        metavar="CxR",
+        help="panel variants e.g. 1x1 2x2 2x3 3x3",
+    )
+    ap.add_argument("--pcb-width", type=float, default=None, metavar="MM")
+    ap.add_argument("--pcb-length", type=float, default=None, metavar="MM")
+    ap.add_argument(
+        "--fetch-prices",
+        action="store_true",
+        help="hit the JLCPCB component API to refresh BOM prices",
+    )
+    ap.add_argument(
+        "--bom", action="store_true", help="print BOM breakdown only (no panel table)"
+    )
+    ap.add_argument(
+        "--residuals",
+        action="store_true",
+        help="show cost residuals for known PCBA quotes (offline mode)",
+    )
+    ap.add_argument(
+        "--country",
+        default=None,
+        metavar="CC",
+        help="destination country code for shipping estimate (e.g. US)",
+    )
+    ap.add_argument(
+        "--postcode",
+        default=None,
+        metavar="ZIP",
+        help="destination postcode for shipping estimate",
+    )
+    ap.add_argument(
+        "--city",
+        default=None,
+        metavar="CITY",
+        help="destination city for shipping estimate",
+    )
+    ap.add_argument(
+        "--html",
+        type=Path,
+        default=None,
+        metavar="FILE",
+        help="write HTML report to FILE (e.g. report.html)",
+    )
     args = ap.parse_args()
 
-    variants   = [(v, *parse_variant(v)) for v in args.variants]
+    variants = [(v, *parse_variant(v)) for v in args.variants]
     quantities = sorted(args.qty)
 
     # PCB dimensions (needed for live mode; shown in offline too)
@@ -343,22 +143,59 @@ def main():
         with open(args.data) as f:
             data = json.load(f)
 
-        fab_quotes         = data.get("fab_quotes", {})
-        fab_is_pcba        = data.get("fab_quotes_are_pcba", False)
-        pcb_quotes         = data.get("pcb_quotes", {})
-        overrides          = data.get("bom_overrides", {})
-        asm_cfg            = data.get("assembly", {})
-        extended_part_fee  = asm_cfg.get("extended_part_fee", 0.0)
-        standard_base_fee  = asm_cfg.get("standard_base_fee", 0.0) * asm_cfg.get("assembly_sides", 1)
+        fab_quotes = data.get("fab_quotes", {})
+        fab_is_pcba = data.get("fab_quotes_are_pcba", False)
+        pcb_quotes = data.get("pcb_quotes", {})
+        overrides = data.get("bom_overrides", {})
+        asm_cfg = data.get("assembly", {})
+        extended_part_fee = asm_cfg.get("extended_part_fee", 0.0)
+        standard_base_fee = asm_cfg.get("standard_base_fee", 0.0) * asm_cfg.get(
+            "assembly_sides", 1
+        )
         import_duty_rate = data.get("import_duty_rate", 0.0)
-        sales_tax_rate   = data.get("sales_tax_rate",   0.0)
+        sales_tax_rate = data.get("sales_tax_rate", 0.0)
         payment_fee_rate = data.get("payment_fee_rate", 0.0)
-        landed_rate      = 1.0 + import_duty_rate + sales_tax_rate + payment_fee_rate
+        landed_rate = 1.0 + import_duty_rate + sales_tax_rate + payment_fee_rate
+        cogs_rate = 1.0 + import_duty_rate + payment_fee_rate
         if import_duty_rate or sales_tax_rate:
-            print(f"Taxes: {import_duty_rate*100:.1f}% import duty"
-                  f" + {sales_tax_rate*100:.1f}% sales tax"
-                  f" + {payment_fee_rate*100:.2f}% payment fee"
-                  f"  →  ×{landed_rate:.3f} landed multiplier")
+            print(
+                f"Taxes: {import_duty_rate * 100:.1f}% import duty"
+                f" + {sales_tax_rate * 100:.1f}% sales tax"
+                f" + {payment_fee_rate * 100:.2f}% payment fee"
+                f"  →  ×{landed_rate:.3f} landed  /  ×{cogs_rate:.3f} COGS"
+            )
+
+        ship_cfg = data.get("shipping", {})
+        ship_methods = ship_cfg.get("methods", [])
+        preferred_ship = ship_cfg.get("preferred_method")
+
+        def _fab_merch(entry: dict, cols: int, rows: int) -> float:
+            """Return PCBA merch cost from a fab_quotes entry.
+            Uses breakdown.merch if present; otherwise back-calculates from
+            grand total: merch ≈ (grand_total − est_shipping) / landed_rate.
+            """
+            bp = entry.get("breakdown", {})
+            if "merch" in bp:
+                return bp["merch"]
+            grand = entry["price"]
+            if ship_methods and pcb_w and pcb_l:
+                w_g = panel_weight_g(pcb_w, pcb_l, entry["qty"], cols, rows)
+                opts = shipping_cost(ship_methods, w_g, preferred_ship)
+                ship = (
+                    next(
+                        (
+                            s["cost"]
+                            for s in opts
+                            if s["display"] == preferred_ship and s["cost"] is not None
+                        ),
+                        None,
+                    )
+                    or next((s["cost"] for s in opts if s["cost"] is not None), None)
+                    or 0.0
+                )
+            else:
+                ship = 0.0
+            return (grand - ship) / cogs_rate if cogs_rate > 1.0 else grand
 
         # Prefer generated JLCPCB BOM CSV; fall back to manual list in data file
         if JLCPCB_BOM_CSV.exists():
@@ -380,97 +217,79 @@ def main():
                     ap.error(f"credentials.json not found (needed for --fetch-prices)")
                 with open(CREDENTIALS_FILE) as f:
                     creds = json.load(f)
-                app_id, access_key, secret_key = creds["AppID"], creds["Accesskey"], creds["SecretKey"]
+                app_id, access_key, secret_key = (
+                    creds["AppID"],
+                    creds["Accesskey"],
+                    creds["SecretKey"],
+                )
+
                 def _auth(method, path, body):
-                    return _auth_header(method, path, body, app_id, access_key, secret_key)
-                api_tiers = fetch_component_prices(lcsc_codes, API_BASE, _auth, PRICE_CACHE)
+                    return auth_header(
+                        method, path, body, app_id, access_key, secret_key
+                    )
+
+                api_tiers = fetch_component_prices(
+                    lcsc_codes, API_BASE, _auth, PRICE_CACHE
+                )
             elif PRICE_CACHE.exists():
-                # Use stale cache without re-fetching
                 import json as _j
+
                 _cache = _j.loads(PRICE_CACHE.read_text())
-                api_tiers = {c: (_cache[c]["tiers"] if c in _cache else []) for c in lcsc_codes}
-                print(f"  Using cached component prices (run --fetch-prices to refresh)")
+                api_tiers = {
+                    c: (_cache[c]["tiers"] if c in _cache else []) for c in lcsc_codes
+                }
+                print(
+                    f"  Using cached component prices (run --fetch-prices to refresh)"
+                )
 
         # ── Assembly summary ──────────────────────────────────────────────────
         if bom:
             asm = assembly_summary(bom)
             forced = asm_cfg.get("type", asm["forced_type"])
-            ext_str = (f", {asm['n_extended']} Extended × ${extended_part_fee:.2f}/order"
-                       if asm["n_extended"] and extended_part_fee else "")
-            so_str  = (f", Standard Only: {', '.join(l.lcsc for l in asm['standard_only'])}"
-                       if asm["standard_only"] else "")
-            std_str = (f", Standard base ${standard_base_fee:.2f}/side"
-                       if standard_base_fee else "")
+            ext_str = (
+                f", {asm['n_extended']} Extended × ${extended_part_fee:.2f}/order"
+                if asm["n_extended"] and extended_part_fee
+                else ""
+            )
+            so_str = (
+                f", Standard Only: {', '.join(l.lcsc for l in asm['standard_only'])}"
+                if asm["standard_only"]
+                else ""
+            )
+            std_str = (
+                f", Standard base ${standard_base_fee:.2f}/side"
+                if standard_base_fee
+                else ""
+            )
             print(f"Assembly: {forced} PCBA{ext_str}{so_str}{std_str}")
 
-        # ── Fit PCB-only pricing model ─────────────────────────────────────────
-        # Model: price = eng_fee + board_material_per_board_in_panel × boards_per_panel × qty
-        # eng_fee = $4.00 fixed per order (confirmed from all breakdowns)
-        # board_material_per_board_in_panel ≈ $0.170 (confirmed: 2x3=$0.170, 3x3=$0.169)
-        ENG_FEE = 4.00
-        # Derive board_material_per_board from all available breakdowns
-        bm_samples = []
-        for v_key, entries in pcb_quotes.items():
-            if v_key.startswith("_") or not isinstance(entries, list):
-                continue
-            v_cols, v_rows = parse_variant(v_key)
-            boards_per_panel = v_cols * v_rows
-            for e in entries:
-                if "breakdown" in e and e["qty"] > 0:
-                    bm_per_panel = e["breakdown"]["board"] / e["qty"]
-                    bm_samples.append(bm_per_panel / boards_per_panel)
-        BM_PER_BOARD = sum(bm_samples) / len(bm_samples) if bm_samples else 0.170
-        print(f"  PCB model: eng_fee=${ENG_FEE:.2f} + ${BM_PER_BOARD:.4f}/board-in-panel × boards × qty"
-              + (f"  (avg of {len(bm_samples)} data point(s))" if bm_samples else "  (default)"))
+        # ── Fit bare-PCB pricing model ────────────────────────────────────────
+        eng_fee, bm_per_board, n_bm = fit_pcb_model(pcb_quotes)
+        print(
+            f"  PCB model: eng_fee=${eng_fee:.2f} + ${bm_per_board:.4f}/board-in-panel × boards × qty"
+            + (f"  (avg of {n_bm} data point(s))" if n_bm else "  (default)")
+        )
 
         pcb_models: dict[str, tuple[float, float]] = {}
         for v, cols, rows in variants:
-            mat = BM_PER_BOARD * cols * rows   # board_material cost per panel
-            pcb_models[v] = (ENG_FEE, mat)
+            pcb_models[v] = (eng_fee, bm_per_board * cols * rows)
 
         # ── Fit PCBA pricing model per variant ────────────────────────────────
         models: dict[str, tuple[float, float]] = {}
         for v, cols, rows in variants:
-            known = [(e["qty"], e["price"]) for e in fab_quotes.get(v, [])]
-            models[v] = _fit_fab_model(known)
+            known = [
+                (e["qty"], _fab_merch(e, cols, rows)) for e in fab_quotes.get(v, [])
+            ]
+            models[v] = fit_fab_model(known)
 
-        # For variants with no data (0,0), interpolate from neighbours by boards-per-panel
-        fitted = {v: models[v] for v, *_ in variants if models[v] != (0.0, 0.0)}
-        if fitted:
-            for v, cols, rows in variants:
-                if models[v] == (0.0, 0.0):
-                    bpp    = cols * rows
-                    # Find closest neighbour below and above by boards-per-panel
-                    below  = [(parse_variant(fv)[0]*parse_variant(fv)[1], fa, fb)
-                               for fv, (fa, fb) in fitted.items()
-                               if parse_variant(fv)[0]*parse_variant(fv)[1] <= bpp]
-                    above  = [(parse_variant(fv)[0]*parse_variant(fv)[1], fa, fb)
-                               for fv, (fa, fb) in fitted.items()
-                               if parse_variant(fv)[0]*parse_variant(fv)[1] >= bpp]
-                    if below and above:
-                        lo_bpp, lo_a, lo_b = max(below, key=lambda x: x[0])
-                        hi_bpp, hi_a, hi_b = min(above, key=lambda x: x[0])
-                        if lo_bpp == hi_bpp:
-                            interp_a, interp_b = lo_a, lo_b
-                        else:
-                            t = (bpp - lo_bpp) / (hi_bpp - lo_bpp)
-                            interp_a = lo_a + t * (hi_a - lo_a)
-                            interp_b = lo_b + t * (hi_b - lo_b)
-                        models[v] = (interp_a, interp_b)
-                    elif below:
-                        # Extrapolate upward: scale marginal by bpp ratio
-                        lo_bpp, lo_a, lo_b = max(below, key=lambda x: x[0])
-                        ratio = bpp / lo_bpp if lo_bpp else 1
-                        models[v] = (lo_a, lo_b * ratio)
-                    elif above:
-                        hi_bpp, hi_a, hi_b = min(above, key=lambda x: x[0])
-                        ratio = bpp / hi_bpp if hi_bpp else 1
-                        models[v] = (hi_a, hi_b * ratio)
+        interpolate_variant_models(models, variants)
 
         for v, cols, rows in variants:
-            a, b  = models[v]
-            n_pts = len([e for e in fab_quotes.get(v, [])])
-            src   = f"{n_pts} known point(s)" if n_pts else "~interpolated from neighbours"
+            a, b = models[v]
+            n_pts = len(fab_quotes.get(v, []))
+            src = (
+                f"{n_pts} known point(s)" if n_pts else "~interpolated from neighbours"
+            )
             print(f"  PCBA {v}: setup_fee=${a:.2f}  marginal=${b:.2f}/panel  ({src})")
 
         # ── BOM-only mode ─────────────────────────────────────────────────────
@@ -478,71 +297,162 @@ def main():
             for qty in sorted(quantities):
                 for v, cols, rows in variants:
                     total_boards = qty * cols * rows
-                    eng, mat     = pcb_models[v]
-                    pcb_total    = eng + mat * qty
+                    eng, mat = pcb_models[v]
+                    pcb_total = estimate_fab(eng, mat, qty)
 
-                    # PCBA price for this config
-                    known_map  = {e["qty"]: e["price"] for e in fab_quotes.get(v, [])}
+                    known_map = {
+                        e["qty"]: _fab_merch(e, cols, rows)
+                        for e in fab_quotes.get(v, [])
+                    }
                     if qty in known_map:
                         pcba_total = known_map[qty]
                     else:
                         a, b = models[v]
-                        pcba_total = _estimate_fab(a, b, qty) if (a or b) else None
+                        pcba_total = estimate_fab(a, b, qty) if (a or b) else None
 
-                    # Cheapest preferred shipping for this config
-                    _ship_cfg      = data.get("shipping", {})
-                    _ship_methods  = _ship_cfg.get("methods", [])
-                    _preferred     = _ship_cfg.get("preferred_method")
-                    if _ship_methods and pcb_w:
-                        _opts     = _shipping_cost(_ship_methods, _panel_weight_g(pcb_w, pcb_l, qty, cols, rows), _preferred)
-                        ship_cost = next((s["cost"] for s in _opts if s["display"] == _preferred and s["cost"] is not None), None) \
-                                    or next((s["cost"] for s in _opts if s["cost"] is not None), None)
+                    if ship_methods and pcb_w:
+                        _opts = shipping_cost(
+                            ship_methods,
+                            panel_weight_g(pcb_w, pcb_l, qty, cols, rows),
+                            preferred_ship,
+                        )
+                        ship_cost = next(
+                            (
+                                s["cost"]
+                                for s in _opts
+                                if s["display"] == preferred_ship
+                                and s["cost"] is not None
+                            ),
+                            None,
+                        ) or next(
+                            (s["cost"] for s in _opts if s["cost"] is not None), None
+                        )
                     else:
                         ship_cost = None
 
                     print(f"\n--- {v} × {qty} panels ({total_boards} boards) ---")
-                    print_bom_breakdown(bom, total_boards, api_tiers,
-                                        extended_part_fee, standard_base_fee, pcb_total,
-                                        pcba_total, import_duty_rate, ship_cost,
-                                        asm_cfg=asm_cfg,
-                                        pcb_w_mm=pcb_w,
-                                        pcb_l_mm=pcb_l)
+                    print_bom_breakdown(
+                        bom,
+                        total_boards,
+                        api_tiers,
+                        extended_part_fee,
+                        standard_base_fee,
+                        pcb_total,
+                        pcba_total,
+                        import_duty_rate,
+                        ship_cost,
+                        asm_cfg=asm_cfg,
+                        pcb_w_mm=pcb_w,
+                        pcb_l_mm=pcb_l,
+                    )
+            return
+
+        # ── Residuals mode ────────────────────────────────────────────────────
+        if args.residuals:
+            col = 9
+            hdr = (
+                f"  {'Variant':>7}  {'Qty':>4}  {'Boards':>6}  "
+                f"{'Comp/bd':>{col}}  {'PCB/bd':>{col}}  {'Asm/bd':>{col}}  "
+                f"{'Bottom-up':>{col}}  {'Actual':>{col}}  Residual"
+            )
+            print(
+                f"\n{'═' * len(hdr)}\n"
+                f"RESIDUAL ANALYSIS — known PCBA quotes vs bottom-up (comp + PCB + assembly)\n"
+                f"{'═' * len(hdr)}"
+            )
+            print(hdr)
+            print("─" * len(hdr))
+            for qty in quantities:
+                for v, cols, rows in variants:
+                    known_map = {
+                        e["qty"]: _fab_merch(e, cols, rows)
+                        for e in fab_quotes.get(v, [])
+                    }
+                    if qty not in known_map:
+                        continue
+                    actual_boards = qty * cols * rows
+                    pcba_tot = known_map[qty]
+                    pcba_pb = pcba_tot / actual_boards
+
+                    eng, mat = pcb_models[v]
+                    pcb_pb = estimate_fab(eng, mat, qty) / actual_boards
+
+                    comp_cpu, _ = (
+                        bom_cost_per_board(bom, actual_boards, api_tiers, asm_cfg)
+                        if bom
+                        else (None, [])
+                    )
+
+                    asm_detail = (
+                        compute_assembly_cost(bom, actual_boards, pcb_w, pcb_l, asm_cfg)
+                        if (bom and pcb_w and pcb_l)
+                        else None
+                    )
+                    asm_pb = (
+                        (asm_detail["total"] / actual_boards) if asm_detail else 0.0
+                    )
+
+                    if comp_cpu is None:
+                        print(
+                            f"  {v:>7}  {qty:>4}  {actual_boards:>6}  (missing component prices)"
+                        )
+                        continue
+
+                    bottom_up = comp_cpu + pcb_pb + asm_pb
+                    residual = pcba_pb - bottom_up
+                    pct = residual / bottom_up * 100 if bottom_up else 0.0
+                    sign = "+" if residual >= 0 else "-"
+                    res_str = f"{sign}${abs(residual):.3f} ({sign}{abs(pct):.1f}%)"
+                    print(
+                        f"  {v:>7}  {qty:>4}  {actual_boards:>6}  "
+                        f"${comp_cpu:{col - 1}.3f}  ${pcb_pb:{col - 1}.3f}  ${asm_pb:{col - 1}.3f}  "
+                        f"${bottom_up:{col - 1}.3f}  ${pcba_pb:{col - 1}.3f}  "
+                        f"{res_str}"
+                    )
+            print(
+                f"\n  Positive residual = JLCPCB charges more than modeled (unaccounted fees/markup)."
+            )
+            print(
+                f"  Negative residual = model overestimates (e.g. promotions applied to actual quote)."
+            )
+            if not pcb_w:
+                print(
+                    f"  (Assembly model unavailable — no PCB dimensions. Asm/bd = $0.)"
+                )
             return
 
         # ── Shipping methods from data file ───────────────────────────────────
-        ship_cfg = data.get("shipping", {})
-        ship_methods   = ship_cfg.get("methods", [])
-        preferred_ship = ship_cfg.get("preferred_method")
         if ship_methods:
             dest = ship_cfg.get("destination", "")
             pref_str = f", preferred: {preferred_ship}" if preferred_ship else ""
-            print(f"Shipping: {len(ship_methods)} method(s) configured"
-                  + (f" → {dest}" if dest else "") + pref_str)
+            print(
+                f"Shipping: {len(ship_methods)} method(s) configured"
+                + (f" → {dest}" if dest else "")
+                + pref_str
+            )
         else:
             print("Shipping: none configured in quotes_data.json")
 
         # ── Build fab + PCB + BOM + shipping results ──────────────────────────
-        # fab_results[qty][v]  = (fab_price | None, actual_boards, estimated)
-        # pcb_results[qty][v]  = (pcb_price | None, estimated)
-        # bom_results[qty][v]  = bom_cost_per_board | None
-        # ship_results[qty][v] = [{"display", "cost", "days"}, ...]
-        fab_results:  dict = {}
-        pcb_results:  dict = {}
-        bom_results:  dict = {}
+        fab_results: dict = {}
+        pcb_results: dict = {}
+        bom_results: dict = {}
         ship_results: dict = {}
         for qty in quantities:
-            fab_results[qty]  = {}
-            pcb_results[qty]  = {}
-            bom_results[qty]  = {}
+            fab_results[qty] = {}
+            pcb_results[qty] = {}
+            bom_results[qty] = {}
             ship_results[qty] = {}
             for v, cols, rows in variants:
                 actual_boards = qty * cols * rows
-                known_map     = {e["qty"]: e["price"] for e in fab_quotes.get(v, [])}
+                known_map = {
+                    e["qty"]: _fab_merch(e, cols, rows) for e in fab_quotes.get(v, [])
+                }
                 if qty in known_map:
                     fab_price, est = known_map[qty], False
                 else:
                     a, b = models[v]
-                    fab_price = _estimate_fab(a, b, qty) if (a or b) else None
+                    fab_price = estimate_fab(a, b, qty) if (a or b) else None
                     est = True
                 fab_results[qty][v] = (fab_price, actual_boards, est)
 
@@ -551,29 +461,35 @@ def main():
                     pcb_results[qty][v] = (pcb_known[qty], False)
                 else:
                     eng, mat = pcb_models[v]
-                    pcb_price = (eng + mat * qty) if (eng or mat) else None
+                    pcb_price = estimate_fab(eng, mat, qty) if (eng or mat) else None
                     pcb_results[qty][v] = (pcb_price, True)
 
-                bom_cpu, _ = bom_cost_per_board(bom, actual_boards, api_tiers, asm_cfg) if bom else (None, [])
+                bom_cpu, _ = (
+                    bom_cost_per_board(bom, actual_boards, api_tiers, asm_cfg)
+                    if bom
+                    else (None, [])
+                )
                 bom_results[qty][v] = bom_cpu
 
                 if ship_methods and pcb_w:
-                    w_g = _panel_weight_g(pcb_w, pcb_l, qty, cols, rows)
-                    ship_results[qty][v] = _shipping_cost(ship_methods, w_g, None)
+                    w_g = panel_weight_g(pcb_w, pcb_l, qty, cols, rows)
+                    ship_results[qty][v] = shipping_cost(ship_methods, w_g, None)
                 else:
                     ship_results[qty][v] = []
 
         # ── Table formatters ──────────────────────────────────────────────────
         def fab_total(qty, v):
             price, actual, est = fab_results[qty][v]
-            return _fmt_price(price, est)
+            return fmt_price(price, est)
 
         def fab_cpu(qty, v):
             price, actual, est = fab_results[qty][v]
-            return _fmt_cpu(price, actual, est)
+            return fmt_cpu(price, actual, est)
 
-        has_bom = (not fab_is_pcba) and bool(bom) and any(
-            bom_results[quantities[0]][v] is not None for v, *_ in variants
+        has_bom = (
+            (not fab_is_pcba)
+            and bool(bom)
+            and any(bom_results[quantities[0]][v] is not None for v, *_ in variants)
         )
 
         def _total(qty, v):
@@ -585,42 +501,60 @@ def main():
 
         def total_fmt(qty, v):
             total, actual, est = _total(qty, v)
-            return _fmt_price(total, est)
+            return fmt_price(total, est)
 
         def total_cpu_fmt(qty, v):
             total, actual, est = _total(qty, v)
-            return _fmt_cpu(total, actual or 1, est)
+            return fmt_cpu(total, actual or 1, est)
 
         def pcb_total_fmt(qty, v):
             price, est = pcb_results[qty][v]
-            return _fmt_price(price, est)
+            return fmt_price(price, est)
 
         def pcb_cpu_fmt(qty, v):
             price, est = pcb_results[qty][v]
             _, actual, _ = fab_results[qty][v]
-            return _fmt_cpu(price, actual, est)
+            return fmt_cpu(price, actual, est)
 
-        _print_table("PCB ONLY — total (bare board, no assembly)", variants, quantities, pcb_total_fmt)
-        _print_table("PCB ONLY — per board",                       variants, quantities, pcb_cpu_fmt)
+        print_table(
+            "PCB ONLY — total (bare board, no assembly)",
+            variants,
+            quantities,
+            pcb_total_fmt,
+        )
+        print_table("PCB ONLY — per board", variants, quantities, pcb_cpu_fmt)
 
         fab_label = "PCBA COST" if fab_is_pcba else "FAB COST"
-        _print_table(f"{fab_label} — total (USD, excl. shipping)", variants, quantities, fab_total)
-        _print_table(f"{fab_label} — per board",                   variants, quantities, fab_cpu)
+        print_table(
+            f"{fab_label} — total (USD, excl. shipping)",
+            variants,
+            quantities,
+            fab_total,
+        )
+        print_table(f"{fab_label} — per board", variants, quantities, fab_cpu)
 
         if has_bom:
-            _print_table("TOTAL excl. shipping (fab + components)",         variants, quantities, total_fmt)
-            _print_table("TOTAL excl. shipping — per board",                variants, quantities, total_cpu_fmt)
+            print_table(
+                "TOTAL excl. shipping (fab + components)",
+                variants,
+                quantities,
+                total_fmt,
+            )
+            print_table(
+                "TOTAL excl. shipping — per board", variants, quantities, total_cpu_fmt
+            )
 
         if fab_is_pcba and bom:
             bom_has_prices = any(
                 bom_results[quantities[0]][v] is not None for v, *_ in variants
             )
             if bom_has_prices:
-                print(f"\n  (BOM component costs are included in PCBA quotes above — shown below for reference only)")
+                print(
+                    f"\n  (BOM component costs are included in PCBA quotes above — shown below for reference only)"
+                )
 
         # ── Shipping table ────────────────────────────────────────────────────
         if ship_methods:
-            # Collect all method names seen across results
             all_methods = []
             seen = set()
             for qty in quantities:
@@ -632,29 +566,34 @@ def main():
 
             sep2 = "  "
             ship_col = 10
-            ship_hdr = (f"{'Qty':>5}  {'Variant':>7}{sep2}"
-                        + sep2.join(f"{m:>{ship_col}}" for m in all_methods))
-            print(f"\n{'═'*len(ship_hdr)}\nSHIPPING COST (estimated by weight)\n{'═'*len(ship_hdr)}")
+            ship_hdr = f"{'Qty':>5}  {'Variant':>7}{sep2}" + sep2.join(
+                f"{m:>{ship_col}}" for m in all_methods
+            )
+            print(
+                f"\n{'═' * len(ship_hdr)}\nSHIPPING COST (estimated by weight)\n{'═' * len(ship_hdr)}"
+            )
             print(ship_hdr)
             print("─" * len(ship_hdr))
             for qty in quantities:
                 for v, cols, rows in variants:
-                    opts     = {s["display"]: s for s in ship_results[qty][v]}
-                    w_g      = _panel_weight_g(pcb_w, pcb_l, qty, cols, rows) if pcb_w else 0
-                    row_pre  = f"{qty:>5}  {v:>7}{sep2}"
-                    row_data = sep2.join(
-                        (f"${opts[m]['cost']:>{ship_col-1}.2f}" if opts.get(m) and opts[m]['cost'] is not None
-                         else f"{'—':>{ship_col}}")
+                    opts = {s["display"]: s for s in ship_results[qty][v]}
+                    w_g = panel_weight_g(pcb_w, pcb_l, qty, cols, rows) if pcb_w else 0
+                    row_pre = f"{qty:>5}  {v:>7}{sep2}"
+                    row_d = sep2.join(
+                        (
+                            f"${opts[m]['cost']:>{ship_col - 1}.2f}"
+                            if opts.get(m) and opts[m]["cost"] is not None
+                            else f"{'—':>{ship_col}}"
+                        )
                         for m in all_methods
                     )
-                    print(f"{row_pre}{row_data}  ({w_g:.0f}g)")
+                    print(f"{row_pre}{row_d}  ({w_g:.0f}g)")
 
         # ── Landed cost table (merch × tax multiplier + cheapest ship) ──────
-        has_ship   = bool(ship_methods)
+        has_ship = bool(ship_methods)
         has_landed = landed_rate > 1.0 or has_ship
 
         def _pick_ship(qty, v) -> dict | None:
-            """Return the preferred shipping option, or cheapest if not found."""
             opts = ship_results[qty][v]
             if not opts:
                 return None
@@ -662,42 +601,116 @@ def main():
                 for s in opts:
                     if s["display"] == preferred_ship and s["cost"] is not None:
                         return s
-            # Fall back to cheapest with a known cost
             valid = [s for s in opts if s["cost"] is not None]
             return valid[0] if valid else None
 
         def _landed(qty, v):
-            """(landed_total, actual, est) including duty/tax/ship."""
+            cogs, actual, est = _cogs(qty, v)
+            if cogs is None:
+                return None, actual, est
+            return cogs * (1.0 + sales_tax_rate), actual, est
+
+        def _cogs(qty, v):
             total, actual, est = _total(qty, v)
             if total is None:
                 return None, actual, est
             ship = _pick_ship(qty, v)
             ship_cost = (ship["cost"] or 0.0) if ship else 0.0
-            return total * landed_rate + ship_cost, actual, est
+            return total * cogs_rate + ship_cost, actual, est
 
         if has_landed:
             ship_label = " + cheapest shipping" if has_ship else ""
-            tax_label  = f" (×{landed_rate:.3f} tax/duty/fee{ship_label})"
+            if sales_tax_rate:
+                WIDE = 22
+                note = f" COGS (×{cogs_rate:.3f}), landed in parens (×{landed_rate:.3f}){ship_label}"
 
-            def landed_total_fmt(qty, v):
-                lt, actual, est = _landed(qty, v)
-                return _fmt_price(lt, est)
+                def _combined(cogs_tup, land_tup, boards):
+                    ct, _, est = cogs_tup
+                    lt, _, _ = land_tup
+                    if ct is None:
+                        return f"{'—':>{WIDE}}"
+                    marker = "~" if est else " "
+                    s = (
+                        f"{marker}${ct / boards:.2f} (${lt / boards:.2f})"
+                        if lt is not None
+                        else f"{marker}${ct / boards:.2f}"
+                    )
+                    return s.rjust(WIDE)
 
-            def landed_cpu_fmt(qty, v):
-                lt, actual, est = _landed(qty, v)
-                return _fmt_cpu(lt, actual or 1, est)
+                def combined_cpu_fmt(qty, v):
+                    c = _cogs(qty, v)
+                    l = _landed(qty, v)
+                    return _combined(c, l, c[1] or 1)
 
-            _print_table(f"LANDED COST — total{tax_label}",    variants, quantities, landed_total_fmt)
-            _print_table(f"LANDED COST — per board{tax_label}", variants, quantities, landed_cpu_fmt)
+                def combined_total_fmt(qty, v):
+                    c = _cogs(qty, v)
+                    l = _landed(qty, v)
+                    ct, actual, est = c
+                    lt, _, _ = l
+                    if ct is None:
+                        return f"{'—':>{WIDE}}"
+                    marker = "~" if est else " "
+                    s = (
+                        f"{marker}${ct:.2f} (${lt:.2f})"
+                        if lt is not None
+                        else f"{marker}${ct:.2f}"
+                    )
+                    return s.rjust(WIDE)
+
+                print_table(
+                    f"COST — total{note}",
+                    variants,
+                    quantities,
+                    combined_total_fmt,
+                    WIDE,
+                )
+                print_table(
+                    f"COST — per board{note}",
+                    variants,
+                    quantities,
+                    combined_cpu_fmt,
+                    WIDE,
+                )
+            else:
+                tax_label = f" (×{landed_rate:.3f} duty/fee{ship_label})"
+
+                def landed_total_fmt(qty, v):
+                    lt, actual, est = _landed(qty, v)
+                    return fmt_price(lt, est)
+
+                def landed_cpu_fmt(qty, v):
+                    lt, actual, est = _landed(qty, v)
+                    return fmt_cpu(lt, actual or 1, est)
+
+                print_table(
+                    f"LANDED COST — total{tax_label}",
+                    variants,
+                    quantities,
+                    landed_total_fmt,
+                )
+                print_table(
+                    f"LANDED COST — per board{tax_label}",
+                    variants,
+                    quantities,
+                    landed_cpu_fmt,
+                )
 
         # ── Best panel summary ────────────────────────────────────────────────
         sep = "  "
         hdr = f"{'Qty':>5}{sep}" + sep.join(f"{v:>{COL_W}}" for v, *_ in variants)
-        label = ("BEST PANEL — lowest landed cost per board"
-                 + (" (PCBA)" if fab_is_pcba else " incl. components" if has_bom else "")
-                 + (" + duty/tax" if landed_rate > 1.0 else "")
-                 + (f" via {preferred_ship}" if preferred_ship else " + cheapest shipping" if has_ship else ""))
-        print(f"\n{'═'*len(hdr)}\n{label}\n{'═'*len(hdr)}")
+        label = (
+            "BEST PANEL — lowest landed cost per board"
+            + (" (PCBA)" if fab_is_pcba else " incl. components" if has_bom else "")
+            + (" + duty/tax" if landed_rate > 1.0 else "")
+            + (
+                f" via {preferred_ship}"
+                if preferred_ship
+                else " + cheapest shipping"
+                if has_ship
+                else ""
+            )
+        )
+        print(f"\n{'═' * len(hdr)}\n{label}\n{'═' * len(hdr)}")
         for qty in quantities:
             best_v, best_cpu_val = None, float("inf")
             for v, cols, rows in variants:
@@ -708,98 +721,168 @@ def main():
                     best_cpu_val, best_v = lt / actual, v
             if best_v:
                 lt, actual, est = _landed(qty, best_v)
-                total, _, _    = _total(qty, best_v)
-                ship           = _pick_ship(qty, best_v) if has_ship else None
-                ship_cost      = (ship["cost"] or 0.0) if ship else 0.0
-                ship_name      = ship["display"] if ship else ""
-                marker    = "~" if est else " "
-                duty_str  = f" ×{landed_rate:.3f}" if landed_rate > 1.0 else ""
-                ship_str  = f" + ${ship_cost:.2f} {ship_name}" if has_ship else ""
-                print(f"  {qty:>3} panels  →  {best_v}  "
-                      f"{marker}${total:.2f} merch{duty_str}{ship_str}"
-                      f"  =  {marker}${lt:.2f} landed"
-                      f"  ({marker}${lt/actual:.2f}/board, {actual} boards)")
+                total, _, _ = _total(qty, best_v)
+                ship = _pick_ship(qty, best_v) if has_ship else None
+                ship_cost = (ship["cost"] or 0.0) if ship else 0.0
+                ship_name = ship["display"] if ship else ""
+                marker = "~" if est else " "
+                cogs_lt, _, _ = _cogs(qty, best_v)
+                ship = _pick_ship(qty, best_v) if has_ship else None
+                ship_cost = (ship["cost"] or 0.0) if ship else 0.0
+                ship_name = ship["display"] if ship else ""
+                ship_str = f" + ${ship_cost:.2f} {ship_name}" if has_ship else ""
+                duty_str = f" ×{cogs_rate:.3f}" if cogs_rate > 1.0 else ""
+                tax_str = f" ×{1 + sales_tax_rate:.3f} tax" if sales_tax_rate else ""
+                cogs_str = (
+                    f"  =  {marker}${cogs_lt:.2f} COGS" if cogs_lt is not None else ""
+                )
+                print(
+                    f"  {qty:>3} panels  →  {best_v}  "
+                    f"{marker}${total:.2f} merch{duty_str}{ship_str}"
+                    f"{cogs_str}{tax_str}"
+                    f"  =  {marker}${lt:.2f} landed"
+                    f"  ({marker}${lt / actual:.2f}/board, {actual} boards)"
+                )
         print(f"  ~ = estimated from model")
 
         # ── HTML report ───────────────────────────────────────────────────────
         if args.html:
             from report import generate_report
 
-            # Build per-(qty,variant) BOM breakdown for the report
             bom_breakdown: dict = {}
             for qty in quantities:
                 bom_breakdown[qty] = {}
                 for v, cols, rows in variants:
                     total_boards = qty * cols * rows
-                    eng, mat     = pcb_models[v]
-                    pcb_tot      = eng + mat * qty
-                    known_map    = {e["qty"]: e["price"] for e in fab_quotes.get(v, [])}
+                    eng, mat = pcb_models[v]
+                    pcb_tot = estimate_fab(eng, mat, qty)
+                    known_map = {
+                        e["qty"]: _fab_merch(e, cols, rows)
+                        for e in fab_quotes.get(v, [])
+                    }
                     if qty in known_map:
                         pcba_tot, est_pcba = known_map[qty], False
                     else:
                         a, b = models[v]
-                        pcba_tot = _estimate_fab(a, b, qty) if (a or b) else None
+                        pcba_tot = estimate_fab(a, b, qty) if (a or b) else None
                         est_pcba = True
-                    _sc_cfg   = data.get("shipping", {})
-                    _sc_meths = _sc_cfg.get("methods", [])
-                    _pref     = _sc_cfg.get("preferred_method")
-                    if _sc_meths and pcb_w:
-                        _opts  = _shipping_cost(_sc_meths, _panel_weight_g(pcb_w, pcb_l, qty, cols, rows), _pref)
-                        s_cost = next((s["cost"] for s in _opts if s["display"] == _pref and s["cost"] is not None), None) \
-                                 or next((s["cost"] for s in _opts if s["cost"] is not None), None)
+                    if ship_methods and pcb_w:
+                        _opts = shipping_cost(
+                            ship_methods,
+                            panel_weight_g(pcb_w, pcb_l, qty, cols, rows),
+                            preferred_ship,
+                        )
+                        s_cost = next(
+                            (
+                                s["cost"]
+                                for s in _opts
+                                if s["display"] == preferred_ship
+                                and s["cost"] is not None
+                            ),
+                            None,
+                        ) or next(
+                            (s["cost"] for s in _opts if s["cost"] is not None), None
+                        )
                     else:
                         s_cost = None
-                    comp_cpu, line_items_raw = bom_cost_per_board(bom, total_boards, api_tiers, asm_cfg) if bom else (None, [])
-                    pcb_pb      = pcb_tot / total_boards if total_boards else 0.0
-                    asm_detail  = compute_assembly_cost(bom, total_boards, pcb_w, pcb_l, asm_cfg) if (bom and pcb_w and pcb_l) else None
-                    asm_pb      = (asm_detail["total"] / total_boards) if asm_detail else 0.0
-                    bottom_up   = (comp_cpu or 0.0) + pcb_pb + asm_pb
-                    asm_residual = (pcba_tot / total_boards - bottom_up) if pcba_tot else None
-                    landed_pb   = (pcba_tot / total_boards * (1 + import_duty_rate) + (s_cost or 0.0) / total_boards) if pcba_tot else None
+                    comp_cpu, line_items_raw = (
+                        bom_cost_per_board(bom, total_boards, api_tiers, asm_cfg)
+                        if bom
+                        else (None, [])
+                    )
+                    pcb_pb = pcb_tot / total_boards if total_boards else 0.0
+                    asm_detail = (
+                        compute_assembly_cost(bom, total_boards, pcb_w, pcb_l, asm_cfg)
+                        if (bom and pcb_w and pcb_l)
+                        else None
+                    )
+                    asm_pb = (asm_detail["total"] / total_boards) if asm_detail else 0.0
+                    bottom_up = (comp_cpu or 0.0) + pcb_pb + asm_pb
+                    asm_residual = (
+                        (pcba_tot / total_boards - bottom_up) if pcba_tot else None
+                    )
+                    cogs_pb = (
+                        (
+                            pcba_tot / total_boards * cogs_rate
+                            + (s_cost or 0.0) / total_boards
+                        )
+                        if pcba_tot
+                        else None
+                    )
+                    landed_pb = (
+                        (cogs_pb * (1.0 + sales_tax_rate))
+                        if cogs_pb is not None
+                        else None
+                    )
                     bom_breakdown[qty][v] = {
-                        "total_boards":              total_boards,
-                        "pcb_cost_total":            pcb_tot,
-                        "pcba_price_total":          pcba_tot,
-                        "pcba_estimated":            est_pcba,
-                        "ship_cost":                 s_cost,
-                        "component_cost_per_board":  comp_cpu,
-                        "pcb_per_board":             pcb_pb,
-                        "assembly_cost_detail":      asm_detail,
-                        "assembly_cost_per_board":   asm_pb,
+                        "total_boards": total_boards,
+                        "pcb_cost_total": pcb_tot,
+                        "pcba_price_total": pcba_tot,
+                        "pcba_estimated": est_pcba,
+                        "ship_cost": s_cost,
+                        "component_cost_per_board": comp_cpu,
+                        "pcb_per_board": pcb_pb,
+                        "assembly_cost_detail": asm_detail,
+                        "assembly_cost_per_board": asm_pb,
                         "assembly_residual_per_board": asm_residual,
-                        "landed_per_board":          landed_pb,
+                        "landed_per_board": landed_pb,
+                        "cogs_per_board": cogs_pb,
                         "line_items": [
                             {
-                                "lcsc":          lcsc,
-                                "desc":          desc,
+                                "lcsc": lcsc,
+                                "desc": desc,
                                 "qty_per_board": qpb,
-                                "unit_price":    up,
-                                "line_total":    lt,
-                                "lib_type":      next((l.lib_type for l in bom if l.lcsc == lcsc), "Basic"),
-                                "standard_only": next((l.standard_only for l in bom if l.lcsc == lcsc), False),
+                                "unit_price": up,
+                                "line_total": lt,
+                                "lib_type": next(
+                                    (l.lib_type for l in bom if l.lcsc == lcsc), "Basic"
+                                ),
+                                "standard_only": next(
+                                    (l.standard_only for l in bom if l.lcsc == lcsc),
+                                    False,
+                                ),
                             }
                             for lcsc, desc, qpb, up, lt, _ in line_items_raw
                         ],
                     }
 
-            asm_meta = assembly_summary(bom) if bom else {"forced_type": "Economy", "n_extended": 0, "standard_only": []}
+            asm_meta = (
+                assembly_summary(bom)
+                if bom
+                else {"forced_type": "Economy", "n_extended": 0, "standard_only": []}
+            )
             report_data = {
                 "meta": {
-                    "pcb_w":            pcb_w or 0,
-                    "pcb_l":            pcb_l or 0,
-                    "assembly_type":    asm_cfg.get("type", asm_meta["forced_type"]),
-                    "n_extended":       asm_meta["n_extended"],
-                    "standard_only":    [l.lcsc for l in asm_meta["standard_only"]],
+                    "pcb_w": pcb_w or 0,
+                    "pcb_l": pcb_l or 0,
+                    "assembly_type": asm_cfg.get("type", asm_meta["forced_type"]),
+                    "n_extended": asm_meta["n_extended"],
+                    "standard_only": [l.lcsc for l in asm_meta["standard_only"]],
                     "import_duty_rate": import_duty_rate,
-                    "preferred_ship":   data.get("shipping", {}).get("preferred_method", ""),
-                    "bm_per_board":     BM_PER_BOARD,
-                    "eng_fee":          ENG_FEE,
+                    "sales_tax_rate": sales_tax_rate,
+                    "landed_rate": landed_rate,
+                    "cogs_rate": cogs_rate,
+                    "sales_tax_rate": sales_tax_rate,
+                    "preferred_ship": data.get("shipping", {}).get(
+                        "preferred_method", ""
+                    ),
+                    "bm_per_board": bm_per_board,
+                    "eng_fee": eng_fee,
                 },
-                "variants":      [v for v, *_ in variants],
-                "quantities":    quantities,
-                "fab_results":   {qty: {v: fab_results[qty][v] for v, *_ in variants} for qty in quantities},
-                "pcb_results":   {qty: {v: pcb_results[qty][v] for v, *_ in variants} for qty in quantities},
-                "ship_results":  {qty: {v: ship_results[qty][v] for v, *_ in variants} for qty in quantities},
+                "variants": [v for v, *_ in variants],
+                "quantities": quantities,
+                "fab_results": {
+                    qty: {v: fab_results[qty][v] for v, *_ in variants}
+                    for qty in quantities
+                },
+                "pcb_results": {
+                    qty: {v: pcb_results[qty][v] for v, *_ in variants}
+                    for qty in quantities
+                },
+                "ship_results": {
+                    qty: {v: ship_results[qty][v] for v, *_ in variants}
+                    for qty in quantities
+                },
                 "bom_breakdown": bom_breakdown,
                 "preferred_ship": data.get("shipping", {}).get("preferred_method", ""),
             }
@@ -814,9 +897,12 @@ def main():
         ap.error(f"credentials.json not found: {CREDENTIALS_FILE}")
     with open(CREDENTIALS_FILE) as f:
         creds = json.load(f)
-    app_id, access_key, secret_key = creds["AppID"], creds["Accesskey"], creds["SecretKey"]
+    app_id, access_key, secret_key = (
+        creds["AppID"],
+        creds["Accesskey"],
+        creds["SecretKey"],
+    )
 
-    # live_results[qty][v] = (fab_price | None, actual_boards, ship_opts)
     live_results: dict = {}
     for qty in quantities:
         live_results[qty] = {}
@@ -824,24 +910,32 @@ def main():
             actual = qty * cols * rows
             print(f"  {v:>5}  qty={qty:>3}  → {actual} boards", end="  ")
             price, ship_opts = get_quote_live(
-                cols, rows, qty, pcb_w, pcb_l, app_id, access_key, secret_key,
-                country=args.country, postcode=args.postcode, city=args.city,
+                cols,
+                rows,
+                qty,
+                pcb_w,
+                pcb_l,
+                app_id,
+                access_key,
+                secret_key,
+                country=args.country,
+                postcode=args.postcode,
+                city=args.city,
             )
             live_results[qty][v] = (price, actual, ship_opts)
             print(f"${price:.2f}" if price is not None else "—")
 
     def lv_total(qty, v):
         price, _, _s = live_results[qty][v]
-        return _fmt_price(price)
+        return fmt_price(price)
 
     def lv_cpu(qty, v):
         price, actual, _s = live_results[qty][v]
-        return _fmt_cpu(price, actual)
+        return fmt_cpu(price, actual)
 
-    _print_table("FAB COST (USD, excl. shipping)", variants, quantities, lv_total)
-    _print_table("FAB COST — per board",           variants, quantities, lv_cpu)
+    print_table("FAB COST (USD, excl. shipping)", variants, quantities, lv_total)
+    print_table("FAB COST — per board", variants, quantities, lv_cpu)
 
-    # Shipping table (only if destination was provided and API returned options)
     all_ship_methods = []
     seen_s = set()
     for qty in quantities:
@@ -852,28 +946,34 @@ def main():
                     seen_s.add(s["display"])
 
     if all_ship_methods:
-        sep2     = "  "
+        sep2 = "  "
         ship_col = 10
-        m_names  = [s["display"] for s in all_ship_methods]
-        ship_hdr = (f"{'Qty':>5}  {'Variant':>7}{sep2}"
-                    + sep2.join(f"{m:>{ship_col}}" for m in m_names))
-        print(f"\n{'═'*len(ship_hdr)}\nSHIPPING OPTIONS\n{'═'*len(ship_hdr)}")
+        m_names = [s["display"] for s in all_ship_methods]
+        ship_hdr = f"{'Qty':>5}  {'Variant':>7}{sep2}" + sep2.join(
+            f"{m:>{ship_col}}" for m in m_names
+        )
+        print(f"\n{'═' * len(ship_hdr)}\nSHIPPING OPTIONS\n{'═' * len(ship_hdr)}")
         print(ship_hdr)
         print("─" * len(ship_hdr))
         for qty in quantities:
             for v, *_ in variants:
-                opts    = {s["display"]: s for s in live_results[qty][v][2]}
+                opts = {s["display"]: s for s in live_results[qty][v][2]}
                 row_pre = f"{qty:>5}  {v:>7}{sep2}"
-                row_d   = sep2.join(
-                    (f"${opts[m]['cost']:>{ship_col-1}.2f}" if opts.get(m) and opts[m]['cost'] is not None
-                     else f"{'—':>{ship_col}}")
+                row_d = sep2.join(
+                    (
+                        f"${opts[m]['cost']:>{ship_col - 1}.2f}"
+                        if opts.get(m) and opts[m]["cost"] is not None
+                        else f"{'—':>{ship_col}}"
+                    )
                     for m in m_names
                 )
                 print(f"{row_pre}{row_d}")
 
     sep = "  "
     hdr = f"{'Qty':>5}{sep}" + sep.join(f"{v:>{COL_W}}" for v, *_ in variants)
-    print(f"\n{'═'*len(hdr)}\nBEST PANEL — lowest fab cost per board\n{'═'*len(hdr)}")
+    print(
+        f"\n{'═' * len(hdr)}\nBEST PANEL — lowest fab cost per board\n{'═' * len(hdr)}"
+    )
     for qty in quantities:
         best_v, best_cpu_val = None, float("inf")
         for v, *_ in variants:
@@ -882,16 +982,26 @@ def main():
                 best_cpu_val, best_v = price / actual, v
         if best_v:
             price, actual, ship_opts = live_results[qty][best_v]
-            cheapest_ship = min((s for s in ship_opts if s["cost"] is not None),
-                                key=lambda s: s["cost"], default=None)
-            ship_str = (f" + ${cheapest_ship['cost']:.2f} {cheapest_ship['display']}"
-                        f" ({cheapest_ship['days']})" if cheapest_ship else "")
-            print(f"  {qty:>3} panels  →  {best_v}  "
-                  f"${price:.2f} fab{ship_str}  "
-                  f"${best_cpu_val:.2f}/board  ({actual} boards)")
+            cheapest_ship = min(
+                (s for s in ship_opts if s["cost"] is not None),
+                key=lambda s: s["cost"],
+                default=None,
+            )
+            ship_str = (
+                f" + ${cheapest_ship['cost']:.2f} {cheapest_ship['display']}"
+                f" ({cheapest_ship['days']})"
+                if cheapest_ship
+                else ""
+            )
+            print(
+                f"  {qty:>3} panels  →  {best_v}  "
+                f"${price:.2f} fab{ship_str}  "
+                f"${best_cpu_val:.2f}/board  ({actual} boards)"
+            )
 
 
 # ── Sample data file ───────────────────────────────────────────────────────────
+
 
 def _write_sample_data(path: Path):
     sample = {
@@ -902,21 +1012,13 @@ def _write_sample_data(path: Path):
             "  qty_per_board: how many of this part per board.",
             "  price_tiers: optional manual tiers used when API prices are unavailable.",
             "    Each tier: {min_qty: N, unit_price: X} — N = total parts ordered.",
-            "  Run with --fetch-prices to pull live tiers from the JLCPCB component API."
+            "  Run with --fetch-prices to pull live tiers from the JLCPCB component API.",
         ],
         "fab_quotes": {
-            "1x1": [
-                {"qty": 10, "price": 279.51}
-            ],
-            "2x2": [
-                {"qty": 5,  "price": 405.78},
-                {"qty": 10, "price": 653.24}
-            ],
+            "1x1": [{"qty": 10, "price": 279.51}],
+            "2x2": [{"qty": 5, "price": 405.78}, {"qty": 10, "price": 653.24}],
             "2x3": [],
-            "3x3": [
-                {"qty": 5,  "price": 714.92},
-                {"qty": 10, "price": 1296.49}
-            ]
+            "3x3": [{"qty": 5, "price": 714.92}, {"qty": 10, "price": 1296.49}],
         },
         "bom_overrides": {},
         "shipping": {
@@ -926,26 +1028,26 @@ def _write_sample_data(path: Path):
                     "name": "DHL",
                     "days": "3-5",
                     "tiers": [
-                        {"max_weight_g": 100,  "cost": 15.90},
-                        {"max_weight_g": 200,  "cost": 16.90},
-                        {"max_weight_g": 500,  "cost": 19.90},
+                        {"max_weight_g": 100, "cost": 15.90},
+                        {"max_weight_g": 200, "cost": 16.90},
+                        {"max_weight_g": 500, "cost": 19.90},
                         {"max_weight_g": 1000, "cost": 24.90},
-                        {"max_weight_g": 2000, "cost": 34.90}
-                    ]
+                        {"max_weight_g": 2000, "cost": 34.90},
+                    ],
                 },
                 {
                     "name": "Ordinary Mail",
                     "days": "25-35",
                     "tiers": [
-                        {"max_weight_g": 100,  "cost": 1.50},
-                        {"max_weight_g": 200,  "cost": 2.20},
-                        {"max_weight_g": 500,  "cost": 3.80},
+                        {"max_weight_g": 100, "cost": 1.50},
+                        {"max_weight_g": 200, "cost": 2.20},
+                        {"max_weight_g": 500, "cost": 3.80},
                         {"max_weight_g": 1000, "cost": 5.50},
-                        {"max_weight_g": 2000, "cost": 8.00}
-                    ]
-                }
-            ]
-        }
+                        {"max_weight_g": 2000, "cost": 8.00},
+                    ],
+                },
+            ],
+        },
     }
     with open(path, "w") as f:
         json.dump(sample, f, indent=2)
