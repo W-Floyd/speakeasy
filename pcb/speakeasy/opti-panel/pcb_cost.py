@@ -26,25 +26,51 @@ def parse_variant(v: str) -> tuple[int, int]:
     return int(parts[0]), int(parts[1])
 
 
+def _extract_blocks(text: str, tag: str) -> list[str]:
+    """Extract all top-level S-expression blocks starting with `(tag`."""
+    blocks = []
+    i = 0
+    pat = re.compile(r'\(' + re.escape(tag) + r'\b')
+    while True:
+        m = pat.search(text, i)
+        if not m:
+            break
+        depth, start = 0, m.start()
+        for j in range(start, len(text)):
+            if text[j] == '(':
+                depth += 1
+            elif text[j] == ')':
+                depth -= 1
+                if depth == 0:
+                    blocks.append(text[start:j+1])
+                    i = j + 1
+                    break
+        else:
+            break
+    return blocks
+
+
 def read_pcb_dimensions(pcb_path: Path) -> tuple[float, float]:
     """Return (width_mm, height_mm) from the Edge.Cuts bounding box."""
     text = pcb_path.read_text(errors="replace")
     xs, ys = [], []
-    for block in re.findall(
-        r'\((?:gr_line|gr_arc|gr_rect|gr_poly)\b[^()]*(?:\([^()]*\)[^()]*)*\)',
-        text, re.DOTALL
-    ):
-        if '"Edge.Cuts"' not in block:
-            continue
-        for m in re.finditer(r'\((?:start|end|xy)\s+([\d.+-]+)\s+([\d.+-]+)', block):
-            xs.append(float(m.group(1)))
-            ys.append(float(m.group(2)))
-    if not xs:
-        for m in re.finditer(r'\((?:start|end)\s+([\d.+-]+)\s+([\d.+-]+)', text):
-            ctx = text[max(0, m.start()-120):m.start()+120]
-            if "Edge.Cuts" in ctx:
-                xs.append(float(m.group(1)))
-                ys.append(float(m.group(2)))
+    for tag in ("gr_line", "gr_arc", "gr_rect", "gr_poly", "gr_circle"):
+        for block in _extract_blocks(text, tag):
+            if '"Edge.Cuts"' not in block:
+                continue
+            if tag == "gr_circle":
+                # bounding box = center ± radius
+                cm = re.search(r'\(center\s+([\d.+-]+)\s+([\d.+-]+)', block)
+                em = re.search(r'\(end\s+([\d.+-]+)\s+([\d.+-]+)', block)
+                if cm and em:
+                    cx, cy = float(cm.group(1)), float(cm.group(2))
+                    r = ((float(em.group(1)) - cx) ** 2 + (float(em.group(2)) - cy) ** 2) ** 0.5
+                    xs += [cx - r, cx + r]
+                    ys += [cy - r, cy + r]
+            else:
+                for m in re.finditer(r'\((?:start|end|xy)\s+([\d.+-]+)\s+([\d.+-]+)', block):
+                    xs.append(float(m.group(1)))
+                    ys.append(float(m.group(2)))
     if not xs:
         raise ValueError(f"Could not parse Edge.Cuts from {pcb_path}")
     return round(max(xs) - min(xs), 3), round(max(ys) - min(ys), 3)

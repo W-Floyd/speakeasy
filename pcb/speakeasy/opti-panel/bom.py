@@ -436,15 +436,15 @@ def print_bom_breakdown(bom: list[BomLine], total_boards: int, api_tiers: dict,
             print(f"{indent}  ${residual:+.4f}  JLCPCB markup / rounding residual")
             print(f"{indent}= ${pcba_per_bd:.4f}  PCBA merch/bd")
 
-            landed = pcba_per_bd * (1 + import_duty_rate)
+            cogs = pcba_per_bd * (1 + import_duty_rate)
             if ship_cost is not None:
                 ship_pb = ship_cost / total_boards
-                landed += ship_pb
+                cogs += ship_pb
                 print(f"{indent}+ ${pcba_per_bd * import_duty_rate:.4f}  import duty ({import_duty_rate*100:.0f}%)")
                 print(f"{indent}+ ${ship_pb:.4f}  shipping/bd")
             else:
                 print(f"{indent}+ ${pcba_per_bd * import_duty_rate:.4f}  import duty ({import_duty_rate*100:.0f}%)")
-            print(f"{indent}= ${landed:.2f}  landed/bd")
+            print(f"{indent}= ${cogs:.2f}  COGS/bd")
     else:
         print(f"  TOTAL: incomplete (missing prices marked !)")
     if asm["standard_only"]:

@@ -80,7 +80,7 @@ def generate_report(report_data: dict, output_path: Path) -> None:
     standard_only  = meta.get("standard_only", [])
     duty_rate      = meta.get("import_duty_rate", 0.0)
     sales_tax_rate = meta.get("sales_tax_rate", 0.0)
-    tax_rate       = meta.get("landed_rate", 1.0 + duty_rate) - 1.0
+    tax_rate       = meta.get("sale_rate", 1.0 + duty_rate) - 1.0
     cogs_rate      = meta.get("cogs_rate", 1.0 + duty_rate) - 1.0
     bm_per_board   = meta.get("bm_per_board")
     eng_fee        = meta.get("eng_fee")
@@ -89,8 +89,9 @@ def generate_report(report_data: dict, output_path: Path) -> None:
 
     # ── Pre-compute summary stats ──────────────────────────────────────────────
 
-    best_landed_val  = None
-    best_landed_cfg  = ""
+    best_sale_val  = None
+    best_sale_cfg  = ""
+    best_cogs_val  = None
     best_pcba_val    = None
     best_pcba_cfg    = ""
     dominant_label   = "N/A"
@@ -101,11 +102,12 @@ def generate_report(report_data: dict, output_path: Path) -> None:
             bb = bom_breakdown.get(qty, {}).get(v)
             if bb is None:
                 continue
-            lp = bb.get("landed_per_board")
+            lp = bb.get("sale_per_board")
             if lp is not None:
-                if best_landed_val is None or lp < best_landed_val:
-                    best_landed_val = lp
-                    best_landed_cfg = f"{qty} panels × {v}"
+                if best_sale_val is None or lp < best_sale_val:
+                    best_sale_val = lp
+                    best_sale_cfg = f"{qty} panels × {v}"
+                    best_cogs_val = bb.get("cogs_per_board")
             fa_price, actual, est = fab_results.get(qty, {}).get(v, (None, 1, False))
             if fa_price is not None and actual:
                 pcba_pb = fa_price / actual
@@ -114,8 +116,8 @@ def generate_report(report_data: dict, output_path: Path) -> None:
                     best_pcba_cfg = f"{qty} panels × {v}"
 
     # Find dominant cost at best qty/variant
-    if best_landed_cfg:
-        best_qty_str, best_var_str = best_landed_cfg.split(" panels × ")
+    if best_sale_cfg:
+        best_qty_str, best_var_str = best_sale_cfg.split(" panels × ")
         best_qty = int(best_qty_str.strip())
         best_var = best_var_str.strip()
         bb = bom_breakdown.get(best_qty, {}).get(best_var, {})
@@ -132,18 +134,18 @@ def generate_report(report_data: dict, output_path: Path) -> None:
             }
             if any(segments.values()):
                 dominant_label = max(segments, key=segments.get)
-                dominant_cfg   = best_landed_cfg
+                dominant_cfg   = best_sale_cfg
 
-    # ── Build landed table data for JS ─────────────────────────────────────────
+    # ── Build sale price table data for JS ──────────────────────────────────────
 
-    landed_table_rows = []
+    sale_table_rows = []
     for qty in quantities:
         row = {"qty": qty, "cells": []}
         cogs_vals = []
         for v in variants:
             bb = bom_breakdown.get(qty, {}).get(v)
             if bb:
-                lp  = bb.get("landed_per_board")
+                lp  = bb.get("sale_per_board")
                 cp  = bb.get("cogs_per_board")
                 est = fab_results.get(qty, {}).get(v, (None, 1, False))[2]
             else:
@@ -152,7 +154,7 @@ def generate_report(report_data: dict, output_path: Path) -> None:
             row["cells"].append({"val": lp, "cogs": cp, "est": est})
         valid = [x for x in cogs_vals if x is not None]
         row["min_val"] = min(valid) if valid else None
-        landed_table_rows.append(row)
+        sale_table_rows.append(row)
 
     # ── Build PCBA table data ──────────────────────────────────────────────────
 
@@ -181,7 +183,7 @@ def generate_report(report_data: dict, output_path: Path) -> None:
             row["cells"].append({"val": val, "est": est})
         pcb_table_rows.append(row)
 
-    # ── Line chart dataset (landed $/board vs qty, one line per variant) ───────
+    # ── Line chart dataset (sale $/board vs qty, one line per variant) ─────────
 
     line_datasets = []
     for v in variants:
@@ -190,7 +192,7 @@ def generate_report(report_data: dict, output_path: Path) -> None:
         verified = []
         for qty in quantities:
             bb  = bom_breakdown.get(qty, {}).get(v)
-            lp  = bb.get("landed_per_board") if bb else None
+            lp  = bb.get("sale_per_board") if bb else None
             est = bb.get("pcba_estimated", True) if bb else True
             points.append(lp)
             verified.append(not est)
@@ -268,13 +270,14 @@ def generate_report(report_data: dict, output_path: Path) -> None:
         variants=variants,
         quantities=quantities,
         median_qty=median_qty,
-        best_landed_val=best_landed_val,
-        best_landed_cfg=best_landed_cfg,
+        best_sale_val=best_sale_val,
+        best_sale_cfg=best_sale_cfg,
+        best_cogs_val=best_cogs_val,
         best_pcba_val=best_pcba_val,
         best_pcba_cfg=best_pcba_cfg,
         dominant_label=dominant_label,
         dominant_cfg=dominant_cfg,
-        landed_table_rows=landed_table_rows,
+        sale_table_rows=sale_table_rows,
         pcba_table_rows=pcba_table_rows,
         pcb_table_rows=pcb_table_rows,
         line_datasets=line_datasets,
@@ -292,10 +295,10 @@ def _build_html(
     today, pcb_w, pcb_l, assembly_type, n_extended, standard_only,
     duty_rate, tax_rate, cogs_rate, sales_tax_rate, bm_per_board, eng_fee, preferred,
     variants, quantities, median_qty,
-    best_landed_val, best_landed_cfg,
+    best_sale_val, best_sale_cfg, best_cogs_val,
     best_pcba_val, best_pcba_cfg,
     dominant_label, dominant_cfg,
-    landed_table_rows, pcba_table_rows, pcb_table_rows,
+    sale_table_rows, pcba_table_rows, pcb_table_rows,
     line_datasets, bom_breakdown_js, bom_lines_display,
 ) -> str:
 
@@ -316,12 +319,12 @@ def _build_html(
     js_preferred       = _js(preferred)
 
     # ── Landed table HTML ──────────────────────────────────────────────────────
-    landed_thead_cells = "".join(f"<th>{v}</th>" for v in variants)
-    landed_tbody = ""
-    for row in landed_table_rows:
+    sale_thead_cells = "".join(f"<th>{v}</th>" for v in variants)
+    sale_tbody = ""
+    for row in sale_table_rows:
         cells_html = ""
         for i, cell in enumerate(row["cells"]):
-            val  = cell["val"]   # landed
+            val  = cell["val"]   # sale price
             cogs = cell.get("cogs")
             est  = cell["est"]
             primary = cogs if cogs is not None else val
@@ -332,22 +335,22 @@ def _build_html(
                 cls = "cell-missing"
             elif est:
                 p_s = f"~${primary:.2f}"
-                tax_s = (f"<span class='landed-parens'>(~${val:.2f})</span>"
+                tax_s = (f"<span class='sale-parens'>(~${val:.2f})</span>"
                          if sales_tax_rate and val is not None else "")
                 cell_str = f"{p_s}{tax_s}"
                 cls = "cell-best cell-est" if is_min else "cell-est"
             else:
                 badge = "<span class='verified-badge'>✓</span>"
                 p_s = f"${primary:.2f}"
-                tax_s = (f"<span class='landed-parens'>(${val:.2f})</span>"
+                tax_s = (f"<span class='sale-parens'>(${val:.2f})</span>"
                          if sales_tax_rate and val is not None else "")
                 cell_str = f"{p_s}{tax_s}{badge}"
                 cls = "cell-best" if is_min else "cell-verified"
             cells_html += f'<td class="{cls}">{cell_str}</td>'
-        landed_tbody += f"<tr><td class='col-qty'>{row['qty']}</td>{cells_html}</tr>\n"
+        sale_tbody += f"<tr><td class='col-qty'>{row['qty']}</td>{cells_html}</tr>\n"
 
     # ── PCBA table HTML ────────────────────────────────────────────────────────
-    pcba_thead_cells = landed_thead_cells
+    pcba_thead_cells = sale_thead_cells
     pcba_tbody = ""
     for row in pcba_table_rows:
         cells_html = ""
@@ -429,7 +432,8 @@ def _build_html(
     )
 
     # ── Summary card values ────────────────────────────────────────────────────
-    card_landed = _fmt(best_landed_val) if best_landed_val is not None else "N/A"
+    card_cogs = _fmt(best_cogs_val) if best_cogs_val is not None else (_fmt(best_sale_val) if best_sale_val is not None else "N/A")
+    card_sale_parens = f" ({_fmt(best_sale_val)})" if best_sale_val is not None and best_cogs_val is not None else ""
     card_pcba   = _fmt(best_pcba_val)   if best_pcba_val   is not None else "N/A"
 
     return f"""<!DOCTYPE html>
@@ -534,7 +538,7 @@ def _build_html(
   .cell-missing {{ color: #374151; }}
   .cell-verified {{ color: #e2e8f0; }}
   .verified-badge {{ color: #34d399; font-size: 0.68rem; margin-left: 3px; opacity: 0.75; }}
-  .landed-parens {{ color: #475569; font-size: 0.82em; margin-left: 3px; }}
+  .sale-parens {{ color: #475569; font-size: 0.82em; margin-left: 3px; }}
   .num  {{ text-align: right; }}
   .mono {{ font-family: "SF Mono", "Fira Code", "Consolas", monospace; font-size: 0.83rem; }}
 
@@ -626,7 +630,6 @@ def _build_html(
       {'<div class="meta-item"><span class="meta-label">Import duty</span><span class="meta-value">' + f'{duty_rate*100:.1f}%' + '</span></div>' if duty_rate else ''}
       {'<div class="meta-item"><span class="meta-label">Sales tax</span><span class="meta-value">' + f'{sales_tax_rate*100:.1f}%' + '</span></div>' if sales_tax_rate else ''}
       {'<div class="meta-item"><span class="meta-label">Shipping</span><span class="meta-value">' + preferred + '</span></div>' if preferred else ''}
-      {'<div class="meta-item"><span class="meta-label">Standard-only parts</span><span class="meta-value">' + ", ".join(standard_only) + '</span></div>' if standard_only else ''}
       <div class="meta-item"><span class="meta-label">Generated</span><span class="meta-value">{today}</span></div>
     </div>
   </div>
@@ -639,9 +642,9 @@ def _build_html(
   <h2>Summary</h2>
   <div class="cards">
     <div class="card card-accent-green">
-      <div class="card-label">Best Landed Cost / Board</div>
-      <div class="card-value">{card_landed}</div>
-      <div class="card-sub">{best_landed_cfg or "—"}</div>
+      <div class="card-label">Best Price / Board</div>
+      <div class="card-value">{card_cogs}<span style="font-size:0.65em;opacity:0.7">{card_sale_parens}</span></div>
+      <div class="card-sub">{best_sale_cfg or "—"} &nbsp;·&nbsp; COGS (sale)</div>
     </div>
     <div class="card card-accent-blue">
       <div class="card-label">Best PCBA Merch Cost / Board</div>
@@ -658,12 +661,12 @@ def _build_html(
 
 <!-- ═══════════════════ COST TABLE ═══════════════════ -->
 <div class="section">
-  <h2>{'COGS per Board — taxed in parens' if sales_tax_rate else 'Landed Cost per Board'} ($/board)</h2>
+  <h2>{'COGS per Board — sale price in parens' if sales_tax_rate else 'Sale Price per Board'} ($/board)</h2>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Panels</th>{landed_thead_cells}</tr></thead>
-      <tbody id="landed-tbody">
-{landed_tbody}
+      <thead><tr><th>Panels</th>{sale_thead_cells}</tr></thead>
+      <tbody id="sale-tbody">
+{sale_tbody}
       </tbody>
     </table>
   </div>
@@ -671,13 +674,13 @@ def _build_html(
     <span style="color:#34d399">Green</span> = lowest COGS in row &nbsp;|&nbsp;
     <span style="color:#e2e8f0">White</span> <span class="verified-badge" style="opacity:1">✓</span> = verified JLCPCB quote &nbsp;|&nbsp;
     <span style="color:#94a3b8">Grey ~</span> = model estimate &nbsp;|&nbsp;
-    <span class="landed-parens" style="font-size:1em">(parens)</span> = full landed incl. sales tax
+    <span class="sale-parens" style="font-size:1em">(parens)</span> = sale price incl. sales tax
   </p>
 </div>
 
 <!-- ═══════════════════ LINE CHART ═══════════════════ -->
 <div class="section">
-  <h2>Landed Cost per Board vs Panels Ordered</h2>
+  <h2>Sale Price per Board vs Panels Ordered</h2>
   <div class="chart-wrap">
     <div class="chart-canvas-wrap" style="height:320px">
       <canvas id="lineChart"></canvas>
@@ -774,7 +777,7 @@ def _build_html(
     <summary>PCB Bare Board Cost per Board (no assembly)</summary>
     <div class="table-wrap">
       <table>
-        <thead><tr><th>Panels</th>{landed_thead_cells}</tr></thead>
+        <thead><tr><th>Panels</th>{sale_thead_cells}</tr></thead>
         <tbody>
 {pcb_tbody}
         </tbody>
@@ -893,7 +896,7 @@ def _build_html(
       scales: {{
         x: {{ ...mkScale("Panels Ordered"), grid: {{ color: gridColor }} }},
         y: {{
-          ...mkScale("Landed $/board"),
+          ...mkScale("Sale $/board"),
           ticks: {{
             color: tickColor,
             callback: v => `$${{v.toFixed(2)}}`,
@@ -981,8 +984,8 @@ def _build_html(
               const lines = [];
               if (bb.cogs_per_board != null && HAS_COGS)
                 lines.push(`COGS:   $${{bb.cogs_per_board.toFixed(2)}}/board`);
-              if (bb.landed_per_board != null)
-                lines.push(`Landed: $${{bb.landed_per_board.toFixed(2)}}/board`);
+              if (bb.sale_per_board != null)
+                lines.push(`Landed: $${{bb.sale_per_board.toFixed(2)}}/board`);
               return lines;
             }},
           }},

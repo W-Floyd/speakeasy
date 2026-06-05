@@ -155,14 +155,14 @@ def main():
         import_duty_rate = data.get("import_duty_rate", 0.0)
         sales_tax_rate = data.get("sales_tax_rate", 0.0)
         payment_fee_rate = data.get("payment_fee_rate", 0.0)
-        landed_rate = 1.0 + import_duty_rate + sales_tax_rate + payment_fee_rate
+        sale_rate = 1.0 + import_duty_rate + sales_tax_rate + payment_fee_rate
         cogs_rate = 1.0 + import_duty_rate + payment_fee_rate
         if import_duty_rate or sales_tax_rate:
             print(
                 f"Taxes: {import_duty_rate * 100:.1f}% import duty"
                 f" + {sales_tax_rate * 100:.1f}% sales tax"
                 f" + {payment_fee_rate * 100:.2f}% payment fee"
-                f"  →  ×{landed_rate:.3f} landed  /  ×{cogs_rate:.3f} COGS"
+                f"  →  ×{sale_rate:.3f} sale  /  ×{cogs_rate:.3f} COGS"
             )
 
         ship_cfg = data.get("shipping", {})
@@ -170,9 +170,10 @@ def main():
         preferred_ship = ship_cfg.get("preferred_method")
 
         def _fab_merch(entry: dict, cols: int, rows: int) -> float:
-            """Return PCBA merch cost from a fab_quotes entry.
-            Uses breakdown.merch if present; otherwise back-calculates from
-            grand total: merch ≈ (grand_total − est_shipping) / landed_rate.
+            """Return pure merch cost (pre-duty, pre-tax) from a fab_quotes entry.
+            Uses breakdown.merch if present; otherwise back-calculates from grand
+            total: merch = (grand − ship) / sale_rate if tax_free=False,
+            or / cogs_rate if no tax was charged.
             """
             bp = entry.get("breakdown", {})
             if "merch" in bp:
@@ -195,7 +196,10 @@ def main():
                 )
             else:
                 ship = 0.0
-            return (grand - ship) / cogs_rate if cogs_rate > 1.0 else grand
+            # tax_free=False → sales tax was charged; divide by sale_rate to recover
+            # pure merch. Otherwise divide by cogs_rate (duty+fee but no sales tax).
+            divisor = sale_rate if entry.get("tax_free") is False else cogs_rate
+            return (grand - ship) / divisor if divisor > 1.0 else grand - ship
 
         # Prefer generated JLCPCB BOM CSV; fall back to manual list in data file
         if JLCPCB_BOM_CSV.exists():
@@ -589,9 +593,9 @@ def main():
                     )
                     print(f"{row_pre}{row_d}  ({w_g:.0f}g)")
 
-        # ── Landed cost table (merch × tax multiplier + cheapest ship) ──────
+        # ── Sale price table (merch × sale_rate + cheapest ship) ─────────────
         has_ship = bool(ship_methods)
-        has_landed = landed_rate > 1.0 or has_ship
+        has_sale = sale_rate > 1.0 or has_ship
 
         def _pick_ship(qty, v) -> dict | None:
             opts = ship_results[qty][v]
@@ -604,25 +608,29 @@ def main():
             valid = [s for s in opts if s["cost"] is not None]
             return valid[0] if valid else None
 
-        def _landed(qty, v):
-            cogs, actual, est = _cogs(qty, v)
-            if cogs is None:
-                return None, actual, est
-            return cogs * (1.0 + sales_tax_rate), actual, est
-
         def _cogs(qty, v):
-            total, actual, est = _total(qty, v)
-            if total is None:
+            base, actual, est = _total(qty, v)
+            if base is None:
                 return None, actual, est
             ship = _pick_ship(qty, v)
             ship_cost = (ship["cost"] or 0.0) if ship else 0.0
-            return total * cogs_rate + ship_cost, actual, est
+            # base × cogs_rate + shipping (includes duty + payment, excludes sales_tax)
+            return base * cogs_rate + ship_cost, actual, est
 
-        if has_landed:
+        def _sale(qty, v):
+            base, actual, est = _total(qty, v)
+            if base is None:
+                return None, actual, est
+            ship = _pick_ship(qty, v)
+            ship_cost = (ship["cost"] or 0.0) if ship else 0.0
+            # sale = merch × sale_rate + ship  (tax on merch only, not compounded on duty)
+            return base * sale_rate + ship_cost, actual, est
+
+        if has_sale:
             ship_label = " + cheapest shipping" if has_ship else ""
             if sales_tax_rate:
                 WIDE = 22
-                note = f" COGS (×{cogs_rate:.3f}), landed in parens (×{landed_rate:.3f}){ship_label}"
+                note = f" COGS (×{cogs_rate:.3f}), sale price in parens (×{sale_rate:.3f}){ship_label}"
 
                 def _combined(cogs_tup, land_tup, boards):
                     ct, _, est = cogs_tup
@@ -639,12 +647,12 @@ def main():
 
                 def combined_cpu_fmt(qty, v):
                     c = _cogs(qty, v)
-                    l = _landed(qty, v)
+                    l = _sale(qty, v)
                     return _combined(c, l, c[1] or 1)
 
                 def combined_total_fmt(qty, v):
                     c = _cogs(qty, v)
-                    l = _landed(qty, v)
+                    l = _sale(qty, v)
                     ct, actual, est = c
                     lt, _, _ = l
                     if ct is None:
@@ -672,36 +680,36 @@ def main():
                     WIDE,
                 )
             else:
-                tax_label = f" (×{landed_rate:.3f} duty/fee{ship_label})"
+                tax_label = f" (×{sale_rate:.3f} duty/fee/tax{ship_label})"
 
-                def landed_total_fmt(qty, v):
-                    lt, actual, est = _landed(qty, v)
+                def sale_total_fmt(qty, v):
+                    lt, actual, est = _sale(qty, v)
                     return fmt_price(lt, est)
 
-                def landed_cpu_fmt(qty, v):
-                    lt, actual, est = _landed(qty, v)
+                def sale_cpu_fmt(qty, v):
+                    lt, actual, est = _sale(qty, v)
                     return fmt_cpu(lt, actual or 1, est)
 
                 print_table(
-                    f"LANDED COST — total{tax_label}",
+                    f"SALE PRICE — total{tax_label}",
                     variants,
                     quantities,
-                    landed_total_fmt,
+                    sale_total_fmt,
                 )
                 print_table(
-                    f"LANDED COST — per board{tax_label}",
+                    f"SALE PRICE — per board{tax_label}",
                     variants,
                     quantities,
-                    landed_cpu_fmt,
+                    sale_cpu_fmt,
                 )
 
         # ── Best panel summary ────────────────────────────────────────────────
         sep = "  "
         hdr = f"{'Qty':>5}{sep}" + sep.join(f"{v:>{COL_W}}" for v, *_ in variants)
         label = (
-            "BEST PANEL — lowest landed cost per board"
+            "BEST PANEL — lowest sale price per board"
             + (" (PCBA)" if fab_is_pcba else " incl. components" if has_bom else "")
-            + (" + duty/tax" if landed_rate > 1.0 else "")
+            + (" + duty/tax" if sale_rate > 1.0 else "")
             + (
                 f" via {preferred_ship}"
                 if preferred_ship
@@ -714,13 +722,13 @@ def main():
         for qty in quantities:
             best_v, best_cpu_val = None, float("inf")
             for v, cols, rows in variants:
-                lt, actual, est = _landed(qty, v)
+                lt, actual, est = _sale(qty, v)
                 if lt is None:
                     continue
                 if lt / actual < best_cpu_val:
                     best_cpu_val, best_v = lt / actual, v
             if best_v:
-                lt, actual, est = _landed(qty, best_v)
+                lt, actual, est = _sale(qty, best_v)
                 total, _, _ = _total(qty, best_v)
                 ship = _pick_ship(qty, best_v) if has_ship else None
                 ship_cost = (ship["cost"] or 0.0) if ship else 0.0
@@ -740,7 +748,7 @@ def main():
                     f"  {qty:>3} panels  →  {best_v}  "
                     f"{marker}${total:.2f} merch{duty_str}{ship_str}"
                     f"{cogs_str}{tax_str}"
-                    f"  =  {marker}${lt:.2f} landed"
+                    f"  =  {marker}${lt:.2f} sale"
                     f"  ({marker}${lt / actual:.2f}/board, {actual} boards)"
                 )
         print(f"  ~ = estimated from model")
@@ -801,18 +809,16 @@ def main():
                     asm_residual = (
                         (pcba_tot / total_boards - bottom_up) if pcba_tot else None
                     )
+                    # pcba_tot = pure merch (duty/tax not yet applied)
+                    # COGS     = merch × cogs_rate + shipping
+                    # Landed   = merch × sale_rate + shipping
+                    merch_pb = pcba_tot / total_boards if pcba_tot else None
+                    ship_pb = (s_cost or 0.0) / total_boards
                     cogs_pb = (
-                        (
-                            pcba_tot / total_boards * cogs_rate
-                            + (s_cost or 0.0) / total_boards
-                        )
-                        if pcba_tot
-                        else None
+                        merch_pb * cogs_rate + ship_pb if merch_pb is not None else None
                     )
-                    landed_pb = (
-                        (cogs_pb * (1.0 + sales_tax_rate))
-                        if cogs_pb is not None
-                        else None
+                    sale_pb = (
+                        merch_pb * sale_rate + ship_pb if merch_pb is not None else None
                     )
                     bom_breakdown[qty][v] = {
                         "total_boards": total_boards,
@@ -825,7 +831,7 @@ def main():
                         "assembly_cost_detail": asm_detail,
                         "assembly_cost_per_board": asm_pb,
                         "assembly_residual_per_board": asm_residual,
-                        "landed_per_board": landed_pb,
+                        "sale_per_board": sale_pb,
                         "cogs_per_board": cogs_pb,
                         "line_items": [
                             {
@@ -860,7 +866,7 @@ def main():
                     "standard_only": [l.lcsc for l in asm_meta["standard_only"]],
                     "import_duty_rate": import_duty_rate,
                     "sales_tax_rate": sales_tax_rate,
-                    "landed_rate": landed_rate,
+                    "sale_rate": sale_rate,
                     "cogs_rate": cogs_rate,
                     "sales_tax_rate": sales_tax_rate,
                     "preferred_ship": data.get("shipping", {}).get(
