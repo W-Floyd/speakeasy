@@ -11,7 +11,6 @@ import (
 type variant struct {
 	Proto      string
 	TwoChannel bool
-	MDNS       bool
 	BT         bool
 	IPv6       bool
 	WiFi       string // "wstock" | "w9" | "wr" | "w9r" (default, no suffix)
@@ -36,9 +35,6 @@ func (v variant) deviceName() string {
 	if v.TwoChannel {
 		name += "-2ch"
 	}
-	if v.MDNS {
-		name += "-mdns"
-	}
 	if v.BT {
 		name += "-bt"
 	}
@@ -61,9 +57,6 @@ func (v variant) friendlyName() string {
 	}
 	if v.TwoChannel {
 		parts = append(parts, "2ch")
-	}
-	if v.MDNS {
-		parts = append(parts, "mDNS")
 	}
 	if v.BT {
 		parts = append(parts, "Bluetooth")
@@ -120,12 +113,6 @@ func generate(v variant) string {
 	fmt.Fprintf(&sb, "  name: %s\n", v.deviceName())
 	fmt.Fprintf(&sb, "  friendly_name: %s\n", v.friendlyName())
 
-	if v.Proto == "snapcast" && !v.MDNS {
-		sb.WriteString("\n  # Snapcast server address and port\n")
-		sb.WriteString("  snapcast_server_ip: \"192.168.1.1\"\n")
-		sb.WriteString("  snapcast_server_port: \"1704\"\n")
-	}
-
 	sb.WriteString("\npackages:\n")
 	for _, pkg := range v.packages() {
 		fmt.Fprintf(&sb, "  - !include %s\n", pkg)
@@ -142,7 +129,7 @@ func generate(v variant) string {
 	sb.WriteString("  name: ${name}\n")
 	sb.WriteString("  friendly_name: ${friendly_name}\n")
 
-	if v.Proto == "snapcast" && v.MDNS {
+	if v.Proto == "snapcast" {
 		sb.WriteString("\nmedia_player:\n")
 		sb.WriteString("  - id: !extend snapclient_media_player\n")
 		sb.WriteString("    hostname: !remove\n")
@@ -164,20 +151,14 @@ func allVariants() []variant {
 					if twoChannel {
 						continue
 					}
-					for _, mdns := range []bool{false, true} {
-						if proto == "sendspin" && !mdns {
-							continue
-						}
-						for _, ipv6 := range []bool{false, true} {
-							variants = append(variants, variant{
-								Proto:      proto,
-								TwoChannel: twoChannel,
-								MDNS:       mdns,
-								BT:         bt,
-								IPv6:       ipv6,
-								WiFi:       wifi,
-							})
-						}
+					for _, ipv6 := range []bool{false, true} {
+						variants = append(variants, variant{
+							Proto:      proto,
+							TwoChannel: twoChannel,
+							BT:         bt,
+							IPv6:       ipv6,
+							WiFi:       wifi,
+						})
 					}
 				}
 			}

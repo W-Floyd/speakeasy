@@ -39,7 +39,7 @@
 
   <div class="question" id="q-proto">
     <div class="question-label">Protocol</div>
-    <p class="question-desc">The audio streaming protocol. Sendspin integrates natively with Music Assistant for synchronized multi-room audio. Snapcast is a generic audio client that can be driven by Music Assistant or any Snapcast-compatible source.</p>
+    <p class="question-desc">The audio streaming protocol. Sendspin integrates natively with Music Assistant for synchronized multi-room audio. Snapcast (ESPHome) wraps CarlosDerSeher/snapclient with Home Assistant integration. Snapcast (standalone) runs CarlosDerSeher/snapclient bare on ESP-IDF with no ESPHome or HA integration.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="proto" id="proto-ss" value="ss" checked>
@@ -47,22 +47,11 @@
       </div>
       <div class="option">
         <input type="radio" name="proto" id="proto-sc" value="sc">
-        <label for="proto-sc">Snapcast<small>Snapcast server</small></label>
-      </div>
-    </div>
-  </div>
-
-  <div class="question" id="q-server">
-    <div class="question-label">Snapcast Server</div>
-    <p class="question-desc">How the device locates the Snapcast server. Static IP requires the server address to be set in the config file before flashing. mDNS discovers it automatically on the local network.</p>
-    <div class="options">
-      <div class="option">
-        <input type="radio" name="server" id="server-static" value="static" checked>
-        <label for="server-static">Static IP<small>address in config</small></label>
+        <label for="proto-sc">Snapcast<small>ESPHome + HA</small></label>
       </div>
       <div class="option">
-        <input type="radio" name="server" id="server-mdns" value="mdns">
-        <label for="server-mdns">mDNS<small>auto-discovery</small></label>
+        <input type="radio" name="proto" id="proto-snapclient" value="snapclient">
+        <label for="proto-snapclient">Snapcast (standalone)<small>bare ESP-IDF</small></label>
       </div>
     </div>
   </div>
@@ -155,10 +144,13 @@
     const unavailableMsg = document.getElementById('unavailable-msg');
 
     function manifestFrom(s) {
-      const mdns = s.proto === 'ss' || s.server === 'mdns';
+      if (s.proto === 'snapclient') {
+        let name = 'snapclient-mdns';
+        if (s.wifi === 'w9') name += '-w9';
+        return name + '/manifest.json';
+      }
       let name = 'speakeasy-' + s.proto;
       if (s.twoch === 'on') name += '-2ch';
-      if (mdns) name += '-mdns';
       if (s.bt === 'on') name += '-bt';
       if (s.ipv6 === 'on') name += '-6';
       if (s.wifi !== 'wstock') name += '-' + s.wifi;
@@ -167,18 +159,17 @@
 
     function readSelections() {
       const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
-      return { proto: get('proto'), server: get('server'), bt: get('bt'),
-               ipv6: get('ipv6'), wifi: get('wifi'), twoch: get('twoch') };
+      return { proto: get('proto'), bt: get('bt'), ipv6: get('ipv6'), wifi: get('wifi'), twoch: get('twoch') };
     }
 
-    // questions in evaluation order; server is handled specially (only for snapcast)
+    // onlyFor values can be a string (single match) or array (any match).
+    const esphome = ['ss', 'sc'];
     const QUESTIONS = [
-      { name: 'proto',   el: 'q-proto',  opts: ['ss', 'sc'] },
-      { name: 'server',  el: 'q-server', opts: ['static', 'mdns'], onlyFor: { proto: 'sc' } },
-      { name: 'bt',      el: 'q-nobt',   opts: ['off', 'on'] },
-      { name: 'ipv6',  el: 'q-ipv6', opts: ['off', 'on'] },
-      { name: 'wifi',    el: 'q-wifi',   opts: ['wstock', 'w9', 'wr', 'w9r'] },
-      { name: 'twoch',   el: 'q-twoch',  opts: ['off', 'on'] },
+      { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
+      { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],            onlyFor: { proto: esphome } },
+      { name: 'ipv6',   el: 'q-ipv6',   opts: ['off', 'on'],            onlyFor: { proto: esphome } },
+      { name: 'wifi',   el: 'q-wifi',   opts: ['wstock', 'w9', 'wr', 'w9r'] },
+      { name: 'twoch',  el: 'q-twoch',  opts: ['off', 'on'],            onlyFor: { proto: esphome } },
     ];
 
     function update() {
@@ -188,7 +179,10 @@
         const el = document.getElementById(q.el);
 
         // fade questions that don't apply to the current selection
-        const inapplicable = !!(q.onlyFor && sel[Object.keys(q.onlyFor)[0]] !== Object.values(q.onlyFor)[0]);
+        const inapplicable = !!(q.onlyFor && (() => {
+          const [key, val] = Object.entries(q.onlyFor)[0];
+          return Array.isArray(val) ? !val.includes(sel[key]) : sel[key] !== val;
+        })());
         el.classList.toggle('inapplicable', inapplicable);
         if (inapplicable) continue;
 
@@ -221,16 +215,20 @@
     // firmware, causing the viability check to hide all options incorrectly.
     function seedFromAvailable() {
       if (!available.size) return;
-      const stem = [...available][0].replace('speakeasy-', '').replace('/manifest.json', '');
-      const parts = stem.split('-');
-      let i = 0;
-      const s = { proto: null, server: 'static', bt: 'off', ipv6: 'off', wifi: 'wstock', twoch: 'off' };
-      s.proto = parts[i++];
-      if (parts[i] === '2ch') { s.twoch = 'on'; i++; }
-      if (parts[i] === 'mdns') { s.server = 'mdns'; i++; }
-      if (parts[i] === 'bt')   { s.bt = 'on'; i++; }
-      if (parts[i] === '6')    { s.ipv6 = 'on'; i++; }
-      if (i < parts.length)    { s.wifi = parts[i]; }
+      const first = [...available][0].replace('/manifest.json', '');
+      const s = { proto: null, bt: 'off', ipv6: 'off', wifi: 'wstock', twoch: 'off' };
+      if (first.startsWith('snapclient-')) {
+        s.proto = 'snapclient';
+        if (first.endsWith('-w9')) s.wifi = 'w9';
+      } else {
+        const parts = first.replace('speakeasy-', '').split('-');
+        let i = 0;
+        s.proto = parts[i++];
+        if (parts[i] === '2ch') { s.twoch = 'on'; i++; }
+        if (parts[i] === 'bt')  { s.bt = 'on'; i++; }
+        if (parts[i] === '6')   { s.ipv6 = 'on'; i++; }
+        if (i < parts.length)   { s.wifi = parts[i]; }
+      }
       for (const [name, value] of Object.entries(s)) {
         const r = document.querySelector(`input[name="${name}"][value="${value}"]`);
         if (r) r.checked = true;

@@ -1,4 +1,10 @@
 # Variants to build in CI (GitHub Actions)
 ci:
-  - ss-mdns-6
-  - sc-mdns-6
+  - ss-6
+  - sc-6
+
+# Snapclient (CarlosDerSeher) standalone ESP-IDF builds
+# Requires: git submodule add https://github.com/CarlosDerSeher/snapclient snapclient
+snapclient-ci:
+  - mdns
+  - mdns-w9

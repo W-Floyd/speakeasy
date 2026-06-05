@@ -1,7 +1,7 @@
-## Speakeasy Sendspin mDNS Bluetooth WiFi 9dBm Ramp - Edit the settings below.
+## Speakeasy Sendspin Bluetooth WiFi 9dBm Ramp - Edit the settings below.
 substitutions:
-  name: ss-mdns-bt-w9r
-  friendly_name: Speakeasy Sendspin mDNS Bluetooth WiFi 9dBm Ramp
+  name: ss-bt-w9r
+  friendly_name: Speakeasy Sendspin Bluetooth WiFi 9dBm Ramp
 
 packages:
   - !include common/base.yaml
@@ -10,7 +10,7 @@ packages:
   - !include common/wifi-9ramp.yaml
 
 dashboard_import:
-  package_import_url: github://W-Floyd/speakeasy/speakeasy-ss-mdns-bt-w9r.yaml@main
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-ss-bt-w9r.yaml@main
   import_full_config: false
 
 esp32:

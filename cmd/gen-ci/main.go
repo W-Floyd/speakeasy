@@ -58,13 +58,60 @@ jobs:
       - name: Upload firmware
         uses: actions/upload-artifact@v4
         with:
-          name: firmware-${{ matrix.yaml-file }}
+          name: esphome-${{ matrix.yaml-file }}
           path: output/
           retention-days: 90
 
+[[if .SnapclientCI]]
+  build-snapclient:
+    runs-on: ubuntu-latest
+    container:
+      image: espressif/idf:v5.5.1
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+[[- range .SnapclientCI]]
+          - [[.]]
+[[- end]]
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Build ${{ matrix.variant }}
+        shell: bash
+        run: |
+          source /opt/esp/idf/export.sh
+          cd snapclient
+          idf.py \
+            -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${{ matrix.variant }}" \
+            -B "build-${{ matrix.variant }}" \
+            build
+          idf.py -B "build-${{ matrix.variant }}" merge-bin
+
+      - name: Stage firmware
+        run: |
+          variant="${{ matrix.variant }}"
+          out="output/snapclient-${variant}"
+          mkdir -p "${out}"
+          cp "snapclient/build-${variant}/merged-binary.bin" "${out}/merged.bin"
+          label="${variant//-/ }"
+          printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
+            "${label}" > "${out}/manifest.json"
+
+      - name: Upload firmware
+        uses: actions/upload-artifact@v4
+        with:
+          name: snapclient-${{ matrix.variant }}
+          path: output/
+          retention-days: 90
+
+[[end]]
   deploy:
     if: github.ref == 'refs/heads/main'
-    needs: build
+    needs: [build, build-snapclient]
     runs-on: ubuntu-latest
     permissions:
       pages: write
@@ -80,7 +127,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: public/
-          pattern: firmware-*
+          pattern: '{esphome-*,snapclient-*}'
           merge-multiple: true
 
       - name: Generate flash page
@@ -96,7 +143,8 @@ jobs:
 `
 
 type config struct {
-	CI []string
+	CI           []string
+	SnapclientCI []string
 }
 
 func loadConfig(path string) (config, error) {
@@ -121,12 +169,15 @@ func loadConfig(path string) (config, error) {
 			if section == "ci" {
 				cfg.CI = append(cfg.CI, item)
 			}
+			if section == "snapclient-ci" {
+				cfg.SnapclientCI = append(cfg.SnapclientCI, item)
+			}
 		}
 	}
 	return cfg, nil
 }
 
-func generateDockerfile(variants []string) string {
+func generateDockerfile(variants []string, snapclientVariants []string) string {
 	var sb strings.Builder
 
 	sb.WriteString("# syntax=docker/dockerfile:1\n")
@@ -168,7 +219,7 @@ COPY speakeasy-*.yaml ./
 	for _, yaml := range variants {
 		stem := strings.TrimSuffix(yaml, ".yaml")
 		short := strings.TrimPrefix(stem, "speakeasy-")
-		stage := "firmware-" + short
+		stage := "esphome-" + short
 
 		fmt.Fprintf(&sb, "# ── %s\n", stem)
 		fmt.Fprintf(&sb, "FROM %s AS %s\n", prevStage, stage)
@@ -183,11 +234,42 @@ COPY speakeasy-*.yaml ./
 		fmt.Fprintf(&sb, "    rm -rf \"${build_dir}\"\n\n")
 	}
 
-	// All firmware outputs have accumulated into the final stage.
-	lastStage := "firmware-" + strings.TrimPrefix(strings.TrimSuffix(variants[len(variants)-1], ".yaml"), "speakeasy-")
+	// All ESPHome firmware outputs have accumulated into the final stage.
+	lastESPHomeStage := "esphome-" + strings.TrimPrefix(strings.TrimSuffix(variants[len(variants)-1], ".yaml"), "speakeasy-")
+
+	if len(snapclientVariants) > 0 {
+		sb.WriteString("# ── Snapclient base ──────────────────────────────────────────────────────────\n")
+		sb.WriteString("FROM espressif/idf:v5.5.1 AS snapclient-base\n\n")
+		sb.WriteString("SHELL [\"/bin/bash\", \"-c\"]\n")
+		sb.WriteString("WORKDIR /snapclient\n")
+		sb.WriteString("COPY snapclient/ .\n")
+		sb.WriteString("COPY snapclient-kconfig/ /snapclient-kconfig/\n\n")
+
+		for _, variant := range snapclientVariants {
+			stage := "snapclient-" + variant
+			fmt.Fprintf(&sb, "# ── %s\n", stage)
+			fmt.Fprintf(&sb, "FROM snapclient-base AS %s\n", stage)
+			label := strings.ReplaceAll(variant, "-", " ")
+			fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/root/.ccache,id=snapclient-ccache-%s \\\n", variant)
+			fmt.Fprintf(&sb, "    source /opt/esp/idf/export.sh && \\\n")
+			fmt.Fprintf(&sb, "    idf.py \\\n")
+			fmt.Fprintf(&sb, "      -DSDKCONFIG_DEFAULTS=\"sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.%s\" \\\n", variant)
+			fmt.Fprintf(&sb, "      -B build-%s \\\n", variant)
+			fmt.Fprintf(&sb, "      build && \\\n")
+			fmt.Fprintf(&sb, "    idf.py -B build-%s merge-bin && \\\n", variant)
+			fmt.Fprintf(&sb, "    mkdir -p /output/snapclient-%s && \\\n", variant)
+			fmt.Fprintf(&sb, "    cp build-%s/merged-binary.bin /output/snapclient-%s/merged.bin && \\\n", variant, variant)
+			fmt.Fprintf(&sb, "    printf '{\"name\":\"Snapclient %s\",\"version\":\"1\",\"builds\":[{\"chipFamily\":\"ESP32-S3\",\"parts\":[{\"path\":\"merged.bin\",\"offset\":0}]}]}' \\\n", label)
+			fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json\n\n", variant)
+		}
+	}
+
 	sb.WriteString("# ── Collect ──────────────────────────────────────────────────────────────────\n")
 	sb.WriteString("FROM alpine AS collect\n")
-	fmt.Fprintf(&sb, "COPY --from=%s /output /output\n", lastStage)
+	fmt.Fprintf(&sb, "COPY --from=%s /output /output\n", lastESPHomeStage)
+	for _, variant := range snapclientVariants {
+		fmt.Fprintf(&sb, "COPY --from=snapclient-%s /output/snapclient-%s /output/snapclient-%s\n", variant, variant, variant)
+	}
 
 	sb.WriteString(`
 # ── Web page ──────────────────────────────────────────────────────────────────
@@ -250,7 +332,7 @@ func main() {
 		}
 	}
 
-	if err := os.WriteFile(*dockerFile, []byte(generateDockerfile(yamls)), 0644); err != nil {
+	if err := os.WriteFile(*dockerFile, []byte(generateDockerfile(yamls, cfg.SnapclientCI)), 0644); err != nil {
 		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", *dockerFile, err)
 		os.Exit(1)
 	}

@@ -24,79 +24,57 @@ type group struct {
 	Items []firmware
 }
 
-var groupOrder = []string{"Sendspin", "Snapcast"}
+var groupOrder = []string{"Sendspin", "Snapcast", "Snapcast (standalone)"}
 
 var known = buildKnown()
 
 func buildKnown() map[string]firmware {
 	type protoSpec struct {
-		id       string
-		label    string
-		desc     string
-		mdnsDesc string
+		id    string
+		label string
+		desc  string
 	}
 	protos := []protoSpec{
-		{
-			id:       "ss",
-			label:    "Sendspin",
-			mdnsDesc: "Music Assistant via Sendspin",
-		},
-		{
-			id:       "sc",
-			label:    "Snapcast",
-			desc:     "Snapcast client (server IP)",
-			mdnsDesc: "Snapcast client (mDNS discovery)",
-		},
+		{id: "ss", label: "Sendspin", desc: "Music Assistant via Sendspin"},
+		{id: "sc", label: "Snapcast", desc: "Snapcast client (mDNS discovery)"},
 	}
-	m := map[string]firmware{}
+	m := map[string]firmware{
+		"snapclient-mdns":    {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
+		"snapclient-mdns-w9": {Label: "mDNS WiFi 9dBm", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery, 9 dBm WiFi"},
+	}
 	for _, p := range protos {
 		for _, twoChannel := range []bool{false, true} {
-			for _, mdns := range []bool{false, true} {
-				if mdns && p.mdnsDesc == "" {
-					continue
-				}
-				if !mdns && p.desc == "" {
-					continue
-				}
-				for _, bt := range []bool{false, true} {
-					for _, ipv6 := range []bool{false, true} {
-						for _, wifi := range []string{"", "w9", "wr", "w9r"} {
-							key := "speakeasy-" + p.id
-							label := p.label
-							desc := p.desc
-							if mdns {
-								desc = p.mdnsDesc
-							}
-							if twoChannel {
-								key += "-2ch"
-								label += " 2ch"
-								desc = "Dual I2S output, " + desc
-							}
-							if mdns {
-								key += "-mdns"
-								label += " mDNS"
-							}
-							if bt {
-								key += "-bt"
-								label += " Bluetooth"
-							}
-							if ipv6 {
-								key += "-6"
-								label += " IPv6"
-							}
-							if wifi != "" {
-								key += "-" + wifi
-							}
-							switch wifi {
-							case "w9":
-								label += " WiFi 9dBm"
-							case "wr":
-								label += " WiFi Stock Ramp"
-							case "w9r":
-								label += " WiFi 9dBm Ramp"
-							}
-							m[key] = firmware{Label: label, Desc: desc}
+			for _, bt := range []bool{false, true} {
+				for _, ipv6 := range []bool{false, true} {
+					for _, wifi := range []string{"", "w9", "wr", "w9r"} {
+						key := "speakeasy-" + p.id
+						label := p.label
+						desc := p.desc
+						if twoChannel {
+							key += "-2ch"
+							label += " 2ch"
+							desc = "Dual I2S output, " + desc
 						}
+						if bt {
+							key += "-bt"
+							label += " Bluetooth"
+						}
+						if ipv6 {
+							key += "-6"
+							label += " IPv6"
+						}
+						if wifi != "" {
+							key += "-" + wifi
+						}
+						switch wifi {
+						case "w9":
+							label += " WiFi 9dBm"
+						case "wr":
+							label += " WiFi Stock Ramp"
+						case "w9r":
+							label += " WiFi 9dBm Ramp"
+						}
+						m[key] = firmware{Label: label, Desc: desc}
 					}
 				}
 			}
@@ -106,6 +84,9 @@ func buildKnown() map[string]firmware {
 }
 
 func groupOf(dir string) string {
+	if strings.HasPrefix(dir, "snapclient-") {
+		return "Snapcast (standalone)"
+	}
 	if strings.HasPrefix(dir, "speakeasy-sc") {
 		return "Snapcast"
 	}
@@ -113,7 +94,7 @@ func groupOf(dir string) string {
 }
 
 func derive(dir string) firmware {
-	name := strings.TrimPrefix(dir, "speakeasy-")
+	name := strings.TrimPrefix(strings.TrimPrefix(dir, "speakeasy-"), "snapclient-")
 	parts := strings.Split(name, "-")
 	for i, p := range parts {
 		switch p {
@@ -121,8 +102,6 @@ func derive(dir string) firmware {
 			parts[i] = "Sendspin"
 		case "sc":
 			parts[i] = "Snapcast"
-		case "mdns":
-			parts[i] = "mDNS"
 		case "bt":
 			parts[i] = "BT"
 		case "6":

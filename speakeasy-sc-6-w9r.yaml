@@ -3,10 +3,6 @@ substitutions:
   name: sc-6-w9r
   friendly_name: Speakeasy Snapcast IPv6 WiFi 9dBm Ramp
 
-  # Snapcast server address and port
-  snapcast_server_ip: "192.168.1.1"
-  snapcast_server_port: "1704"
-
 packages:
   - !include common/base.yaml
   - !include common/snapcast-audio.yaml
@@ -23,3 +19,8 @@ esp32:
 esphome:
   name: ${name}
   friendly_name: ${friendly_name}
+
+media_player:
+  - id: !extend snapclient_media_player
+    hostname: !remove
+    port: !remove

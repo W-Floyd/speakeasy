@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
 go run ./cmd/gen-configs
+go run ./cmd/gen-snapclient
 go run ./cmd/gen-ci
-git add speakeasy-*.yaml .github/workflows/build.yaml Dockerfile
+git add speakeasy-*.yaml .github/workflows/build.yaml Dockerfile snapclient-kconfig/
