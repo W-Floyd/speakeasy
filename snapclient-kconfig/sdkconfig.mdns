@@ -22,6 +22,8 @@ CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 # WiFi IRAM opts are counterproductive on ESP32-S3 (WiFi code is mapped to IRAM by default).
 CONFIG_ESP_WIFI_IRAM_OPT=n
 CONFIG_ESP_WIFI_RX_IRAM_OPT=n
+# WiFi provisioning via Improv serial — configure credentials at https://web.esphome.io/
+CONFIG_ENABLE_WIFI_PROVISIONING=y
 
 # Discovery: mDNS — server located automatically on the local network
 CONFIG_SNAPSERVER_USE_MDNS=y
