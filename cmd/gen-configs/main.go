@@ -12,7 +12,6 @@ type variant struct {
 	Proto      string
 	TwoChannel bool
 	BT         bool
-	IPv6       bool
 	WiFi       string // "wstock" | "w9" | "wr" | "w9r" (default, no suffix)
 }
 
@@ -38,9 +37,7 @@ func (v variant) deviceName() string {
 	if v.BT {
 		name += "-bt"
 	}
-	if v.IPv6 {
-		name += "-6"
-	}
+
 	if v.WiFi != "wstock" {
 		name += "-" + v.WiFi
 	}
@@ -61,9 +58,7 @@ func (v variant) friendlyName() string {
 	if v.BT {
 		parts = append(parts, "Bluetooth")
 	}
-	if v.IPv6 {
-		parts = append(parts, "IPv6")
-	}
+
 	switch v.WiFi {
 	// wstock is the default, no label addition
 	case "w9":
@@ -90,9 +85,7 @@ func (v variant) packages() []string {
 	if v.TwoChannel {
 		pkgs = append(pkgs, "common/second-speaker.yaml")
 	}
-	if v.IPv6 {
-		pkgs = append(pkgs, "common/ipv6.yaml")
-	}
+
 	switch v.WiFi {
 	case "w9":
 		pkgs = append(pkgs, "common/wifi-9.yaml")
@@ -151,15 +144,12 @@ func allVariants() []variant {
 					if twoChannel {
 						continue
 					}
-					for _, ipv6 := range []bool{false, true} {
 						variants = append(variants, variant{
-							Proto:      proto,
-							TwoChannel: twoChannel,
-							BT:         bt,
-							IPv6:       ipv6,
-							WiFi:       wifi,
-						})
-					}
+						Proto:      proto,
+						TwoChannel: twoChannel,
+						BT:         bt,
+						WiFi:       wifi,
+					})
 				}
 			}
 		}

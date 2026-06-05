@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         yaml-file:
-          - speakeasy-ss-6.yaml
-          - speakeasy-sc-6.yaml
+          - speakeasy-ss.yaml
+          - speakeasy-sc.yaml
 
     steps:
       - uses: actions/checkout@v4

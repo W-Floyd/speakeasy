@@ -87,21 +87,6 @@
     </div>
   </div>
 
-  <div class="question" id="q-ipv6">
-    <div class="question-label">IPv6</div>
-    <p class="question-desc">Enable if your network uses IPv6 addressing or your Home Assistant instance is IPv6-only. Has no effect on IPv4-only networks.</p>
-    <div class="options">
-      <div class="option">
-        <input type="radio" name="ipv6" id="ipv6-off" value="off" checked>
-        <label for="ipv6-off">Disabled<small>IPv4 only</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="ipv6" id="ipv6-on" value="on">
-        <label for="ipv6-on">Enabled<small>dual-stack</small></label>
-      </div>
-    </div>
-  </div>
-
   <div class="question" id="q-wifi">
     <div class="question-label">WiFi TX Power</div>
     <p class="question-desc">The compact PCB antenna can self-interfere at high TX power, causing Sendspin timing failures. 9 dBm is a safe fixed limit. Ramp variants expose a Home Assistant control and automatically step power up when WiFi drops.</p>
@@ -168,14 +153,13 @@
       let name = 'speakeasy-' + s.proto;
       if (s.twoch === 'on') name += '-2ch';
       if (s.bt === 'on') name += '-bt';
-      if (s.ipv6 === 'on') name += '-6';
       if (s.wifi !== 'wstock') name += '-' + s.wifi;
       return name + '/manifest.json';
     }
 
     function readSelections() {
       const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
-      return { proto: get('proto'), bt: get('bt'), ipv6: get('ipv6'), wifi: get('wifi'), twoch: get('twoch') };
+      return { proto: get('proto'), bt: get('bt'), wifi: get('wifi'), twoch: get('twoch') };
     }
 
     // onlyFor values can be a string (single match) or array (any match).
@@ -183,7 +167,6 @@
     const QUESTIONS = [
       { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
       { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],            onlyFor: { proto: esphome } },
-      { name: 'ipv6',   el: 'q-ipv6',   opts: ['off', 'on'],            onlyFor: { proto: esphome } },
       { name: 'wifi',   el: 'q-wifi',   opts: ['wstock', 'w9', 'wr', 'w9r'] },
       { name: 'twoch',  el: 'q-twoch',  opts: ['off', 'on'],            onlyFor: { proto: esphome } },
     ];
@@ -232,7 +215,7 @@
     function seedFromAvailable() {
       if (!available.size) return;
       const first = [...available][0].replace('/manifest.json', '');
-      const s = { proto: null, bt: 'off', ipv6: 'off', wifi: 'wstock', twoch: 'off' };
+      const s = { proto: null, bt: 'off', wifi: 'wstock', twoch: 'off' };
       if (first.startsWith('snapclient-')) {
         s.proto = 'snapclient';
         if (first.endsWith('-w9')) s.wifi = 'w9';
@@ -242,7 +225,6 @@
         s.proto = parts[i++];
         if (parts[i] === '2ch') { s.twoch = 'on'; i++; }
         if (parts[i] === 'bt')  { s.bt = 'on'; i++; }
-        if (parts[i] === '6')   { s.ipv6 = 'on'; i++; }
         if (i < parts.length)   { s.wifi = parts[i]; }
       }
       for (const [name, value] of Object.entries(s)) {

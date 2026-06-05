@@ -45,37 +45,31 @@ func buildKnown() map[string]firmware {
 	for _, p := range protos {
 		for _, twoChannel := range []bool{false, true} {
 			for _, bt := range []bool{false, true} {
-				for _, ipv6 := range []bool{false, true} {
-					for _, wifi := range []string{"", "w9", "wr", "w9r"} {
-						key := "speakeasy-" + p.id
-						label := p.label
-						desc := p.desc
-						if twoChannel {
-							key += "-2ch"
-							label += " 2ch"
-							desc = "Dual I2S output, " + desc
-						}
-						if bt {
-							key += "-bt"
-							label += " Bluetooth"
-						}
-						if ipv6 {
-							key += "-6"
-							label += " IPv6"
-						}
-						if wifi != "" {
-							key += "-" + wifi
-						}
-						switch wifi {
-						case "w9":
-							label += " WiFi 9dBm"
-						case "wr":
-							label += " WiFi Stock Ramp"
-						case "w9r":
-							label += " WiFi 9dBm Ramp"
-						}
-						m[key] = firmware{Label: label, Desc: desc}
+				for _, wifi := range []string{"", "w9", "wr", "w9r"} {
+					key := "speakeasy-" + p.id
+					label := p.label
+					desc := p.desc
+					if twoChannel {
+						key += "-2ch"
+						label += " 2ch"
+						desc = "Dual I2S output, " + desc
 					}
+					if bt {
+						key += "-bt"
+						label += " Bluetooth"
+					}
+					if wifi != "" {
+						key += "-" + wifi
+					}
+					switch wifi {
+					case "w9":
+						label += " WiFi 9dBm"
+					case "wr":
+						label += " WiFi Stock Ramp"
+					case "w9r":
+						label += " WiFi 9dBm Ramp"
+					}
+					m[key] = firmware{Label: label, Desc: desc}
 				}
 			}
 		}

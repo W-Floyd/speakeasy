@@ -52,7 +52,7 @@ wifi:
         ESP_LOGW("speakeasy", "IP: %s, RSSI: %d dBm", ip_buf, id(wifi_component).wifi_rssi());
 
 network:
-  enable_ipv6: false
+  enable_ipv6: true
   enable_high_performance: true
 
 psram:
