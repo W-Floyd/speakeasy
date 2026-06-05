@@ -78,7 +78,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          submodules: recursive
+          submodules: true
+
+      - name: Init snapclient submodules
+        run: git submodule update --init --recursive snapclient
 
       - name: Build ${{ matrix.variant }}
         shell: bash
