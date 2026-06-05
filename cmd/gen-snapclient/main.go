@@ -31,6 +31,8 @@ CONFIG_ESP_WIFI_IRAM_OPT=n
 CONFIG_ESP_WIFI_RX_IRAM_OPT=n
 # WiFi provisioning via Improv serial — configure credentials at https://web.esphome.io/
 CONFIG_ENABLE_WIFI_PROVISIONING=y
+# Light sleep gates USB clocks on ESP32-S3, breaking USB Serial JTAG used by Improv.
+CONFIG_PM_ENABLE=n
 `
 
 type discovery struct {
