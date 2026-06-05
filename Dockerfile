@@ -212,8 +212,7 @@ COPY snapclient-kconfig/ /snapclient-kconfig/
 
 # ── snapclient-mdns
 FROM snapclient-base AS snapclient-mdns
-RUN --mount=type=cache,target=/root/.ccache,id=snapclient-ccache-mdns \
-    source /opt/esp/idf/export.sh && \
+RUN source /opt/esp/idf/export.sh && \
     idf.py \
       -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.mdns" \
       -B build-mdns \
@@ -226,8 +225,7 @@ RUN --mount=type=cache,target=/root/.ccache,id=snapclient-ccache-mdns \
 
 # ── snapclient-mdns-w9
 FROM snapclient-base AS snapclient-mdns-w9
-RUN --mount=type=cache,target=/root/.ccache,id=snapclient-ccache-mdns-w9 \
-    source /opt/esp/idf/export.sh && \
+RUN source /opt/esp/idf/export.sh && \
     idf.py \
       -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.mdns-w9" \
       -B build-mdns-w9 \
