@@ -35,7 +35,7 @@
 </head>
 <body>
   <h1>Speakeasy</h1>
-  <p class="subtitle">ESP32-S3 multi-room audio firmware. Plug in via USB and flash below. Requires Chrome or Edge.</p>
+  <p class="subtitle">ESP32-S3 multi-room audio firmware. Plug in via USB and flash below. Requires Chrome or Edge, or Firefox with the <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">WebSerial extension</a>.</p>
 
   <div class="question" id="q-proto">
     <div class="question-label">Protocol</div>
@@ -138,7 +138,7 @@
   <div class="flash-area">
     <esp-web-install-button id="install-btn" manifest="">
       <button slot="activate">Flash</button>
-      <span slot="unsupported">Use Chrome or Edge</span>
+      <span slot="unsupported">Use Chrome, Edge, or <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">Firefox + WebSerial</a></span>
       <span slot="not-allowed">Requires HTTPS</span>
     </esp-web-install-button>
     <span id="variant-name"></span>
