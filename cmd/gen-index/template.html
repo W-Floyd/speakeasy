@@ -89,7 +89,7 @@
 
   <div class="question" id="q-wifi">
     <div class="question-label">WiFi TX Power</div>
-    <p class="question-desc">The compact PCB antenna can self-interfere at high TX power, causing Sendspin timing failures. 9 dBm is a safe fixed limit. Ramp variants expose a Home Assistant control and automatically step power up when WiFi drops.</p>
+    <p class="question-desc">The compact PCB antenna can self-interfere at high TX power, causing audio sync failures. 9 dBm is a safe fixed limit. Ramp variants (ESPHome only) expose a Home Assistant control and automatically step power up when WiFi drops.</p>
     <div class="options">
       <div class="option">
         <input type="radio" name="wifi" id="wifi-wstock" value="wstock" checked>
@@ -97,7 +97,7 @@
       </div>
       <div class="option">
         <input type="radio" name="wifi" id="wifi-w9" value="w9">
-        <label for="wifi-w9">9 dBm<small>fixed limit, no HA control</small></label>
+        <label for="wifi-w9">9 dBm<small>fixed limit</small></label>
       </div>
       <div class="option">
         <input type="radio" name="wifi" id="wifi-wr" value="wr">
@@ -190,8 +190,11 @@
         for (const opt of q.opts) {
           const radio = document.querySelector(`input[name="${q.name}"][value="${opt}"]`);
           const isViable = viable.includes(opt);
+          const isRamp = q.name === 'wifi' && (opt === 'wr' || opt === 'w9r');
+          const hide = isRamp && sel.proto === 'snapclient';
           radio.disabled = !isViable;
           radio.closest('.option').classList.toggle('unavailable', !isViable);
+          radio.closest('.option').style.display = hide ? 'none' : '';
         }
 
         if (viable.length === 1 && sel[q.name] !== viable[0]) {
