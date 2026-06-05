@@ -37,6 +37,22 @@
   <h1>Speakeasy</h1>
   <p class="subtitle">ESP32-S3 multi-room audio firmware. Plug in via USB and flash below. Requires Chrome or Edge, or Firefox with the <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">WebSerial extension</a>.</p>
 
+  <details style="margin-bottom:1.5rem;font-size:0.85rem;color:#555;">
+    <summary style="cursor:pointer;font-weight:600;color:#444;">Hardware pin mappings</summary>
+    <table style="margin-top:0.6rem;border-collapse:collapse;width:100%;">
+      <thead><tr style="text-align:left;font-size:0.78rem;color:#999;text-transform:uppercase;letter-spacing:0.05em;">
+        <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">Signal</th>
+        <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">GPIO</th>
+        <th style="padding:0.2rem 0;font-weight:600;">Component</th>
+      </tr></thead>
+      <tbody style="font-family:monospace;">
+        <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">LRCLK</td><td style="padding:0.15rem 0.75rem 0.15rem 0;">10</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+        <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">BCLK</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">11</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+        <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">DOUT</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">12</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+      </tbody>
+    </table>
+  </details>
+
   <div class="question" id="q-proto">
     <div class="question-label">Protocol</div>
     <p class="question-desc">The audio streaming protocol. Sendspin integrates natively with Music Assistant for synchronized multi-room audio. Snapcast (ESPHome) wraps CarlosDerSeher/snapclient with Home Assistant integration. Snapcast (standalone) runs CarlosDerSeher/snapclient bare on ESP-IDF with no ESPHome or HA integration.</p>
