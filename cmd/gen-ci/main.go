@@ -79,7 +79,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Init snapclient submodules
-        run: git submodule update --init --recursive snapclient
+        run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
+          git submodule update --init --recursive snapclient
 
       - name: Build ${{ matrix.variant }}
         shell: bash
