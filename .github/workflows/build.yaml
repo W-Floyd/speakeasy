@@ -81,6 +81,7 @@ jobs:
           idf.py -B "build-${{ matrix.variant }}" merge-bin
 
       - name: Stage firmware
+        shell: bash
         run: |
           variant="${{ matrix.variant }}"
           out="output/snapclient-${variant}"

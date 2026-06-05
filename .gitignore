@@ -12,7 +12,7 @@ pcb/speakeasy/speakeasy/jlcpcb/project.db
 **/__pycache__/
 *.DS_Store
 **/.history
-gen-ci
-gen-snapclient
-gen-index
-gen-configs
+/gen-ci
+/gen-snapclient
+/gen-index
+/gen-configs
