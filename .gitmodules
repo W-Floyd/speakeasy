@@ -4,3 +4,4 @@
 [submodule "pcb/circuit-synth-local"]
 	path = pcb/circuit-synth-local
 	url = ssh://git@github.com/W-Floyd/circuit-synth.git
+	branch = dev
