@@ -77,8 +77,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true
 
       - name: Init snapclient submodules
         run: git submodule update --init --recursive snapclient
