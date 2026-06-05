@@ -140,8 +140,7 @@
     <summary style="cursor:pointer;font-weight:600;color:#444;">Changes vs upstream snapclient</summary>
     <p style="margin:0.6rem 0 0.3rem;font-size:0.82rem;color:#666;">Based on <a href="https://github.com/CarlosDerSeher/snapclient">CarlosDerSeher/snapclient</a> with the following additions:</p>
     <ul style="margin:0.4rem 0 0;padding-left:1.25rem;line-height:1.7;font-size:0.82rem;">
-      <li><strong>Exponential volume curve</strong> — maps the volume slider to perceived loudness using a dB-range exponential curve (default 60 dB) with NVS persistence.</li>
-      <li><strong>Improv WiFi scan fix</strong> — fixed <code>isConnected()</code> always returning false, and a scan race where the WiFi event handler re-triggered <code>esp_wifi_connect()</code> before the scan could run, producing 0 results.</li>
+      <li><strong>Exponential volume curve</strong> — maps the volume slider to perceived loudness using a dB-range exponential curve; range (0–90 dB, default 60 dB) is adjustable in the DSP settings page and persisted to NVS.</li>
     </ul>
   </details>
 
