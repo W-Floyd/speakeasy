@@ -223,24 +223,10 @@ RUN source /opt/esp/idf/export.sh && \
     printf '{"name":"Snapclient mdns","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
       > /output/snapclient-mdns/manifest.json
 
-# ── snapclient-mdns-w9
-FROM snapclient-base AS snapclient-mdns-w9
-RUN source /opt/esp/idf/export.sh && \
-    idf.py \
-      -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.mdns-w9" \
-      -B build-mdns-w9 \
-      build && \
-    idf.py -B build-mdns-w9 merge-bin && \
-    mkdir -p /output/snapclient-mdns-w9 && \
-    cp build-mdns-w9/merged-binary.bin /output/snapclient-mdns-w9/merged.bin && \
-    printf '{"name":"Snapclient mdns w9","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
-      > /output/snapclient-mdns-w9/manifest.json
-
 # ── Collect ──────────────────────────────────────────────────────────────────
 FROM alpine AS collect
 COPY --from=esphome-sc-bt-w9r /output /output
 COPY --from=snapclient-mdns /output/snapclient-mdns /output/snapclient-mdns
-COPY --from=snapclient-mdns-w9 /output/snapclient-mdns-w9 /output/snapclient-mdns-w9
 
 # ── Web page ──────────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS web

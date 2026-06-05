@@ -7,4 +7,3 @@ ci:
 # Requires: git submodule add https://github.com/CarlosDerSeher/snapclient snapclient
 snapclient-ci:
   - mdns
-  - mdns-w9

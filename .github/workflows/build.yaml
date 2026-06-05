@@ -59,7 +59,6 @@ jobs:
       matrix:
         variant:
           - mdns
-          - mdns-w9
 
     steps:
       - uses: actions/checkout@v4

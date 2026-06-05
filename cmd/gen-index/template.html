@@ -142,6 +142,7 @@
     <ul style="margin:0.4rem 0 0;padding-left:1.25rem;line-height:1.7;font-size:0.82rem;">
       <li><strong>Exponential volume curve</strong> — maps the volume slider to perceived loudness using a dB-range exponential curve; range (0–90 dB, default 60 dB) is adjustable in the DSP settings page and persisted to NVS.</li>
       <li><strong>Channel routing</strong> — runtime Stereo / Left Only / Right Only mode in DSP settings, persisted to NVS. Enables two speakers to act as a stereo pair.</li>
+      <li><strong>WiFi TX power</strong> — slider in the general settings page (8.5–20 dBm), applied at boot and live on change, persisted to NVS. Useful for compact PCB antennas that self-interfere at high power.</li>
     </ul>
   </details>
 
@@ -156,9 +157,7 @@
 
     function manifestFrom(s) {
       if (s.proto === 'snapclient') {
-        let name = 'snapclient-mdns';
-        if (s.wifi === 'w9') name += '-w9';
-        return name + '/manifest.json';
+        return 'snapclient-mdns/manifest.json';
       }
       let name = 'speakeasy-' + s.proto;
       if (s.twoch === 'on') name += '-2ch';
@@ -177,7 +176,7 @@
     const QUESTIONS = [
       { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
       { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],            onlyFor: { proto: esphome } },
-      { name: 'wifi',   el: 'q-wifi',   opts: ['wstock', 'w9', 'wr', 'w9r'] },
+      { name: 'wifi',   el: 'q-wifi',   opts: ['wstock', 'w9', 'wr', 'w9r'], onlyFor: { proto: esphome } },
       { name: 'twoch',  el: 'q-twoch',  opts: ['off', 'on'],            onlyFor: { proto: esphome } },
     ];
 
@@ -231,7 +230,6 @@
       const s = { proto: null, bt: 'off', wifi: 'wstock', twoch: 'off' };
       if (first.startsWith('snapclient-')) {
         s.proto = 'snapclient';
-        if (first.endsWith('-w9')) s.wifi = 'w9';
       } else {
         const parts = first.replace('speakeasy-', '').split('-');
         let i = 0;
