@@ -33,6 +33,9 @@ CONFIG_ESP_WIFI_RX_IRAM_OPT=n
 CONFIG_ENABLE_WIFI_PROVISIONING=y
 # Light sleep gates USB clocks on ESP32-S3, breaking USB Serial JTAG used by Improv.
 CONFIG_PM_ENABLE=n
+# MAX98357A has no hardware volume control — use DSP-based software volume.
+CONFIG_USE_DSP_PROCESSOR=y
+CONFIG_SNAPCLIENT_USE_SOFT_VOL=y
 `
 
 type discovery struct {
