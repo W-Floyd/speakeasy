@@ -8,63 +8,84 @@ import (
 	"strings"
 )
 
-// base holds the hardware constants for this board. These never vary across builds.
-const base = `# Hardware: ESP32-S3 Supermini + MAX98357A
+// base is the overlay applied on top of sdkconfig.defaults + sdkconfig.defaults.esp32s3.
+// Only includes settings that differ from or extend those upstream defaults.
+// Non-essential tuning is commented out — enable incrementally to prove each change.
+const base = `# ── Essential: hardware identity ────────────────────────────────────────────
 # SD_MODE is tied to a L+R/2 voltage divider for hardware mono mix — no mute GPIO needed.
 CONFIG_AUDIO_BOARD_CUSTOM=y
 CONFIG_DAC_MAX98357=y
 CONFIG_MASTER_I2S_BCK_PIN=11
 CONFIG_MASTER_I2S_LRCK_PIN=10
 CONFIG_MASTER_I2S_DATAOUT_PIN=12
-CONFIG_SPIRAM=y
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
+
+# ── Essential: PSRAM ─────────────────────────────────────────────────────────
+# Override: upstream sdkconfig.defaults.esp32s3 sets OCT; this board has quad PSRAM only.
 CONFIG_SPIRAM_MODE_QUAD=y
 CONFIG_SPIRAM_BOOT_INIT=y
 CONFIG_SPIRAM_USE_MALLOC=y
 CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=16384
-CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240=y
-CONFIG_ESP32S3_DATA_CACHE_64KB=y
-CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
-CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
-CONFIG_SPIRAM_TRY_ALLOCATE_WIFI_LWIP=y
-CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM=16
-CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM=64
-CONFIG_ESP_WIFI_STATIC_TX_BUFFER_NUM=16
-CONFIG_ESP_WIFI_CACHE_TX_BUFFER_NUM=32
-CONFIG_ESP_WIFI_MGMT_SBUF_NUM=32
-CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
-CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
-# Compiler: optimize for performance (O2) over size.
-CONFIG_COMPILER_OPTIMIZATION_PERF=y
-# FreeRTOS: keep scheduler in IRAM for fast context switches; 1ms tick resolution.
-CONFIG_FREERTOS_PLACE_FUNCTIONS_INTO_FLASH=n
-CONFIG_FREERTOS_HZ=1000
-CONFIG_FREERTOS_IDLE_TASK_STACKSIZE=1536
-CONFIG_ESP_WIFI_IRAM_OPT=y
-CONFIG_ESP_WIFI_RX_IRAM_OPT=y
-# AMPDU block-acknowledgment windows for better WiFi streaming throughput.
-CONFIG_ESP_WIFI_TX_BA_WIN=8
-CONFIG_ESP_WIFI_RX_BA_WIN=16
+
+# ── Essential: audio function ────────────────────────────────────────────────
+# MAX98357A has no hardware volume control — use DSP-based software volume.
+CONFIG_USE_DSP_PROCESSOR=y
+CONFIG_SNAPCLIENT_USE_SOFT_VOL=y
+CONFIG_SNAPCLIENT_VOLUME_CURVE_DB_RANGE=40
+# Compact PCB antenna self-interferes at high TX power; expose slider in web UI.
+CONFIG_SNAPCLIENT_WIFI_TX_POWER_CONTROL=y
+
+# ── Essential: WiFi provisioning ─────────────────────────────────────────────
 # WiFi provisioning via Improv serial — configure credentials at https://web.esphome.io/
 CONFIG_ENABLE_WIFI_PROVISIONING=y
 # Light sleep gates USB clocks on ESP32-S3, breaking USB Serial JTAG used by Improv.
 CONFIG_PM_ENABLE=n
+
+# ── Tuning: CPU / cache ───────────────────────────────────────────────────────
+#CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240=y
+#CONFIG_ESP32S3_DATA_CACHE_64KB=y
+#CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+#CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+
+# ── Tuning: compiler ─────────────────────────────────────────────────────────
+#CONFIG_COMPILER_OPTIMIZATION_PERF=y
+
+# ── Tuning: FreeRTOS ─────────────────────────────────────────────────────────
+#CONFIG_FREERTOS_HZ=1000
+
+# ── Tuning: WiFi buffers ─────────────────────────────────────────────────────
+#CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM=16
+#CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM=64
+#CONFIG_ESP_WIFI_STATIC_TX_BUFFER_NUM=16
+#CONFIG_ESP_WIFI_CACHE_TX_BUFFER_NUM=32
+#CONFIG_ESP_WIFI_MGMT_SBUF_NUM=32
+
+# ── Tuning: WiFi IRAM / AMPDU ────────────────────────────────────────────────
+#CONFIG_ESP_WIFI_RX_IRAM_OPT=y
+#CONFIG_ESP_WIFI_TX_BA_WIN=8
+#CONFIG_ESP_WIFI_RX_BA_WIN=16
+
+# ── Tuning: WiFi power management ────────────────────────────────────────────
 # Prevent power save mode from activating on WiFi disconnect (avoids reconnect latency spike).
-CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE=n
+#CONFIG_ESP_WIFI_STA_DISCONNECTED_PM_ENABLE=n
+
+# ── Tuning: LwIP ─────────────────────────────────────────────────────────────
 # Pin LwIP/TCP to core 0 alongside WiFi, freeing core 1 for audio.
-CONFIG_LWIP_TCPIP_TASK_AFFINITY_CPU0=y
-# LWIP TCP — larger windows, selective ACK, and buffers improve streaming smoothness.
-CONFIG_LWIP_TCP_SND_BUF_DEFAULT=11520
-CONFIG_LWIP_TCP_WND_DEFAULT=11520
-CONFIG_LWIP_TCP_RECVMBOX_SIZE=16
-CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=64
-CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS=8
-CONFIG_LWIP_TCP_SACK_OUT=y
+#CONFIG_LWIP_TCPIP_TASK_AFFINITY_CPU0=y
+# Larger windows, selective ACK, and buffers improve streaming smoothness.
+#CONFIG_LWIP_TCP_SND_BUF_DEFAULT=11520
+#CONFIG_LWIP_TCP_WND_DEFAULT=11520
+#CONFIG_LWIP_TCP_RECVMBOX_SIZE=16
+#CONFIG_LWIP_TCPIP_RECVMBOX_SIZE=64
+# Override: upstream sets 4; raise to 8 for smoother streaming.
+#CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS=8
+#CONFIG_LWIP_TCP_SACK_OUT=y
+
+# ── Tuning: logging ───────────────────────────────────────────────────────────
 # Zero logging overhead at runtime; level can be raised at runtime for debugging.
-CONFIG_LOG_DEFAULT_LEVEL_NONE=y
-CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
-# MAX98357A has no hardware volume control — use DSP-based software volume.
-CONFIG_USE_DSP_PROCESSOR=y
-CONFIG_SNAPCLIENT_USE_SOFT_VOL=y
+#CONFIG_LOG_DEFAULT_LEVEL_NONE=y
+#CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
 `
 
 type discovery struct {

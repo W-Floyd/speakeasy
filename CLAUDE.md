@@ -53,7 +53,7 @@ Sendspin uses a time burst protocol (8 round-trip messages) to synchronize clock
 Known causes of time burst timeouts on this hardware:
 - WiFi power too high (fixed by `output_power: 8.5`)
 - WiFi power saving adding latency (fixed by `power_save_mode: none`)
-- The WiFi IRAM sdkconfig options (`CONFIG_ESP_WIFI_RX_IRAM_OPT` etc.) are **counterproductive on ESP32-S3** — the S3 maps WiFi code to IRAM by default
+- The WiFi IRAM sdkconfig options (`CONFIG_ESP_WIFI_RX_IRAM_OPT` etc.) are only redundant on S3 with **octal** PSRAM (WiFi code maps to IRAM by default there); with **quad** PSRAM they are still beneficial and should be enabled
 
 Sendspin component version in use: `sendspin-cpp v0.6.1`
 

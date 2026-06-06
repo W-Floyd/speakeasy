@@ -1,6 +1,7 @@
 [submodule "snapclient"]
 	path = snapclient
 	url = https://github.com/W-Floyd/snapclient.git
+	branch = develop
 [submodule "pcb/circuit-synth-local"]
 	path = pcb/circuit-synth-local
 	url = https://github.com/W-Floyd/circuit-synth.git
