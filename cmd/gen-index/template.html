@@ -88,21 +88,6 @@
     </div>
   </div>
 
-  <div class="question" id="q-twoch">
-    <div class="question-label">Output</div>
-    <p class="question-desc">Single drives one I2S DAC. Dual simultaneously outputs to two separate I2S DACs wired to different GPIO pins.</p>
-    <div class="options">
-      <div class="option">
-        <input type="radio" name="twoch" id="twoch-off" value="off" checked>
-        <label for="twoch-off">Single<small>one I2S DAC</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="twoch" id="twoch-on" value="on">
-        <label for="twoch-on">Dual (2ch)<small>two I2S DACs</small></label>
-      </div>
-    </div>
-  </div>
-
   <div class="flash-area">
     <esp-web-install-button id="install-btn" manifest="">
       <button slot="activate">Flash</button>
@@ -140,14 +125,13 @@
         return 'snapclient-mdns/manifest.json';
       }
       let name = 'speakeasy-' + s.proto;
-      if (s.twoch === 'on') name += '-2ch';
       if (s.bt === 'on') name += '-bt';
       return name + '/manifest.json';
     }
 
     function readSelections() {
       const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
-      return { proto: get('proto'), bt: get('bt'), twoch: get('twoch') };
+      return { proto: get('proto'), bt: get('bt') };
     }
 
     // onlyFor values can be a string (single match) or array (any match).
@@ -155,7 +139,6 @@
     const QUESTIONS = [
       { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
       { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],  onlyFor: { proto: esphome } },
-      { name: 'twoch',  el: 'q-twoch',  opts: ['off', 'on'],  onlyFor: { proto: esphome } },
     ];
 
     function update() {
@@ -210,15 +193,14 @@
     function seedFromAvailable() {
       if (!available.size) return;
       const first = [...available][0].replace('/manifest.json', '');
-      const s = { proto: null, bt: 'off', twoch: 'off' };
+      const s = { proto: null, bt: 'off' };
       if (first.startsWith('snapclient-')) {
         s.proto = 'snapclient';
       } else {
         const parts = first.replace('speakeasy-', '').split('-');
         let i = 0;
         s.proto = parts[i++];
-        if (parts[i] === '2ch') { s.twoch = 'on'; i++; }
-        if (parts[i] === 'bt')  { s.bt = 'on'; i++; }
+        if (parts[i] === 'bt') { s.bt = 'on'; i++; }
       }
       for (const [name, value] of Object.entries(s)) {
         const r = document.querySelector(`input[name="${name}"][value="${value}"]`);

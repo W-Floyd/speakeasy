@@ -43,22 +43,15 @@ func buildKnown() map[string]firmware {
 		"snapclient-mdns": {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
 	}
 	for _, p := range protos {
-		for _, twoChannel := range []bool{false, true} {
-			for _, bt := range []bool{false, true} {
-				key := "speakeasy-" + p.id
-				label := p.label
-				desc := p.desc
-				if twoChannel {
-					key += "-2ch"
-					label += " 2ch"
-					desc = "Dual I2S output, " + desc
-				}
-				if bt {
-					key += "-bt"
-					label += " Bluetooth"
-				}
-				m[key] = firmware{Label: label, Desc: desc}
+		for _, bt := range []bool{false, true} {
+			key := "speakeasy-" + p.id
+			label := p.label
+			desc := p.desc
+			if bt {
+				key += "-bt"
+				label += " Bluetooth"
 			}
+			m[key] = firmware{Label: label, Desc: desc}
 		}
 	}
 	return m
