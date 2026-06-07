@@ -70,138 +70,6 @@ RUN --mount=type=cache,target=/root/.ccache,id=ccache \
     cp -r "${build_dir}/." /output/speakeasy-sc-bt/ && \
     rm -rf "${build_dir}"
 
-# ── speakeasy-ss-w9
-FROM esphome-sc-bt AS esphome-ss-w9
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-ss-w9 \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ss-w9.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-ss-w9.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-ss-w9 && \
-    cp -r "${build_dir}/." /output/speakeasy-ss-w9/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-sc-w9
-FROM esphome-ss-w9 AS esphome-sc-w9
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-sc-w9 \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-sc-w9.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-sc-w9.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-sc-w9 && \
-    cp -r "${build_dir}/." /output/speakeasy-sc-w9/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-ss-bt-w9
-FROM esphome-sc-w9 AS esphome-ss-bt-w9
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-ss-bt-w9 \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ss-bt-w9.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-ss-bt-w9.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-ss-bt-w9 && \
-    cp -r "${build_dir}/." /output/speakeasy-ss-bt-w9/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-sc-bt-w9
-FROM esphome-ss-bt-w9 AS esphome-sc-bt-w9
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-sc-bt-w9 \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-sc-bt-w9.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-sc-bt-w9.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-sc-bt-w9 && \
-    cp -r "${build_dir}/." /output/speakeasy-sc-bt-w9/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-ss-wr
-FROM esphome-sc-bt-w9 AS esphome-ss-wr
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-ss-wr \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ss-wr.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-ss-wr.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-ss-wr && \
-    cp -r "${build_dir}/." /output/speakeasy-ss-wr/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-sc-wr
-FROM esphome-ss-wr AS esphome-sc-wr
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-sc-wr \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-sc-wr.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-sc-wr.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-sc-wr && \
-    cp -r "${build_dir}/." /output/speakeasy-sc-wr/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-ss-bt-wr
-FROM esphome-sc-wr AS esphome-ss-bt-wr
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-ss-bt-wr \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ss-bt-wr.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-ss-bt-wr.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-ss-bt-wr && \
-    cp -r "${build_dir}/." /output/speakeasy-ss-bt-wr/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-sc-bt-wr
-FROM esphome-ss-bt-wr AS esphome-sc-bt-wr
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-sc-bt-wr \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-sc-bt-wr.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-sc-bt-wr.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-sc-bt-wr && \
-    cp -r "${build_dir}/." /output/speakeasy-sc-bt-wr/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-ss-w9r
-FROM esphome-sc-bt-wr AS esphome-ss-w9r
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-ss-w9r \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ss-w9r.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-ss-w9r.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-ss-w9r && \
-    cp -r "${build_dir}/." /output/speakeasy-ss-w9r/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-sc-w9r
-FROM esphome-ss-w9r AS esphome-sc-w9r
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-sc-w9r \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-sc-w9r.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-sc-w9r.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-sc-w9r && \
-    cp -r "${build_dir}/." /output/speakeasy-sc-w9r/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-ss-bt-w9r
-FROM esphome-sc-w9r AS esphome-ss-bt-w9r
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-ss-bt-w9r \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ss-bt-w9r.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-ss-bt-w9r.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-ss-bt-w9r && \
-    cp -r "${build_dir}/." /output/speakeasy-ss-bt-w9r/ && \
-    rm -rf "${build_dir}"
-
-# ── speakeasy-sc-bt-w9r
-FROM esphome-ss-bt-w9r AS esphome-sc-bt-w9r
-RUN --mount=type=cache,target=/root/.ccache,id=ccache \
-    --mount=type=cache,target=/config/.esphome,id=esphome-sc-bt-w9r \
-    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-sc-bt-w9r.yaml && \
-    name=$(yq '.substitutions.name' speakeasy-sc-bt-w9r.yaml) && \
-    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
-    mkdir -p /output/speakeasy-sc-bt-w9r && \
-    cp -r "${build_dir}/." /output/speakeasy-sc-bt-w9r/ && \
-    rm -rf "${build_dir}"
-
 # ── Snapclient base ──────────────────────────────────────────────────────────
 FROM espressif/idf:v5.5.1 AS snapclient-base
 
@@ -220,12 +88,13 @@ RUN source /opt/esp/idf/export.sh && \
     idf.py -B build-mdns merge-bin && \
     mkdir -p /output/snapclient-mdns && \
     cp build-mdns/merged-binary.bin /output/snapclient-mdns/merged.bin && \
+    cp build-mdns/snapclient.bin /output/snapclient-mdns/snapclient-mdns-ota.bin && \
     printf '{"name":"Snapclient mdns","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
       > /output/snapclient-mdns/manifest.json
 
 # ── Collect ──────────────────────────────────────────────────────────────────
 FROM alpine AS collect
-COPY --from=esphome-sc-bt-w9r /output /output
+COPY --from=esphome-sc-bt /output /output
 COPY --from=snapclient-mdns /output/snapclient-mdns /output/snapclient-mdns
 
 # ── Web page ──────────────────────────────────────────────────────────────────

@@ -88,29 +88,6 @@
     </div>
   </div>
 
-  <div class="question" id="q-wifi">
-    <div class="question-label">WiFi TX Power</div>
-    <p class="question-desc">The compact PCB antenna can self-interfere at high TX power, causing audio sync failures. 9 dBm is a safe fixed limit. Ramp variants (ESPHome only) expose a Home Assistant control and automatically step power up when WiFi drops.</p>
-    <div class="options">
-      <div class="option">
-        <input type="radio" name="wifi" id="wifi-wstock" value="wstock" checked>
-        <label for="wifi-wstock">Stock<small>ESP-IDF default (~20 dBm)</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="wifi" id="wifi-w9" value="w9">
-        <label for="wifi-w9">9 dBm<small>fixed limit</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="wifi" id="wifi-wr" value="wr">
-        <label for="wifi-wr">Stock + Ramp<small>HA control, ramps up on drop</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="wifi" id="wifi-w9r" value="w9r">
-        <label for="wifi-w9r">9 dBm + Ramp<small>9 dBm limit + HA control</small></label>
-      </div>
-    </div>
-  </div>
-
   <div class="question" id="q-twoch">
     <div class="question-label">Output</div>
     <p class="question-desc">Single drives one I2S DAC. Dual simultaneously outputs to two separate I2S DACs wired to different GPIO pins.</p>
@@ -132,6 +109,7 @@
       <span slot="unsupported">Use Chrome, Edge, or <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">Firefox + WebSerial</a></span>
       <span slot="not-allowed">Requires HTTPS</span>
     </esp-web-install-button>
+    <a id="ota-dl" style="display:none;font-size:0.9rem;" download>Download OTA binary</a>
     <span id="variant-name"></span>
     <span id="unavailable-msg"></span>
   </div>
@@ -143,6 +121,7 @@
       <li><strong>Exponential volume curve</strong> — maps the volume slider to perceived loudness using a dB-range exponential curve; range (0–90 dB, default 60 dB) is adjustable in the DSP settings page and persisted to NVS.</li>
       <li><strong>Channel routing</strong> — runtime Stereo / Left Only / Right Only mode in DSP settings, persisted to NVS. Enables two speakers to act as a stereo pair.</li>
       <li><strong>WiFi TX power</strong> — slider in the general settings page (8.5–20 dBm), applied at boot and live on change, persisted to NVS. Useful for compact PCB antennas that self-interfere at high power.</li>
+      <li><strong>Web OTA</strong> — firmware updates over WiFi via a browser UI at <code>/ota-update.html</code> or <code>POST /api/ota/upload</code>. Displays current and pending firmware details (version, build date, SHA256) side-by-side before flashing. The OTA binary is also available for download above.</li>
     </ul>
   </details>
 
@@ -150,6 +129,7 @@
 
   <script>
     const available = new Set([{{range .}}{{range .Items}}"{{.Manifest}}",{{end}}{{end}}]);
+    const otaLinks = { {{range .}}{{range .Items}}{{if .OTA}}"{{.Manifest}}": "{{.OTA}}",{{end}}{{end}}{{end}} };
 
     const installBtn = document.getElementById('install-btn');
     const variantName = document.getElementById('variant-name');
@@ -162,22 +142,20 @@
       let name = 'speakeasy-' + s.proto;
       if (s.twoch === 'on') name += '-2ch';
       if (s.bt === 'on') name += '-bt';
-      if (s.wifi !== 'wstock') name += '-' + s.wifi;
       return name + '/manifest.json';
     }
 
     function readSelections() {
       const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
-      return { proto: get('proto'), bt: get('bt'), wifi: get('wifi'), twoch: get('twoch') };
+      return { proto: get('proto'), bt: get('bt'), twoch: get('twoch') };
     }
 
     // onlyFor values can be a string (single match) or array (any match).
     const esphome = ['ss', 'sc'];
     const QUESTIONS = [
       { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
-      { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],            onlyFor: { proto: esphome } },
-      { name: 'wifi',   el: 'q-wifi',   opts: ['wstock', 'w9', 'wr', 'w9r'], onlyFor: { proto: esphome } },
-      { name: 'twoch',  el: 'q-twoch',  opts: ['off', 'on'],            onlyFor: { proto: esphome } },
+      { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],  onlyFor: { proto: esphome } },
+      { name: 'twoch',  el: 'q-twoch',  opts: ['off', 'on'],  onlyFor: { proto: esphome } },
     ];
 
     function update() {
@@ -218,6 +196,11 @@
       variantName.textContent = manifest.replace('/manifest.json', '');
       installBtn.style.display = exists ? '' : 'none';
       unavailableMsg.textContent = exists ? '' : 'Not available as a pre-built binary.';
+
+      const otaDl = document.getElementById('ota-dl');
+      const otaURL = otaLinks[manifest];
+      otaDl.style.display = otaURL ? '' : 'none';
+      if (otaURL) otaDl.href = otaURL;
     }
 
     // Parse a manifest path back into selections so we can seed radios from a
@@ -227,7 +210,7 @@
     function seedFromAvailable() {
       if (!available.size) return;
       const first = [...available][0].replace('/manifest.json', '');
-      const s = { proto: null, bt: 'off', wifi: 'wstock', twoch: 'off' };
+      const s = { proto: null, bt: 'off', twoch: 'off' };
       if (first.startsWith('snapclient-')) {
         s.proto = 'snapclient';
       } else {
@@ -236,7 +219,6 @@
         s.proto = parts[i++];
         if (parts[i] === '2ch') { s.twoch = 'on'; i++; }
         if (parts[i] === 'bt')  { s.bt = 'on'; i++; }
-        if (i < parts.length)   { s.wifi = parts[i]; }
       }
       for (const [name, value] of Object.entries(s)) {
         const r = document.querySelector(`input[name="${name}"][value="${value}"]`);

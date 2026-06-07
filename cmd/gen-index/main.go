@@ -17,6 +17,7 @@ type firmware struct {
 	Label    string
 	Desc     string
 	Manifest string
+	OTA      string
 }
 
 type group struct {
@@ -39,38 +40,24 @@ func buildKnown() map[string]firmware {
 		{id: "sc", label: "Snapcast", desc: "Snapcast client (mDNS discovery)"},
 	}
 	m := map[string]firmware{
-		"snapclient-mdns":    {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
-		"snapclient-mdns-w9": {Label: "mDNS WiFi 9dBm", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery, 9 dBm WiFi"},
+		"snapclient-mdns": {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
 	}
 	for _, p := range protos {
 		for _, twoChannel := range []bool{false, true} {
 			for _, bt := range []bool{false, true} {
-				for _, wifi := range []string{"", "w9", "wr", "w9r"} {
-					key := "speakeasy-" + p.id
-					label := p.label
-					desc := p.desc
-					if twoChannel {
-						key += "-2ch"
-						label += " 2ch"
-						desc = "Dual I2S output, " + desc
-					}
-					if bt {
-						key += "-bt"
-						label += " Bluetooth"
-					}
-					if wifi != "" {
-						key += "-" + wifi
-					}
-					switch wifi {
-					case "w9":
-						label += " WiFi 9dBm"
-					case "wr":
-						label += " WiFi Stock Ramp"
-					case "w9r":
-						label += " WiFi 9dBm Ramp"
-					}
-					m[key] = firmware{Label: label, Desc: desc}
+				key := "speakeasy-" + p.id
+				label := p.label
+				desc := p.desc
+				if twoChannel {
+					key += "-2ch"
+					label += " 2ch"
+					desc = "Dual I2S output, " + desc
 				}
+				if bt {
+					key += "-bt"
+					label += " Bluetooth"
+				}
+				m[key] = firmware{Label: label, Desc: desc}
 			}
 		}
 	}
@@ -140,10 +127,16 @@ func main() {
 		if groups[g] == nil {
 			groups[g] = &group{Name: g}
 		}
+		ota := ""
+		otaFile := entry.Name() + "-ota.bin"
+		if _, err := os.Stat(filepath.Join(*dir, entry.Name(), otaFile)); err == nil {
+			ota = entry.Name() + "/" + otaFile
+		}
 		groups[g].Items = append(groups[g].Items, firmware{
 			Label:    meta.Label,
 			Desc:     meta.Desc,
 			Manifest: entry.Name() + "/manifest.json",
+			OTA:      ota,
 		})
 	}
 

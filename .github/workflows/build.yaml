@@ -86,6 +86,7 @@ jobs:
           out="output/snapclient-${variant}"
           mkdir -p "${out}"
           cp "snapclient/build-${variant}/merged-binary.bin" "${out}/merged.bin"
+          cp "snapclient/build-${variant}/snapclient.bin" "${out}/snapclient-${variant}-ota.bin"
           label="${variant//-/ }"
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"

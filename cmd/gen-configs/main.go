@@ -12,7 +12,6 @@ type variant struct {
 	Proto      string
 	TwoChannel bool
 	BT         bool
-	WiFi       string // "wstock" | "w9" | "wr" | "w9r" (default, no suffix)
 }
 
 func (v variant) filename() string {
@@ -38,9 +37,6 @@ func (v variant) deviceName() string {
 		name += "-bt"
 	}
 
-	if v.WiFi != "wstock" {
-		name += "-" + v.WiFi
-	}
 	return name
 }
 
@@ -57,16 +53,6 @@ func (v variant) friendlyName() string {
 	}
 	if v.BT {
 		parts = append(parts, "Bluetooth")
-	}
-
-	switch v.WiFi {
-	// wstock is the default, no label addition
-	case "w9":
-		parts = append(parts, "WiFi 9dBm")
-	case "wr":
-		parts = append(parts, "WiFi Stock Ramp")
-	case "w9r":
-		parts = append(parts, "WiFi 9dBm Ramp")
 	}
 	return strings.Join(parts, " ")
 }
@@ -85,16 +71,7 @@ func (v variant) packages() []string {
 	if v.TwoChannel {
 		pkgs = append(pkgs, "common/second-speaker.yaml")
 	}
-
-	switch v.WiFi {
-	case "w9":
-		pkgs = append(pkgs, "common/wifi-9.yaml")
-	case "wr":
-		pkgs = append(pkgs, "common/wifi-ramp.yaml")
-	case "w9r":
-		pkgs = append(pkgs, "common/wifi-9ramp.yaml")
-	// wstock: no extra package
-	}
+	pkgs = append(pkgs, "common/wifi-ramp.yaml")
 	return pkgs
 }
 
@@ -134,24 +111,12 @@ func generate(v variant) string {
 
 func allVariants() []variant {
 	var variants []variant
-	// Outer loops are by component set so sequential Docker stages maximise
-	// ccache hits: wifi mode (ramp lambdas are expensive) then bt (BLE stack),
-	// then proto/mdns/ipv6 which don't add new C++ components per group.
-	for _, wifi := range []string{"wstock", "w9", "wr", "w9r"} {
-		for _, bt := range []bool{false, true} {
-			for _, proto := range []string{"sendspin", "snapcast"} {
-				for _, twoChannel := range []bool{false, true} {
-					if twoChannel {
-						continue
-					}
-						variants = append(variants, variant{
-						Proto:      proto,
-						TwoChannel: twoChannel,
-						BT:         bt,
-						WiFi:       wifi,
-					})
-				}
-			}
+	for _, bt := range []bool{false, true} {
+		for _, proto := range []string{"sendspin", "snapcast"} {
+			variants = append(variants, variant{
+				Proto: proto,
+				BT:    bt,
+			})
 		}
 	}
 	return variants

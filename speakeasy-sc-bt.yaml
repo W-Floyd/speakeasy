@@ -7,6 +7,7 @@ packages:
   - !include common/base.yaml
   - !include common/improv.yaml
   - !include common/snapcast-audio.yaml
+  - !include common/wifi-ramp.yaml
 
 dashboard_import:
   package_import_url: github://W-Floyd/speakeasy/speakeasy-sc-bt.yaml@main

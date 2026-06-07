@@ -101,6 +101,7 @@ jobs:
           out="output/snapclient-${variant}"
           mkdir -p "${out}"
           cp "snapclient/build-${variant}/merged-binary.bin" "${out}/merged.bin"
+          cp "snapclient/build-${variant}/snapclient.bin" "${out}/snapclient-${variant}-ota.bin"
           label="${variant//-/ }"
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"
@@ -262,6 +263,7 @@ COPY speakeasy-*.yaml ./
 			fmt.Fprintf(&sb, "    idf.py -B build-%s merge-bin && \\\n", variant)
 			fmt.Fprintf(&sb, "    mkdir -p /output/snapclient-%s && \\\n", variant)
 			fmt.Fprintf(&sb, "    cp build-%s/merged-binary.bin /output/snapclient-%s/merged.bin && \\\n", variant, variant)
+			fmt.Fprintf(&sb, "    cp build-%s/snapclient.bin /output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant, variant)
 			fmt.Fprintf(&sb, "    printf '{\"name\":\"Snapclient %s\",\"version\":\"1\",\"builds\":[{\"chipFamily\":\"ESP32-S3\",\"parts\":[{\"path\":\"merged.bin\",\"offset\":0}]}]}' \\\n", label)
 			fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json\n\n", variant)
 		}
