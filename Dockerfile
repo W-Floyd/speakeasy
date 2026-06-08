@@ -98,10 +98,25 @@ RUN source /opt/esp/idf/export.sh && \
       "${sc_ver}" "${pages_base}" "${sc_sha}" "${sc_ver}" \
       > /output/snapclient-mdns/ota-manifest.json
 
+# ── snapclient-mdns-nopull
+FROM snapclient-base AS snapclient-mdns-nopull
+RUN source /opt/esp/idf/export.sh && \
+    idf.py \
+      -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.mdns-nopull" \
+      -B build-mdns-nopull \
+      build && \
+    idf.py -B build-mdns-nopull merge-bin && \
+    mkdir -p /output/snapclient-mdns-nopull && \
+    cp build-mdns-nopull/merged-binary.bin /output/snapclient-mdns-nopull/merged.bin && \
+    cp build-mdns-nopull/snapclient.bin /output/snapclient-mdns-nopull/snapclient-mdns-nopull-ota.bin && \
+    printf '{"name":"Snapclient mdns nopull","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
+      > /output/snapclient-mdns-nopull/manifest.json
+
 # ── Collect ──────────────────────────────────────────────────────────────────
 FROM alpine AS collect
 COPY --from=esphome-sc-bt /output /output
 COPY --from=snapclient-mdns /output/snapclient-mdns /output/snapclient-mdns
+COPY --from=snapclient-mdns-nopull /output/snapclient-mdns-nopull /output/snapclient-mdns-nopull
 
 # ── Web page ──────────────────────────────────────────────────────────────────
 FROM golang:1.22-alpine AS web

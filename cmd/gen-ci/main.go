@@ -105,12 +105,14 @@ jobs:
           label="${variant//-/ }"
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"
-          sc_ver=$(cd snapclient && git rev-parse --short HEAD)
-          sc_sha=$(sha256sum "${out}/snapclient-${variant}-ota.bin" | cut -d' ' -f1)
-          pages_base="https://w-floyd.github.io/speakeasy"
-          printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","release_notes":"snapclient@%s"}' \
-            "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${sc_ver}" \
-            > "${out}/ota-manifest.json"
+          if ! grep -q "CONFIG_SNAPCLIENT_WEB_OTA_PULL=n" "${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${variant}"; then
+            sc_ver=$(cd snapclient && git rev-parse --short HEAD)
+            sc_sha=$(sha256sum "${out}/snapclient-${variant}-ota.bin" | cut -d' ' -f1)
+            pages_base="https://w-floyd.github.io/speakeasy"
+            printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","release_notes":"snapclient@%s"}' \
+              "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${sc_ver}" \
+              > "${out}/ota-manifest.json"
+          fi
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
@@ -271,13 +273,17 @@ COPY speakeasy-*.yaml ./
 			fmt.Fprintf(&sb, "    cp build-%s/merged-binary.bin /output/snapclient-%s/merged.bin && \\\n", variant, variant)
 			fmt.Fprintf(&sb, "    cp build-%s/snapclient.bin /output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant, variant)
 			fmt.Fprintf(&sb, "    printf '{\"name\":\"Snapclient %s\",\"version\":\"1\",\"builds\":[{\"chipFamily\":\"ESP32-S3\",\"parts\":[{\"path\":\"merged.bin\",\"offset\":0}]}]}' \\\n", label)
-			fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json && \\\n", variant)
-			fmt.Fprintf(&sb, "    sc_sha=$(sha256sum /output/snapclient-%s/snapclient-%s-ota.bin | cut -d' ' -f1) && \\\n", variant, variant)
-			fmt.Fprintf(&sb, "    sc_ver=${sc_sha:0:8} && \\\n")
-			fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")
-			fmt.Fprintf(&sb, "    printf '{\"version\":\"%%s\",\"url\":\"%%s/snapclient-%s/snapclient-%s-ota.bin\",\"sha256\":\"%%s\",\"release_notes\":\"snapclient@%%s\"}' \\\n", variant, variant)
-			fmt.Fprintf(&sb, "      \"${sc_ver}\" \"${pages_base}\" \"${sc_sha}\" \"${sc_ver}\" \\\n")
-			fmt.Fprintf(&sb, "      > /output/snapclient-%s/ota-manifest.json\n\n", variant)
+			if !strings.HasSuffix(variant, "nopull") {
+				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json && \\\n", variant)
+				fmt.Fprintf(&sb, "    sc_sha=$(sha256sum /output/snapclient-%s/snapclient-%s-ota.bin | cut -d' ' -f1) && \\\n", variant, variant)
+				fmt.Fprintf(&sb, "    sc_ver=${sc_sha:0:8} && \\\n")
+				fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")
+				fmt.Fprintf(&sb, "    printf '{\"version\":\"%%s\",\"url\":\"%%s/snapclient-%s/snapclient-%s-ota.bin\",\"sha256\":\"%%s\",\"release_notes\":\"snapclient@%%s\"}' \\\n", variant, variant)
+				fmt.Fprintf(&sb, "      \"${sc_ver}\" \"${pages_base}\" \"${sc_sha}\" \"${sc_ver}\" \\\n")
+				fmt.Fprintf(&sb, "      > /output/snapclient-%s/ota-manifest.json\n\n", variant)
+			} else {
+				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json\n\n", variant)
+			}
 		}
 	}
 

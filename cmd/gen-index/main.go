@@ -41,7 +41,8 @@ func buildKnown() map[string]firmware {
 		{id: "sc", label: "Snapcast", desc: "Snapcast client (mDNS discovery)"},
 	}
 	m := map[string]firmware{
-		"snapclient-mdns": {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
+		"snapclient-mdns":       {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
+		"snapclient-mdns-nopull": {Label: "mDNS (no pull OTA)", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery, pull OTA disabled"},
 	}
 	for _, p := range protos {
 		for _, bt := range []bool{false, true} {
