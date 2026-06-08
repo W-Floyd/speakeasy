@@ -114,7 +114,7 @@ var discoveries = []discovery{
 	{
 		name:    "mdns",
 		comment: "Discovery: mDNS — server located automatically on the local network",
-		config:  "CONFIG_SNAPSERVER_USE_MDNS=y\n",
+		config:  "CONFIG_SNAPSERVER_USE_MDNS=y\nCONFIG_SNAPCLIENT_OTA_PULL_URL=\"https://w-floyd.github.io/speakeasy/snapclient-mdns/ota-manifest.json\"\n",
 	},
 }
 

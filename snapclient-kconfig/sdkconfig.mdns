@@ -96,3 +96,4 @@ CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
 
 # Discovery: mDNS — server located automatically on the local network
 CONFIG_SNAPSERVER_USE_MDNS=y
+CONFIG_SNAPCLIENT_OTA_PULL_URL="https://w-floyd.github.io/speakeasy/snapclient-mdns/ota-manifest.json"

@@ -90,7 +90,13 @@ RUN source /opt/esp/idf/export.sh && \
     cp build-mdns/merged-binary.bin /output/snapclient-mdns/merged.bin && \
     cp build-mdns/snapclient.bin /output/snapclient-mdns/snapclient-mdns-ota.bin && \
     printf '{"name":"Snapclient mdns","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
-      > /output/snapclient-mdns/manifest.json
+      > /output/snapclient-mdns/manifest.json && \
+    sc_sha=$(sha256sum /output/snapclient-mdns/snapclient-mdns-ota.bin | cut -d' ' -f1) && \
+    sc_ver=${sc_sha:0:8} && \
+    pages_base="https://w-floyd.github.io/speakeasy" && \
+    printf '{"version":"%s","url":"%s/snapclient-mdns/snapclient-mdns-ota.bin","sha256":"%s","release_notes":"snapclient@%s"}' \
+      "${sc_ver}" "${pages_base}" "${sc_sha}" "${sc_ver}" \
+      > /output/snapclient-mdns/ota-manifest.json
 
 # ── Collect ──────────────────────────────────────────────────────────────────
 FROM alpine AS collect

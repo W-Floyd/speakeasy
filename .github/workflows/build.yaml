@@ -92,6 +92,12 @@ jobs:
           label="${variant//-/ }"
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"
+          sc_ver=$(cd snapclient && git rev-parse --short HEAD)
+          sc_sha=$(sha256sum "${out}/snapclient-${variant}-ota.bin" | cut -d' ' -f1)
+          pages_base="https://w-floyd.github.io/speakeasy"
+          printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","release_notes":"snapclient@%s"}' \
+            "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${sc_ver}" \
+            > "${out}/ota-manifest.json"
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
