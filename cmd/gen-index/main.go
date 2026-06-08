@@ -14,10 +14,11 @@ import (
 var page string
 
 type firmware struct {
-	Label    string
-	Desc     string
-	Manifest string
-	OTA      string
+	Label       string
+	Desc        string
+	Manifest    string
+	OTA         string
+	OTAManifest string
 }
 
 type group struct {
@@ -125,11 +126,16 @@ func main() {
 		if _, err := os.Stat(filepath.Join(*dir, entry.Name(), otaFile)); err == nil {
 			ota = entry.Name() + "/" + otaFile
 		}
+		otaManifest := ""
+		if _, err := os.Stat(filepath.Join(*dir, entry.Name(), "ota-manifest.json")); err == nil {
+			otaManifest = entry.Name() + "/ota-manifest.json"
+		}
 		groups[g].Items = append(groups[g].Items, firmware{
-			Label:    meta.Label,
-			Desc:     meta.Desc,
-			Manifest: entry.Name() + "/manifest.json",
-			OTA:      ota,
+			Label:       meta.Label,
+			Desc:        meta.Desc,
+			Manifest:    entry.Name() + "/manifest.json",
+			OTA:         ota,
+			OTAManifest: otaManifest,
 		})
 	}
 

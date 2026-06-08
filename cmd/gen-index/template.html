@@ -98,15 +98,20 @@
     <span id="variant-name"></span>
     <span id="unavailable-msg"></span>
   </div>
+  <p id="ota-pull-note" style="display:none;margin-top:0.75rem;font-size:0.82rem;color:#555;">
+    Already flashed? On the device's OTA Update page, use this URL to pull the latest firmware directly:
+    <code id="ota-manifest-url" style="word-break:break-all;"></code>
+  </p>
 
   <details style="margin-top:2rem;font-size:0.85rem;color:#555;">
     <summary style="cursor:pointer;font-weight:600;color:#444;">Changes vs upstream snapclient</summary>
     <p style="margin:0.6rem 0 0.3rem;font-size:0.82rem;color:#666;">Based on <a href="https://github.com/CarlosDerSeher/snapclient">CarlosDerSeher/snapclient</a> with the following additions:</p>
     <ul style="margin:0.4rem 0 0;padding-left:1.25rem;line-height:1.7;font-size:0.82rem;">
       <li><strong>Exponential volume curve</strong> — maps the volume slider to perceived loudness using a dB-range exponential curve; range (0–90 dB, default 60 dB) is adjustable in the DSP settings page and persisted to NVS.</li>
-      <li><strong>Channel routing</strong> — runtime Stereo / Left Only / Right Only mode in the general settings page, persisted to NVS. Enables two speakers to act as a stereo pair.</li>
-      <li><strong>WiFi TX power</strong> — slider in the general settings page (8.5–20 dBm), applied at boot and live on change, persisted to NVS. Useful for compact PCB antennas that self-interfere at high power.</li>
-      <li><strong>Web OTA</strong> — firmware updates over WiFi via a browser UI at <code>/ota-update.html</code> or <code>POST /api/ota/upload</code>. Displays current and pending firmware details (version, build date, SHA256) side-by-side before flashing. The OTA binary is also available for download above.</li>
+      <li><strong>Channel routing</strong> — runtime Stereo / Left Only / Right Only / Mono mode in the general settings page, persisted to NVS. Enables two speakers to act as a stereo pair; Mono mixes L+R to both outputs.</li>
+      <li><strong>WiFi TX power</strong> — slider in the general settings page (dBm), applied at boot and live on change, persisted to NVS. Useful for compact PCB antennas that self-interfere at high power.</li>
+      <li><strong>Web OTA (push)</strong> — firmware updates over WiFi via a browser UI at <code>/ota-update.html</code> or <code>POST /api/ota/upload</code>. Displays current and pending firmware details (version, build date, SHA256) side-by-side before flashing. The OTA binary is also available for download above.</li>
+      <li><strong>Web OTA (pull)</strong> — device fetches a manifest URL (<code>POST /api/ota/pull</code>), version-checks against running firmware, then downloads and flashes the listed binary with SHA-256 integrity verification. Pre-configured to pull from this page.</li>
     </ul>
   </details>
 
@@ -115,6 +120,7 @@
   <script>
     const available = new Set([{{range .}}{{range .Items}}"{{.Manifest}}",{{end}}{{end}}]);
     const otaLinks = { {{range .}}{{range .Items}}{{if .OTA}}"{{.Manifest}}": "{{.OTA}}",{{end}}{{end}}{{end}} };
+    const otaManifestLinks = { {{range .}}{{range .Items}}{{if .OTAManifest}}"{{.Manifest}}": "{{.OTAManifest}}",{{end}}{{end}}{{end}} };
 
     const installBtn = document.getElementById('install-btn');
     const variantName = document.getElementById('variant-name');
@@ -184,6 +190,17 @@
       const otaURL = otaLinks[manifest];
       otaDl.style.display = otaURL ? '' : 'none';
       if (otaURL) otaDl.href = otaURL;
+
+      const otaPullNote = document.getElementById('ota-pull-note');
+      const otaManifestEl = document.getElementById('ota-manifest-url');
+      const otaManifestPath = otaManifestLinks[manifest];
+      if (otaManifestPath) {
+        const url = new URL(otaManifestPath, window.location.href).href;
+        otaManifestEl.textContent = url;
+        otaPullNote.style.display = '';
+      } else {
+        otaPullNote.style.display = 'none';
+      }
     }
 
     // Parse a manifest path back into selections so we can seed radios from a
