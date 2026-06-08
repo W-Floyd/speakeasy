@@ -98,10 +98,13 @@
     <span id="variant-name"></span>
     <span id="unavailable-msg"></span>
   </div>
-  <p id="ota-pull-note" style="display:none;margin-top:0.75rem;font-size:0.82rem;color:#555;">
-    Already flashed? On the device's OTA Update page, use this URL to pull the latest firmware directly:
-    <code id="ota-manifest-url" style="word-break:break-all;"></code>
-  </p>
+  <div id="ota-pull-note" style="display:none;margin-top:0.75rem;">
+    <p style="margin:0 0 0.35rem;font-size:0.82rem;color:#555;">Already flashed? On the device's OTA Update page, use this URL to pull the latest firmware directly:</p>
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <input id="ota-manifest-url" readonly style="flex:1;font-family:monospace;font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:4px;color:#444;background:#f9f9f9;" />
+      <button id="ota-manifest-copy" onclick="(function(){var el=document.getElementById('ota-manifest-url');el.select();navigator.clipboard.writeText(el.value).catch(()=>{});var btn=document.getElementById('ota-manifest-copy');btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);})()" style="padding:0.3rem 0.7rem;font-size:0.78rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;">Copy</button>
+    </div>
+  </div>
 
   <details style="margin-top:2rem;font-size:0.85rem;color:#555;">
     <summary style="cursor:pointer;font-weight:600;color:#444;">Changes vs upstream snapclient</summary>
@@ -196,7 +199,7 @@
       const otaManifestPath = otaManifestLinks[manifest];
       if (otaManifestPath) {
         const url = new URL(otaManifestPath, window.location.href).href;
-        otaManifestEl.textContent = url;
+        otaManifestEl.value = url;
         otaPullNote.style.display = '';
       } else {
         otaPullNote.style.display = 'none';
