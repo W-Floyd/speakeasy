@@ -88,6 +88,21 @@
     </div>
   </div>
 
+  <div class="question" id="q-pull">
+    <div class="question-label">Pull OTA</div>
+    <p class="question-desc">Pull OTA lets the device fetch and flash firmware from a URL via its web UI.</p>
+    <div class="options">
+      <div class="option">
+        <input type="radio" name="pull" id="pull-on" value="on" checked>
+        <label for="pull-on">Enabled<small>update from web UI</small></label>
+      </div>
+      <div class="option">
+        <input type="radio" name="pull" id="pull-off" value="off">
+        <label for="pull-off">Disabled</label>
+      </div>
+    </div>
+  </div>
+
   <div class="flash-area">
     <esp-web-install-button id="install-btn" manifest="">
       <button slot="activate">Flash</button>
@@ -131,7 +146,9 @@
 
     function manifestFrom(s) {
       if (s.proto === 'snapclient') {
-        return 'snapclient-mdns/manifest.json';
+        let name = 'snapclient-mdns';
+        if (s.pull === 'off') name += '-nopull';
+        return name + '/manifest.json';
       }
       let name = 'speakeasy-' + s.proto;
       if (s.bt === 'on') name += '-bt';
@@ -140,7 +157,7 @@
 
     function readSelections() {
       const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
-      return { proto: get('proto'), bt: get('bt') };
+      return { proto: get('proto'), bt: get('bt'), pull: get('pull') };
     }
 
     // onlyFor values can be a string (single match) or array (any match).
@@ -148,6 +165,7 @@
     const QUESTIONS = [
       { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
       { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],  onlyFor: { proto: esphome } },
+      { name: 'pull',   el: 'q-pull',   opts: ['on', 'off'],  onlyFor: { proto: 'snapclient' } },
     ];
 
     function update() {
@@ -213,9 +231,10 @@
     function seedFromAvailable() {
       if (!available.size) return;
       const first = [...available][0].replace('/manifest.json', '');
-      const s = { proto: null, bt: 'off' };
+      const s = { proto: null, bt: 'off', pull: 'on' };
       if (first.startsWith('snapclient-')) {
         s.proto = 'snapclient';
+        if (first.endsWith('-nopull')) s.pull = 'off';
       } else {
         const parts = first.replace('speakeasy-', '').split('-');
         let i = 0;
