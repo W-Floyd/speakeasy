@@ -31,6 +31,29 @@ esp32:
       CONFIG_ESPTOOLPY_FLASHFREQ_80M: "y"
       CONFIG_ESP32_WIFI_STATIC_RX_BUFFER_NUM: "16"
       CONFIG_ESP32_WIFI_DYNAMIC_RX_BUFFER_NUM: "64"
+      # WiFi IRAM — required for quad PSRAM (not auto-mapped unlike octal)
+      CONFIG_ESP_WIFI_IRAM_OPT: "y"
+      CONFIG_ESP_WIFI_RX_IRAM_OPT: "y"
+      CONFIG_ESP_WIFI_EXTRA_IRAM_OPT: "y"
+      # WiFi buffers / AMPDU
+      CONFIG_ESP_WIFI_CACHE_TX_BUFFER_NUM: "32"
+      CONFIG_ESP_WIFI_MGMT_SBUF_NUM: "32"
+      CONFIG_ESP_WIFI_TX_BA_WIN: "8"
+      CONFIG_ESP_WIFI_RX_BA_WIN: "16"
+      # I2S ISR in IRAM — keeps audio safe during OTA/NVS flash writes
+      CONFIG_I2S_ISR_IRAM_SAFE: "y"
+      # LwIP — pin to core 0, IRAM paths, larger TCP windows
+      CONFIG_LWIP_TCPIP_TASK_AFFINITY_CPU0: "y"
+      CONFIG_LWIP_IRAM_OPTIMIZATION: "y"
+      CONFIG_LWIP_EXTRA_IRAM_OPTIMIZATION: "y"
+      CONFIG_LWIP_TCP_SND_BUF_DEFAULT: "11520"
+      CONFIG_LWIP_TCP_WND_DEFAULT: "11520"
+      CONFIG_LWIP_TCP_RECVMBOX_SIZE: "16"
+      CONFIG_LWIP_TCPIP_RECVMBOX_SIZE: "64"
+      CONFIG_LWIP_TCP_OOSEQ_MAX_PBUFS: "8"
+      CONFIG_LWIP_TCP_SACK_OUT: "y"
+      # Compiler performance optimization
+      CONFIG_COMPILER_OPTIMIZATION_PERF: "y"
 
 logger:
   level: debug
