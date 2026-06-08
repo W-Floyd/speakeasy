@@ -37,6 +37,7 @@ CONFIG_ESP_WIFI_RX_IRAM_OPT=y
 # ── Essential: audio function ────────────────────────────────────────────────
 # MAX98357A has no hardware volume control — use DSP-based software volume.
 CONFIG_USE_DSP_PROCESSOR=y
+CONFIG_USE_DSP_SOFT_CLIP=y
 CONFIG_SNAPCLIENT_USE_SOFT_VOL=y
 CONFIG_SNAPCLIENT_VOLUME_CURVE_DB_RANGE=40
 # Compact PCB antenna self-interferes at high TX power; expose slider in web UI.
