@@ -1,7 +1,9 @@
 # Variants to build in CI (GitHub Actions)
 ci:
   - ss
+  - ss-bt
   - sc
+  - sc-bt
 
 # Snapclient (CarlosDerSeher) standalone ESP-IDF builds
 # Requires: git submodule add https://github.com/CarlosDerSeher/snapclient snapclient

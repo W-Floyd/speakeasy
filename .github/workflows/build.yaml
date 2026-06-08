@@ -16,7 +16,9 @@ jobs:
       matrix:
         yaml-file:
           - speakeasy-ss.yaml
+          - speakeasy-ss-bt.yaml
           - speakeasy-sc.yaml
+          - speakeasy-sc-bt.yaml
 
     steps:
       - uses: actions/checkout@v4
