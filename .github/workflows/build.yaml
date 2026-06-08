@@ -95,10 +95,12 @@ jobs:
             "${label}" > "${out}/manifest.json"
           if ! grep -q "CONFIG_SNAPCLIENT_WEB_OTA_PULL=n" "${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${variant}"; then
             sc_ver=$(cd snapclient && git rev-parse --short HEAD)
-            sc_sha=$(sha256sum "${out}/snapclient-${variant}-ota.bin" | cut -d' ' -f1)
+            _ota="${out}/snapclient-${variant}-ota.bin"
+            file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1)
+            sc_sha=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')")
             pages_base="https://w-floyd.github.io/speakeasy"
-            printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","release_notes":"snapclient@%s"}' \
-              "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${sc_ver}" \
+            printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
+              "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
               > "${out}/ota-manifest.json"
           fi
 

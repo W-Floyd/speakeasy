@@ -91,11 +91,13 @@ RUN source /opt/esp/idf/export.sh && \
     cp build-mdns/snapclient.bin /output/snapclient-mdns/snapclient-mdns-ota.bin && \
     printf '{"name":"Snapclient mdns","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
       > /output/snapclient-mdns/manifest.json && \
-    sc_sha=$(sha256sum /output/snapclient-mdns/snapclient-mdns-ota.bin | cut -d' ' -f1) && \
+    _ota=/output/snapclient-mdns/snapclient-mdns-ota.bin && \
+    file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1) && \
+    sc_sha=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')") && \
     sc_ver=${sc_sha:0:8} && \
     pages_base="https://w-floyd.github.io/speakeasy" && \
-    printf '{"version":"%s","url":"%s/snapclient-mdns/snapclient-mdns-ota.bin","sha256":"%s","release_notes":"snapclient@%s"}' \
-      "${sc_ver}" "${pages_base}" "${sc_sha}" "${sc_ver}" \
+    printf '{"version":"%s","url":"%s/snapclient-mdns/snapclient-mdns-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
+      "${sc_ver}" "${pages_base}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
       > /output/snapclient-mdns/ota-manifest.json
 
 # ── snapclient-mdns-nopull

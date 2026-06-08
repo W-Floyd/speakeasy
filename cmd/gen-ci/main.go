@@ -107,10 +107,12 @@ jobs:
             "${label}" > "${out}/manifest.json"
           if ! grep -q "CONFIG_SNAPCLIENT_WEB_OTA_PULL=n" "${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${variant}"; then
             sc_ver=$(cd snapclient && git rev-parse --short HEAD)
-            sc_sha=$(sha256sum "${out}/snapclient-${variant}-ota.bin" | cut -d' ' -f1)
+            _ota="${out}/snapclient-${variant}-ota.bin"
+            file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1)
+            sc_sha=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')")
             pages_base="https://w-floyd.github.io/speakeasy"
-            printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","release_notes":"snapclient@%s"}' \
-              "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${sc_ver}" \
+            printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
+              "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
               > "${out}/ota-manifest.json"
           fi
 
@@ -275,11 +277,13 @@ COPY speakeasy-*.yaml ./
 			fmt.Fprintf(&sb, "    printf '{\"name\":\"Snapclient %s\",\"version\":\"1\",\"builds\":[{\"chipFamily\":\"ESP32-S3\",\"parts\":[{\"path\":\"merged.bin\",\"offset\":0}]}]}' \\\n", label)
 			if !strings.HasSuffix(variant, "nopull") {
 				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json && \\\n", variant)
-				fmt.Fprintf(&sb, "    sc_sha=$(sha256sum /output/snapclient-%s/snapclient-%s-ota.bin | cut -d' ' -f1) && \\\n", variant, variant)
+				fmt.Fprintf(&sb, "    _ota=/output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant)
+				fmt.Fprintf(&sb, "    file_sha=$(sha256sum \"${_ota}\" | cut -d' ' -f1) && \\\n")
+				fmt.Fprintf(&sb, "    sc_sha=$(python3 -c \"import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')\") && \\\n")
 				fmt.Fprintf(&sb, "    sc_ver=${sc_sha:0:8} && \\\n")
 				fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")
-				fmt.Fprintf(&sb, "    printf '{\"version\":\"%%s\",\"url\":\"%%s/snapclient-%s/snapclient-%s-ota.bin\",\"sha256\":\"%%s\",\"release_notes\":\"snapclient@%%s\"}' \\\n", variant, variant)
-				fmt.Fprintf(&sb, "      \"${sc_ver}\" \"${pages_base}\" \"${sc_sha}\" \"${sc_ver}\" \\\n")
+				fmt.Fprintf(&sb, "    printf '{\"version\":\"%%s\",\"url\":\"%%s/snapclient-%s/snapclient-%s-ota.bin\",\"sha256\":\"%%s\",\"file_sha256\":\"%%s\",\"release_notes\":\"snapclient@%%s\"}' \\\n", variant, variant)
+				fmt.Fprintf(&sb, "      \"${sc_ver}\" \"${pages_base}\" \"${sc_sha}\" \"${file_sha}\" \"${sc_ver}\" \\\n")
 				fmt.Fprintf(&sb, "      > /output/snapclient-%s/ota-manifest.json\n\n", variant)
 			} else {
 				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json\n\n", variant)
