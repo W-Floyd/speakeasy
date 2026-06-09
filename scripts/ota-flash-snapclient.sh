@@ -55,27 +55,7 @@ IMAGE_TAG="speakeasy-${STAGE}-extract"
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 parse_app_desc() {
-    python3 - "$1" <<'EOF'
-import sys, struct
-
-data = open(sys.argv[1], 'rb').read()
-magic_bytes = struct.pack('<I', 0xABCD5432)
-pos = data.find(magic_bytes)
-if pos < 0:
-    print('ERROR: esp_app_desc_t magic not found', file=sys.stderr)
-    sys.exit(1)
-
-def cstr(off, length):
-    s = data[pos+off : pos+off+length]
-    return s[:s.find(b'\x00')].decode('utf-8', errors='replace')
-
-print(f"version={cstr(16, 32)}")
-print(f"project_name={cstr(48, 32)}")
-print(f"compile_date={cstr(96, 16)}")
-print(f"compile_time={cstr(80, 16)}")
-print(f"idf_version={cstr(112, 32)}")
-print(f"sha256={data[pos+144:pos+176].hex()}")
-EOF
+    python3 -m esptool image-info "$1" 2>/dev/null
 }
 
 dev_status_json() {
@@ -168,18 +148,17 @@ docker rm "${CONTAINER}" > /dev/null
 
 echo "==> Parsing firmware binary..."
 APP_DESC=$(parse_app_desc "${TMP}")
-BIN_SHA=$(echo "${APP_DESC}" | grep '^sha256='       | cut -d= -f2)
-BIN_VER=$(echo "${APP_DESC}" | grep '^version='      | cut -d= -f2)
-BIN_NAME=$(echo "${APP_DESC}" | grep '^project_name='| cut -d= -f2)
-BIN_DATE=$(echo "${APP_DESC}" | grep '^compile_date=' | cut -d= -f2)
-BIN_TIME=$(echo "${APP_DESC}" | grep '^compile_time=' | cut -d= -f2)
-BIN_IDF=$(echo "${APP_DESC}" | grep '^idf_version='  | cut -d= -f2)
+BIN_SHA=$(echo "${APP_DESC}"  | awk '/^ELF file SHA256:/{print $4}')
+BIN_VER=$(echo "${APP_DESC}"  | awk '/^App version:/{print $3}')
+BIN_NAME=$(echo "${APP_DESC}" | awk '/^Project name:/{print $3}')
+BIN_DATE=$(echo "${APP_DESC}" | awk '/^Compile time:/{$1=$2=""; sub(/^  */,""); print}')
+BIN_IDF=$(echo "${APP_DESC}"  | awk '/^ESP-IDF:/{print $2}')
 
 echo ""
 echo "  Binary to flash:"
 echo "    project : ${BIN_NAME}"
 echo "    version : ${BIN_VER}"
-echo "    built   : ${BIN_DATE} ${BIN_TIME}"
+echo "    built   : ${BIN_DATE}"
 echo "    IDF     : ${BIN_IDF}"
 echo "    sha256  : ${BIN_SHA}"
 
