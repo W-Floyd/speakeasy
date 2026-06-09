@@ -8,12 +8,14 @@ A ~$30 per-room speaker using off-the-shelf modules and no soldering beyond wire
 
 ### Parts
 
-| Part | Qty | Link |
-|------|-----|------|
-| ESP32-S3 Supermini | 1 | [Amazon B0GS283V6F](https://amazon.com/dp/B0GS283V6F) |
-| MAX98357A I2S amplifier breakout | 1 | [Amazon B0B4GK5R1R](https://amazon.com/dp/B0B4GK5R1R) |
-| Saiyin 3" wall-mount passive speaker | 1 | [Amazon B0DGLMY9SB](https://amazon.com/dp/B0DGLMY9SB) |
-| Dupont jumper wires F-F (recommend 10 cm) | 5 | [Amazon B07GD312VG](https://www.amazon.com/dp/B07GD312VG) |
+| Part | Qty | Price | Link |
+|------|-----|-------|------|
+| ESP32-S3 Supermini | 1 | ~$4.25 | [Amazon B0GS283V6F](https://amazon.com/dp/B0GS283V6F) |
+| MAX98357A I2S amplifier breakout | 1 | ~$2.00 | [Amazon B0B4GK5R1R](https://amazon.com/dp/B0B4GK5R1R) |
+| Saiyin 3" wall-mount passive speaker | 1 | ~$18.00 | [Amazon B0DGLMY9SB](https://amazon.com/dp/B0DGLMY9SB) |
+| Dupont jumper wires F-F (recommend 10 cm) | 5 | <$1.00 | [Amazon B07GD312VG](https://www.amazon.com/dp/B07GD312VG) |
+| USB-C power supply + cable | 1 | ~$4.50 | [Amazon B08G4GRQYV](https://www.amazon.com/dp/B08G4GRQYV) |
+| **Total** | | **~$29.75** | |
 
 ### Wiring
 
