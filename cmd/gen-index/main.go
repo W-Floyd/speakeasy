@@ -143,6 +143,31 @@ func renderDocs(docsDir string) []doc {
 	return docs
 }
 
+// copyDocAssets copies non-.md files from docsDir into outDir/docs/.
+func copyDocAssets(docsDir, outDir string) error {
+	entries, err := os.ReadDir(docsDir)
+	if err != nil {
+		return nil // no docs dir — not an error
+	}
+	dest := filepath.Join(outDir, "docs")
+	for _, e := range entries {
+		if e.IsDir() || strings.HasSuffix(e.Name(), ".md") {
+			continue
+		}
+		data, err := os.ReadFile(filepath.Join(docsDir, e.Name()))
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(dest, 0755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(dest, e.Name()), data, 0644); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func main() {
 	dir := flag.String("dir", ".", "directory containing firmware subdirectories")
 	docsDir := flag.String("docs", "docs", "directory containing markdown doc files")
@@ -211,6 +236,10 @@ func main() {
 		panic(err)
 	}
 	defer f.Close()
+
+	if err := copyDocAssets(*docsDir, filepath.Dir(*out)); err != nil {
+		panic(err)
+	}
 
 	data := pageData{
 		Groups: result,
