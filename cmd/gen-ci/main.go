@@ -98,7 +98,7 @@ jobs:
           if ! grep -q "CONFIG_SNAPCLIENT_WEB_OTA_PULL=n" "${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${{ matrix.variant }}"; then
             _ota="build-${{ matrix.variant }}/snapclient.bin"
             file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1)
-            _info=$(esptool.py image-info "${_ota}" 2>/dev/null)
+            _info=$(esptool.py image_info --version 2 "${_ota}" 2>/dev/null)
             sc_sha=$(echo "${_info}" | awk '/^ELF file SHA256:/{print $4}')
             sc_ver=$(echo "${_info}" | awk '/^App version:/{print $3}')
             pages_base="https://w-floyd.github.io/speakeasy"
