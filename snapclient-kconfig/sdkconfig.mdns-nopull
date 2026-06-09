@@ -40,6 +40,9 @@ CONFIG_ENABLE_WIFI_PROVISIONING=y
 # Light sleep gates USB clocks on ESP32-S3, breaking USB Serial JTAG used by Improv.
 CONFIG_PM_ENABLE=n
 
+# ── Essential: web server ────────────────────────────────────────────────────
+CONFIG_WEB_PORT=80
+
 # ── Tuning: CPU / cache ───────────────────────────────────────────────────────
 CONFIG_ESP32S3_DEFAULT_CPU_FREQ_240=y
 CONFIG_ESP32S3_DATA_CACHE_64KB=y
