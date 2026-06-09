@@ -108,10 +108,10 @@ jobs:
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"
           if ! grep -q "CONFIG_SNAPCLIENT_WEB_OTA_PULL=n" "${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${variant}"; then
-            sc_ver=$(cd snapclient && git rev-parse --short HEAD)
             _ota="${out}/snapclient-${variant}-ota.bin"
             file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1)
             sc_sha=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')")
+            sc_ver=${sc_sha:0:8}
             pages_base="https://w-floyd.github.io/speakeasy"
             printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
               "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
