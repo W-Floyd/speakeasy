@@ -94,11 +94,11 @@
     <div class="options">
       <div class="option">
         <input type="radio" name="pull" id="pull-on" value="on" checked>
-        <label for="pull-on">Enabled<small>update from web UI</small></label>
+        <label for="pull-on">Enabled<small>update from web UI</small><small id="pull-size-on" style="color:#aaa;"></small></label>
       </div>
       <div class="option">
         <input type="radio" name="pull" id="pull-off" value="off">
-        <label for="pull-off">Disabled</label>
+        <label for="pull-off">Disabled<small id="pull-size-off" style="color:#aaa;"></small></label>
       </div>
     </div>
   </div>
@@ -121,6 +121,11 @@
     </div>
   </div>
 
+  <details id="size-report" style="display:none;margin-top:1.25rem;font-size:0.85rem;color:#555;">
+    <summary style="cursor:pointer;font-weight:600;color:#444;">Memory usage (idf.py size)</summary>
+    <pre id="size-report-text" style="margin:0.5rem 0 0;padding:0.6rem 0.75rem;background:#f8f8f8;border:1px solid #eee;border-radius:4px;font-size:0.76rem;overflow-x:auto;white-space:pre;"></pre>
+  </details>
+
   <details style="margin-top:2rem;font-size:0.85rem;color:#555;">
     <summary style="cursor:pointer;font-weight:600;color:#444;">Changes vs upstream snapclient</summary>
     <p style="margin:0.6rem 0 0.3rem;font-size:0.82rem;color:#666;">Based on <a href="https://github.com/CarlosDerSeher/snapclient">CarlosDerSeher/snapclient</a> with the following additions:</p>
@@ -139,6 +144,33 @@
     const available = new Set([{{range .}}{{range .Items}}"{{.Manifest}}",{{end}}{{end}}]);
     const otaLinks = { {{range .}}{{range .Items}}{{if .OTA}}"{{.Manifest}}": "{{.OTA}}",{{end}}{{end}}{{end}} };
     const otaManifestLinks = { {{range .}}{{range .Items}}{{if .OTAManifest}}"{{.Manifest}}": "{{.OTAManifest}}",{{end}}{{end}}{{end}} };
+    const sizeReports = { {{range .}}{{range .Items}}{{if .SizeReport}}"{{.Manifest}}": {{.SizeReport}},{{end}}{{end}}{{end}} };
+
+    function formatSizeReport(r) {
+      try {
+        const kb = n => (n / 1024).toFixed(1).padStart(7) + ' KiB';
+        const pct = ratio => ' (' + (ratio * 100).toFixed(1) + '%)';
+        const row = (label, n, suffix) => label.padEnd(18) + kb(n) + (suffix || '');
+        const sep = '─'.repeat(36);
+        return [
+          'DIRAM',
+          row('  .data',    r.diram_data),
+          row('  .bss',     r.diram_bss,  '  (zero-init, not in flash)'),
+          row('  .text',    r.diram_text),
+          row('  vectors',  r.diram_vectors),
+          row('  used',     r.used_diram, pct(r.used_diram_ratio) + ' of ' + kb(r.diram_total).trim()),
+          row('  remain',   r.diram_remain),
+          sep,
+          'Flash',
+          row('  code',     r.flash_code),
+          row('  rodata',   r.flash_rodata),
+          row('  other',    r.flash_other),
+          row('  total',    r.used_flash_non_ram),
+          sep,
+          row('Total image', r.total_size),
+        ].join('\n');
+      } catch { return JSON.stringify(r, null, 2); }
+    }
 
     const installBtn = document.getElementById('install-btn');
     const variantName = document.getElementById('variant-name');
@@ -221,6 +253,33 @@
         otaPullNote.style.display = '';
       } else {
         otaPullNote.style.display = 'none';
+      }
+
+      const sizeEl = document.getElementById('size-report');
+      const sizeText = document.getElementById('size-report-text');
+      const report = sizeReports[manifest];
+      if (report) {
+        sizeText.textContent = formatSizeReport(report);
+        sizeEl.style.display = '';
+
+        const rOn  = sizeReports['snapclient-mdns/manifest.json'];
+        const rOff = sizeReports['snapclient-mdns-nopull/manifest.json'];
+        const elOn  = document.getElementById('pull-size-on');
+        const elOff = document.getElementById('pull-size-off');
+        if (rOn && rOff) {
+          const dpct = n => (n >= 0 ? '+' : '') + n.toFixed(1) + '%';
+          const memD   = (rOn.used_diram         - rOff.used_diram)         / rOff.used_diram         * 100;
+          const flashD = (rOn.used_flash_non_ram  - rOff.used_flash_non_ram) / rOff.used_flash_non_ram * 100;
+          const isPullOn = sel.pull === 'on';
+          elOn.textContent  = isPullOn  ? '' : `${dpct(memD)} DIRAM, ${dpct(flashD)} flash`;
+          elOff.textContent = !isPullOn ? '' : `${dpct(-memD)} DIRAM, ${dpct(-flashD)} flash`;
+        } else {
+          if (elOn)  elOn.textContent  = '';
+          if (elOff) elOff.textContent = '';
+        }
+      } else {
+        sizeEl.style.display = 'none';
+        deltaNoteEl.style.display = 'none';
       }
     }
 

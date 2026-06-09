@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"encoding/json"
 	"flag"
 	"html/template"
 	"os"
@@ -19,6 +20,7 @@ type firmware struct {
 	Manifest    string
 	OTA         string
 	OTAManifest string
+	SizeReport  template.JS // JSON-encoded string or "null"
 }
 
 type group struct {
@@ -131,12 +133,19 @@ func main() {
 		if _, err := os.Stat(filepath.Join(*dir, entry.Name(), "ota-manifest.json")); err == nil {
 			otaManifest = entry.Name() + "/ota-manifest.json"
 		}
+		sizeReport := template.JS("null")
+		if data, err := os.ReadFile(filepath.Join(*dir, entry.Name(), "size.json")); err == nil {
+			if json.Valid(data) {
+				sizeReport = template.JS(data)
+			}
+		}
 		groups[g].Items = append(groups[g].Items, firmware{
 			Label:       meta.Label,
 			Desc:        meta.Desc,
 			Manifest:    entry.Name() + "/manifest.json",
 			OTA:         ota,
 			OTAManifest: otaManifest,
+			SizeReport:  sizeReport,
 		})
 	}
 
