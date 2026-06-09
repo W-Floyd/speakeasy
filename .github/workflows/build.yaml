@@ -81,6 +81,7 @@ jobs:
             -B "build-${{ matrix.variant }}" \
             build
           idf.py -B "build-${{ matrix.variant }}" merge-bin
+          python3 -m esp_idf_size --format json "build-${{ matrix.variant }}/snapclient.map" > "build-${{ matrix.variant }}/size.json"
 
       - name: Stage firmware
         shell: bash
@@ -90,7 +91,7 @@ jobs:
           mkdir -p "${out}"
           cp "snapclient/build-${variant}/merged-binary.bin" "${out}/merged.bin"
           cp "snapclient/build-${variant}/snapclient.bin" "${out}/snapclient-${variant}-ota.bin"
-          python3 -m esp_idf_size --format json "snapclient/build-${variant}/snapclient.map" > "${out}/size.json"
+          cp "snapclient/build-${variant}/size.json" "${out}/size.json"
           label="${variant//-/ }"
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"
