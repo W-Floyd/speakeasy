@@ -152,7 +152,7 @@ jobs:
           merge-multiple: true
 
       - name: Generate flash page
-        run: go run ./cmd/gen-index -dir public -out public/index.html
+        run: go run ./cmd/gen-index -dir public -docs docs -out public/index.html
 
       - uses: actions/upload-pages-artifact@v3
         with:

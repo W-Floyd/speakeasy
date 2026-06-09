@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"bytes"
 	"encoding/json"
 	"flag"
 	"html/template"
@@ -9,6 +10,10 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	"github.com/yuin/goldmark/renderer/html"
 )
 
 //go:embed template.html
@@ -28,6 +33,16 @@ type group struct {
 	Items []firmware
 }
 
+type doc struct {
+	Name string
+	HTML template.HTML
+}
+
+type pageData struct {
+	Groups []group
+	Docs   []doc
+}
+
 var groupOrder = []string{"Sendspin", "Snapcast", "Snapcast (standalone)"}
 
 var known = buildKnown()
@@ -43,7 +58,7 @@ func buildKnown() map[string]firmware {
 		{id: "sc", label: "Snapcast", desc: "Snapcast client (mDNS discovery)"},
 	}
 	m := map[string]firmware{
-		"snapclient-mdns":       {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
+		"snapclient-mdns":        {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
 		"snapclient-mdns-nopull": {Label: "mDNS (no pull OTA)", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery, pull OTA disabled"},
 	}
 	for _, p := range protos {
@@ -97,8 +112,40 @@ func derive(dir string) firmware {
 	return firmware{Label: strings.Join(parts, " ")}
 }
 
+var md = goldmark.New(
+	goldmark.WithExtensions(extension.GFM),
+	goldmark.WithRendererOptions(html.WithUnsafe()),
+)
+
+func renderDocs(docsDir string) []doc {
+	entries, err := os.ReadDir(docsDir)
+	if err != nil {
+		return nil
+	}
+	var docs []doc
+	for _, e := range entries {
+		if e.IsDir() || !strings.HasSuffix(e.Name(), ".md") {
+			continue
+		}
+		src, err := os.ReadFile(filepath.Join(docsDir, e.Name()))
+		if err != nil {
+			continue
+		}
+		var buf bytes.Buffer
+		if err := md.Convert(src, &buf); err != nil {
+			continue
+		}
+		name := strings.TrimSuffix(e.Name(), ".md")
+		name = strings.ReplaceAll(name, "-", " ")
+		name = strings.ToUpper(name[:1]) + name[1:]
+		docs = append(docs, doc{Name: name, HTML: template.HTML(buf.String())})
+	}
+	return docs
+}
+
 func main() {
 	dir := flag.String("dir", ".", "directory containing firmware subdirectories")
+	docsDir := flag.String("docs", "docs", "directory containing markdown doc files")
 	out := flag.String("out", "index.html", "output HTML file")
 	flag.Parse()
 
@@ -165,8 +212,13 @@ func main() {
 	}
 	defer f.Close()
 
+	data := pageData{
+		Groups: result,
+		Docs:   renderDocs(*docsDir),
+	}
+
 	tmpl := template.Must(template.New("page").Parse(page))
-	if err := tmpl.Execute(f, result); err != nil {
+	if err := tmpl.Execute(f, data); err != nil {
 		panic(err)
 	}
 }

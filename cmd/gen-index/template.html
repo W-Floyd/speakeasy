@@ -6,10 +6,22 @@
   <title>Speakeasy Firmware</title>
   <script type="module" src="https://unpkg.com/esp-web-tools@10/dist/web/install-button.js?module"></script>
   <style>
-    body { font-family: sans-serif; max-width: 560px; margin: 3rem auto; padding: 0 1rem; }
+    body { font-family: sans-serif; max-width: 660px; margin: 3rem auto; padding: 0 1rem; }
     h1 { margin-bottom: 0.25rem; }
-    p.subtitle { color: #666; margin-top: 0; margin-bottom: 2rem; }
 
+    /* ── Tabs ────────────────────────────────────────────────────────── */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #e5e7eb; margin-bottom: 1.75rem; }
+    .tab-btn {
+      padding: 0.5rem 1.1rem; font-size: 0.9rem; font-weight: 600; color: #6b7280;
+      background: none; border: none; border-bottom: 2px solid transparent;
+      margin-bottom: -2px; cursor: pointer; transition: color 0.1s, border-color 0.1s;
+    }
+    .tab-btn:hover { color: #374151; }
+    .tab-btn.active { color: #2563eb; border-bottom-color: #2563eb; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    /* ── Flasher ─────────────────────────────────────────────────────── */
     .question { margin-bottom: 1.25rem; }
     .question-label { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: #999; margin-bottom: 0.25rem; }
     .question-desc { font-size: 0.82rem; color: #aaa; margin: 0 0 0.5rem; }
@@ -31,120 +43,187 @@
     .flash-area { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #eee; display: flex; align-items: center; gap: 1rem; }
     #variant-name { font-family: monospace; font-size: 0.82rem; color: #666; }
     #unavailable-msg { font-size: 0.85rem; color: #b91c1c; }
+
+    /* ── Docs ────────────────────────────────────────────────────────── */
+    .docs-rendered { font-size: 0.92rem; line-height: 1.7; color: #374151; }
+    .docs-rendered h1 { font-size: 1.5rem; margin-top: 0; }
+    .docs-rendered h2 { font-size: 1.15rem; margin-top: 2rem; padding-bottom: 0.3rem; border-bottom: 1px solid #e5e7eb; }
+    .docs-rendered h3 { font-size: 1rem; margin-top: 1.5rem; }
+    .docs-rendered code { font-size: 0.85em; background: #f3f4f6; padding: 0.1em 0.35em; border-radius: 4px; }
+    .docs-rendered pre { background: #f8f8f8; border: 1px solid #eee; border-radius: 6px; padding: 0.75rem 1rem; overflow-x: auto; }
+    .docs-rendered pre code { background: none; padding: 0; }
+    .docs-rendered a { color: #2563eb; }
+    .docs-rendered table { border-collapse: collapse; width: 100%; font-size: 0.88rem; }
+    .docs-rendered th, .docs-rendered td { border: 1px solid #e5e7eb; padding: 0.35rem 0.65rem; text-align: left; }
+    .docs-rendered th { background: #f9fafb; font-weight: 600; }
+    .doc-panel { display: none; }
+    .doc-panel.active { display: block; }
   </style>
 </head>
 <body>
   <h1>Speakeasy</h1>
-  <p style="margin:0 0 0.75rem;padding:0.5rem 0.75rem;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;font-size:0.85rem;color:#92400e;">⚠ These are experimental development builds. Expect bugs.</p>
-  <p class="subtitle">ESP32-S3 multi-room audio firmware. Plug in via USB and flash below. Requires Chrome or Edge, or Firefox with the <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">WebSerial extension</a>.</p>
 
-  <details style="margin-bottom:1.5rem;font-size:0.85rem;color:#555;">
-    <summary style="cursor:pointer;font-weight:600;color:#444;">Hardware pin mappings</summary>
-    <table style="margin-top:0.6rem;border-collapse:collapse;width:100%;">
-      <thead><tr style="text-align:left;font-size:0.78rem;color:#999;text-transform:uppercase;letter-spacing:0.05em;">
-        <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">Signal</th>
-        <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">GPIO</th>
-        <th style="padding:0.2rem 0;font-weight:600;">Component</th>
-      </tr></thead>
-      <tbody style="font-family:monospace;">
-        <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">LRCLK</td><td style="padding:0.15rem 0.75rem 0.15rem 0;">10</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
-        <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">BCLK</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">11</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
-        <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">DOUT</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">12</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
-      </tbody>
-    </table>
-  </details>
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="docs">Docs</button>
+    <button class="tab-btn" data-tab="flash">Flash</button>
+  </div>
 
-  <div class="question" id="q-proto">
-    <div class="question-label">Protocol</div>
-    <p class="question-desc">The audio streaming protocol. Sendspin integrates natively with Music Assistant for synchronized multi-room audio. Snapcast (ESPHome) wraps CarlosDerSeher/snapclient with Home Assistant integration. Snapcast (standalone) runs CarlosDerSeher/snapclient bare on ESP-IDF with no ESPHome or HA integration.</p>
-    <div class="options">
-      <div class="option">
-        <input type="radio" name="proto" id="proto-ss" value="ss" checked>
-        <label for="proto-ss">Sendspin<small>Music Assistant</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="proto" id="proto-sc" value="sc">
-        <label for="proto-sc">Snapcast<small>ESPHome + HA</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="proto" id="proto-snapclient" value="snapclient">
-        <label for="proto-snapclient">Snapcast (standalone)<small>bare ESP-IDF</small></label>
+  <!-- ── Docs tab ───────────────────────────────────────────────────── -->
+  <div class="tab-panel active" id="tab-docs">
+    {{if .Docs}}
+      {{if gt (len .Docs) 1}}
+        <div class="tabs" style="margin-bottom:1.25rem;">
+          {{range $i, $d := .Docs}}
+          <button class="tab-btn doc-tab-btn{{if eq $i 0}} active{{end}}" data-doc="doc-{{$i}}">{{$d.Name}}</button>
+          {{end}}
+        </div>
+        {{range $i, $d := .Docs}}
+        <div class="doc-panel{{if eq $i 0}} active{{end}}" id="doc-{{$i}}">
+          <div class="docs-rendered">{{$d.HTML}}</div>
+        </div>
+        {{end}}
+      {{else}}
+        <div class="docs-rendered">{{(index .Docs 0).HTML}}</div>
+      {{end}}
+    {{else}}
+      <p style="color:#9ca3af;font-size:0.9rem;">No docs found. Add <code>.md</code> files to the <code>docs/</code> folder.</p>
+    {{end}}
+  </div>
+
+  <!-- ── Flash tab ──────────────────────────────────────────────────── -->
+  <div class="tab-panel" id="tab-flash">
+    <p style="margin:0 0 0.75rem;padding:0.5rem 0.75rem;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;font-size:0.85rem;color:#92400e;">⚠ These are experimental development builds. Expect bugs.</p>
+    <p style="margin:0 0 1.5rem;font-size:0.88rem;color:#555;">Plug in via USB and flash below. Requires Chrome or Edge, or Firefox with the <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">WebSerial extension</a>.</p>
+
+    <details style="margin-bottom:1.5rem;font-size:0.85rem;color:#555;">
+      <summary style="cursor:pointer;font-weight:600;color:#444;">Hardware pin mappings</summary>
+      <table style="margin-top:0.6rem;border-collapse:collapse;width:100%;">
+        <thead><tr style="text-align:left;font-size:0.78rem;color:#999;text-transform:uppercase;letter-spacing:0.05em;">
+          <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">Signal</th>
+          <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">GPIO</th>
+          <th style="padding:0.2rem 0;font-weight:600;">Component</th>
+        </tr></thead>
+        <tbody style="font-family:monospace;">
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">LRCLK</td><td style="padding:0.15rem 0.75rem 0.15rem 0;">10</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">BCLK</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">11</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">DOUT</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">12</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+        </tbody>
+      </table>
+    </details>
+
+    <div class="question" id="q-proto">
+      <div class="question-label">Protocol</div>
+      <p class="question-desc">The audio streaming protocol. Sendspin integrates natively with Music Assistant for synchronized multi-room audio. Snapcast (ESPHome) wraps CarlosDerSeher/snapclient with Home Assistant integration. Snapcast (standalone) runs CarlosDerSeher/snapclient bare on ESP-IDF with no ESPHome or HA integration.</p>
+      <div class="options">
+        <div class="option">
+          <input type="radio" name="proto" id="proto-ss" value="ss" checked>
+          <label for="proto-ss">Sendspin<small>Music Assistant</small></label>
+        </div>
+        <div class="option">
+          <input type="radio" name="proto" id="proto-sc" value="sc">
+          <label for="proto-sc">Snapcast<small>ESPHome + HA</small></label>
+        </div>
+        <div class="option">
+          <input type="radio" name="proto" id="proto-snapclient" value="snapclient">
+          <label for="proto-snapclient">Snapcast (standalone)<small>bare ESP-IDF</small></label>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="question" id="q-nobt">
-    <div class="question-label">Bluetooth</div>
-    <p class="question-desc">BLE is used for WiFi provisioning via Improv — configure WiFi credentials from a phone without USB. Disabling it frees ~100 KB of RAM and is recommended once the device is set up.</p>
-    <div class="options">
-      <div class="option">
-        <input type="radio" name="bt" id="bt-off" value="off" checked>
-        <label for="bt-off">Disabled<small>more free RAM</small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="bt" id="bt-on" value="on">
-        <label for="bt-on">Enabled<small>WiFi setup via BLE</small></label>
-      </div>
-    </div>
-  </div>
-
-  <div class="question" id="q-pull">
-    <div class="question-label">Pull OTA</div>
-    <p class="question-desc">Pull OTA lets the device fetch and flash firmware from a URL via its web UI.</p>
-    <div class="options">
-      <div class="option">
-        <input type="radio" name="pull" id="pull-on" value="on" checked>
-        <label for="pull-on">Enabled<small>update from web UI</small><small id="pull-size-on" style="color:#aaa;"></small></label>
-      </div>
-      <div class="option">
-        <input type="radio" name="pull" id="pull-off" value="off">
-        <label for="pull-off">Disabled<small id="pull-size-off" style="color:#aaa;"></small></label>
+    <div class="question" id="q-nobt">
+      <div class="question-label">Bluetooth</div>
+      <p class="question-desc">BLE is used for WiFi provisioning via Improv — configure WiFi credentials from a phone without USB. Disabling it frees ~100 KB of RAM and is recommended once the device is set up.</p>
+      <div class="options">
+        <div class="option">
+          <input type="radio" name="bt" id="bt-off" value="off" checked>
+          <label for="bt-off">Disabled<small>more free RAM</small></label>
+        </div>
+        <div class="option">
+          <input type="radio" name="bt" id="bt-on" value="on">
+          <label for="bt-on">Enabled<small>WiFi setup via BLE</small></label>
+        </div>
       </div>
     </div>
-  </div>
 
-  <div class="flash-area">
-    <esp-web-install-button id="install-btn" manifest="">
-      <button slot="activate">Flash</button>
-      <span slot="unsupported">Use Chrome, Edge, or <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">Firefox + WebSerial</a></span>
-      <span slot="not-allowed">Requires HTTPS</span>
-    </esp-web-install-button>
-    <a id="ota-dl" style="display:none;font-size:0.9rem;" download>Download OTA binary</a>
-    <span id="variant-name"></span>
-    <span id="unavailable-msg"></span>
-  </div>
-  <div id="ota-pull-note" style="display:none;margin-top:0.75rem;">
-    <p style="margin:0 0 0.35rem;font-size:0.82rem;color:#555;">Already flashed? On the device's OTA Update page, use this URL to pull the latest firmware directly:</p>
-    <div style="display:flex;align-items:center;gap:0.5rem;">
-      <input id="ota-manifest-url" readonly style="flex:1;font-family:monospace;font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:4px;color:#444;background:#f9f9f9;" />
-      <button id="ota-manifest-copy" onclick="(function(){var el=document.getElementById('ota-manifest-url');el.select();navigator.clipboard.writeText(el.value).catch(()=>{});var btn=document.getElementById('ota-manifest-copy');btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);})()" style="padding:0.3rem 0.7rem;font-size:0.78rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;">Copy</button>
+    <div class="question" id="q-pull">
+      <div class="question-label">Pull OTA</div>
+      <p class="question-desc">Pull OTA lets the device fetch and flash firmware from a URL via its web UI.</p>
+      <div class="options">
+        <div class="option">
+          <input type="radio" name="pull" id="pull-on" value="on" checked>
+          <label for="pull-on">Enabled<small>update from web UI</small><small id="pull-size-on" style="color:#aaa;"></small></label>
+        </div>
+        <div class="option">
+          <input type="radio" name="pull" id="pull-off" value="off">
+          <label for="pull-off">Disabled<small id="pull-size-off" style="color:#aaa;"></small></label>
+        </div>
+      </div>
     </div>
+
+    <div class="flash-area">
+      <esp-web-install-button id="install-btn" manifest="">
+        <button slot="activate">Flash</button>
+        <span slot="unsupported">Use Chrome, Edge, or <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">Firefox + WebSerial</a></span>
+        <span slot="not-allowed">Requires HTTPS</span>
+      </esp-web-install-button>
+      <a id="ota-dl" style="display:none;font-size:0.9rem;" download>Download OTA binary</a>
+      <span id="variant-name"></span>
+      <span id="unavailable-msg"></span>
+    </div>
+    <div id="ota-pull-note" style="display:none;margin-top:0.75rem;">
+      <p style="margin:0 0 0.35rem;font-size:0.82rem;color:#555;">Already flashed? On the device's OTA Update page, use this URL to pull the latest firmware directly:</p>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <input id="ota-manifest-url" readonly style="flex:1;font-family:monospace;font-size:0.78rem;padding:0.3rem 0.5rem;border:1px solid #ddd;border-radius:4px;color:#444;background:#f9f9f9;" />
+        <button id="ota-manifest-copy" onclick="(function(){var el=document.getElementById('ota-manifest-url');el.select();navigator.clipboard.writeText(el.value).catch(()=>{});var btn=document.getElementById('ota-manifest-copy');btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy',1500);})()" style="padding:0.3rem 0.7rem;font-size:0.78rem;border:1px solid #ddd;border-radius:4px;background:#fff;cursor:pointer;">Copy</button>
+      </div>
+    </div>
+
+    <details id="size-report" style="display:none;margin-top:1.25rem;font-size:0.85rem;color:#555;">
+      <summary style="cursor:pointer;font-weight:600;color:#444;">Memory usage (idf.py size)</summary>
+      <pre id="size-report-text" style="margin:0.5rem 0 0;padding:0.6rem 0.75rem;background:#f8f8f8;border:1px solid #eee;border-radius:4px;font-size:0.76rem;overflow-x:auto;white-space:pre;"></pre>
+    </details>
+
+    <details style="margin-top:2rem;font-size:0.85rem;color:#555;">
+      <summary style="cursor:pointer;font-weight:600;color:#444;">Changes vs upstream snapclient</summary>
+      <p style="margin:0.6rem 0 0.3rem;font-size:0.82rem;color:#666;">Based on <a href="https://github.com/CarlosDerSeher/snapclient">CarlosDerSeher/snapclient</a> with the following additions:</p>
+      <ul style="margin:0.4rem 0 0;padding-left:1.25rem;line-height:1.7;font-size:0.82rem;">
+        <li><strong>Exponential volume curve</strong> — maps the volume slider to perceived loudness using a dB-range exponential curve; range (0-90 dB, default 40 dB) is adjustable in the DSP settings page and persisted to NVS.</li>
+        <li><strong>Channel routing</strong> — runtime Stereo / Left Only / Right Only / Mono mode in the general settings page, persisted to NVS. Enables two speakers to act as a stereo pair; Mono mixes L+R to both outputs.</li>
+        <li><strong>WiFi TX power</strong> — slider in the general settings page (dBm), applied at boot and live on change, persisted to NVS. Useful for compact PCB antennas that self-interfere at high power.</li>
+        <li><strong>Web OTA (push)</strong> — firmware updates over WiFi via a browser UI at <code>/ota-update.html</code> or <code>POST /api/ota/upload</code>. Displays current and pending firmware details (version, build date, SHA256) side-by-side before flashing. The OTA binary is also available for download above.</li>
+        <li><strong>Web OTA (pull)</strong> — device fetches a manifest URL (<code>POST /api/ota/pull</code>), version-checks against running firmware, then downloads and flashes the listed binary with SHA-256 integrity verification. Pre-configured to pull from this page.</li>
+      </ul>
+    </details>
+
+    <p style="margin-top:1rem;font-size:0.8rem;color:#aaa;"><a href="https://github.com/W-Floyd/speakeasy">Source on GitHub</a>.</p>
   </div>
-
-  <details id="size-report" style="display:none;margin-top:1.25rem;font-size:0.85rem;color:#555;">
-    <summary style="cursor:pointer;font-weight:600;color:#444;">Memory usage (idf.py size)</summary>
-    <pre id="size-report-text" style="margin:0.5rem 0 0;padding:0.6rem 0.75rem;background:#f8f8f8;border:1px solid #eee;border-radius:4px;font-size:0.76rem;overflow-x:auto;white-space:pre;"></pre>
-  </details>
-
-  <details style="margin-top:2rem;font-size:0.85rem;color:#555;">
-    <summary style="cursor:pointer;font-weight:600;color:#444;">Changes vs upstream snapclient</summary>
-    <p style="margin:0.6rem 0 0.3rem;font-size:0.82rem;color:#666;">Based on <a href="https://github.com/CarlosDerSeher/snapclient">CarlosDerSeher/snapclient</a> with the following additions:</p>
-    <ul style="margin:0.4rem 0 0;padding-left:1.25rem;line-height:1.7;font-size:0.82rem;">
-      <li><strong>Exponential volume curve</strong> — maps the volume slider to perceived loudness using a dB-range exponential curve; range (0–90 dB, default 60 dB) is adjustable in the DSP settings page and persisted to NVS.</li>
-      <li><strong>Channel routing</strong> — runtime Stereo / Left Only / Right Only / Mono mode in the general settings page, persisted to NVS. Enables two speakers to act as a stereo pair; Mono mixes L+R to both outputs.</li>
-      <li><strong>WiFi TX power</strong> — slider in the general settings page (dBm), applied at boot and live on change, persisted to NVS. Useful for compact PCB antennas that self-interfere at high power.</li>
-      <li><strong>Web OTA (push)</strong> — firmware updates over WiFi via a browser UI at <code>/ota-update.html</code> or <code>POST /api/ota/upload</code>. Displays current and pending firmware details (version, build date, SHA256) side-by-side before flashing. The OTA binary is also available for download above.</li>
-      <li><strong>Web OTA (pull)</strong> — device fetches a manifest URL (<code>POST /api/ota/pull</code>), version-checks against running firmware, then downloads and flashes the listed binary with SHA-256 integrity verification. Pre-configured to pull from this page.</li>
-    </ul>
-  </details>
-
-  <p style="margin-top:1rem;font-size:0.8rem;color:#aaa;"><a href="https://github.com/W-Floyd/speakeasy">Source on GitHub</a>.</p>
 
   <script>
-    const available = new Set([{{range .}}{{range .Items}}"{{.Manifest}}",{{end}}{{end}}]);
-    const otaLinks = { {{range .}}{{range .Items}}{{if .OTA}}"{{.Manifest}}": "{{.OTA}}",{{end}}{{end}}{{end}} };
-    const otaManifestLinks = { {{range .}}{{range .Items}}{{if .OTAManifest}}"{{.Manifest}}": "{{.OTAManifest}}",{{end}}{{end}}{{end}} };
-    const sizeReports = { {{range .}}{{range .Items}}{{if .SizeReport}}"{{.Manifest}}": {{.SizeReport}},{{end}}{{end}}{{end}} };
+    // ── Top-level tabs ────────────────────────────────────────────────
+    document.querySelectorAll('.tab-btn:not(.doc-tab-btn)').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn:not(.doc-tab-btn)').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+      });
+    });
+
+    // ── Doc sub-tabs ──────────────────────────────────────────────────
+    document.querySelectorAll('.doc-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.doc-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.doc-panel').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.doc).classList.add('active');
+      });
+    });
+
+    // ── Flasher ───────────────────────────────────────────────────────
+    const available = new Set([{{range .Groups}}{{range .Items}}"{{.Manifest}}",{{end}}{{end}}]);
+    const otaLinks = { {{range .Groups}}{{range .Items}}{{if .OTA}}"{{.Manifest}}": "{{.OTA}}",{{end}}{{end}}{{end}} };
+    const otaManifestLinks = { {{range .Groups}}{{range .Items}}{{if .OTAManifest}}"{{.Manifest}}": "{{.OTAManifest}}",{{end}}{{end}}{{end}} };
+    const sizeReports = { {{range .Groups}}{{range .Items}}{{if .SizeReport}}"{{.Manifest}}": {{.SizeReport}},{{end}}{{end}}{{end}} };
 
     function formatSizeReport(r) {
       try {
@@ -192,7 +271,6 @@
       return { proto: get('proto'), bt: get('bt'), pull: get('pull') };
     }
 
-    // onlyFor values can be a string (single match) or array (any match).
     const esphome = ['ss', 'sc'];
     const QUESTIONS = [
       { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
@@ -206,7 +284,6 @@
       for (const q of QUESTIONS) {
         const el = document.getElementById(q.el);
 
-        // fade questions that don't apply to the current selection
         const inapplicable = !!(q.onlyFor && (() => {
           const [key, val] = Object.entries(q.onlyFor)[0];
           return Array.isArray(val) ? !val.includes(sel[key]) : sel[key] !== val;
@@ -279,14 +356,9 @@
         }
       } else {
         sizeEl.style.display = 'none';
-        deltaNoteEl.style.display = 'none';
       }
     }
 
-    // Parse a manifest path back into selections so we can seed radios from a
-    // known-available state before the first update() call. Without this, the
-    // default HTML selections (e.g. ipv6=off) may not match any available
-    // firmware, causing the viability check to hide all options incorrectly.
     function seedFromAvailable() {
       if (!available.size) return;
       const first = [...available][0].replace('/manifest.json', '');
