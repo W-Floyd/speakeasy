@@ -96,8 +96,9 @@ RUN source /opt/esp/idf/export.sh && \
       > /output/snapclient-mdns/manifest.json && \
     _ota=/output/snapclient-mdns/snapclient-mdns-ota.bin && \
     file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1) && \
-    sc_sha=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')") && \
-    sc_ver=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);v=d[i+16:i+48];print(v.split(b'\x00')[0].decode(),end='')") && \
+    _info=$(python3 -m esptool image-info "${_ota}" 2>/dev/null) && \
+    sc_sha=$(echo "${_info}" | awk '/^ELF file SHA256:/{print $4}') && \
+    sc_ver=$(echo "${_info}" | awk '/^App version:/{print $3}') && \
     pages_base="https://w-floyd.github.io/speakeasy" && \
     printf '{"version":"%s","url":"%s/snapclient-mdns/snapclient-mdns-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
       "${sc_ver}" "${pages_base}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
