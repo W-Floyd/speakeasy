@@ -64,12 +64,12 @@
   <h1>Speakeasy</h1>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="docs">Docs</button>
-    <button class="tab-btn" data-tab="flash">Flash</button>
+    <button class="tab-btn active" data-tab="flash">Flash</button>
+    <button class="tab-btn" data-tab="docs">Docs</button>
   </div>
 
   <!-- ── Docs tab ───────────────────────────────────────────────────── -->
-  <div class="tab-panel active" id="tab-docs">
+  <div class="tab-panel" id="tab-docs">
     {{if .Docs}}
       {{if gt (len .Docs) 1}}
         <div class="tabs" style="margin-bottom:1.25rem;">
@@ -91,7 +91,7 @@
   </div>
 
   <!-- ── Flash tab ──────────────────────────────────────────────────── -->
-  <div class="tab-panel" id="tab-flash">
+  <div class="tab-panel active" id="tab-flash">
     <p style="margin:0 0 0.75rem;padding:0.5rem 0.75rem;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;font-size:0.85rem;color:#92400e;">⚠ These are experimental development builds. Expect bugs.</p>
     <p style="margin:0 0 1.5rem;font-size:0.88rem;color:#555;">Plug in via USB and flash below. Requires Chrome or Edge, or Firefox with the <a href="https://addons.mozilla.org/en-US/firefox/addon/webserial-for-firefox/">WebSerial extension</a>.</p>
 
