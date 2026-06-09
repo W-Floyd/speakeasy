@@ -288,7 +288,7 @@ COPY speakeasy-*.yaml ./
 				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json && \\\n", variant)
 				fmt.Fprintf(&sb, "    _ota=/output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant)
 				fmt.Fprintf(&sb, "    file_sha=$(sha256sum \"${_ota}\" | cut -d' ' -f1) && \\\n")
-				fmt.Fprintf(&sb, "    _info=$(esptool.py image-info \"${_ota}\" 2>/dev/null) && \\\n")
+				fmt.Fprintf(&sb, "    _info=$(esptool.py image_info --version 2 \"${_ota}\" 2>/dev/null) && \\\n")
 				fmt.Fprintf(&sb, "    sc_sha=$(echo \"${_info}\" | awk '/^ELF file SHA256:/{print $4}') && \\\n")
 				fmt.Fprintf(&sb, "    sc_ver=$(echo \"${_info}\" | awk '/^App version:/{print $3}') && \\\n")
 				fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")
