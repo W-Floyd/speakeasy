@@ -102,7 +102,7 @@ jobs:
           mkdir -p "${out}"
           cp "snapclient/build-${variant}/merged-binary.bin" "${out}/merged.bin"
           cp "snapclient/build-${variant}/snapclient.bin" "${out}/snapclient-${variant}-ota.bin"
-          python3 ${IDF_PATH}/tools/idf_size.py --format json "snapclient/build-${variant}/snapclient.map" > "${out}/size.json"
+          python3 -m esp_idf_size --format json "snapclient/build-${variant}/snapclient.map" > "${out}/size.json"
           label="${variant//-/ }"
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"
@@ -273,7 +273,7 @@ COPY speakeasy-*.yaml ./
 			fmt.Fprintf(&sb, "      build && \\\n")
 			fmt.Fprintf(&sb, "    idf.py -B build-%s merge-bin && \\\n", variant)
 			fmt.Fprintf(&sb, "    mkdir -p /output/snapclient-%s && \\\n", variant)
-			fmt.Fprintf(&sb, "    python3 ${IDF_PATH}/tools/idf_size.py --format json build-%s/snapclient.map > /output/snapclient-%s/size.json && \\\n", variant, variant)
+			fmt.Fprintf(&sb, "    python3 -m esp_idf_size --format json build-%s/snapclient.map > /output/snapclient-%s/size.json && \\\n", variant, variant)
 			fmt.Fprintf(&sb, "    cp build-%s/merged-binary.bin /output/snapclient-%s/merged.bin && \\\n", variant, variant)
 			fmt.Fprintf(&sb, "    cp build-%s/snapclient.bin /output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant, variant)
 			fmt.Fprintf(&sb, "    printf '{\"name\":\"Snapclient %s\",\"version\":\"1\",\"builds\":[{\"chipFamily\":\"ESP32-S3\",\"parts\":[{\"path\":\"merged.bin\",\"offset\":0}]}]}' \\\n", label)

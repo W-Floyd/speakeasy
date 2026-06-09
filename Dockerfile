@@ -87,7 +87,7 @@ RUN source /opt/esp/idf/export.sh && \
       build && \
     idf.py -B build-mdns merge-bin && \
     mkdir -p /output/snapclient-mdns && \
-    python3 ${IDF_PATH}/tools/idf_size.py --format json build-mdns/snapclient.map > /output/snapclient-mdns/size.json && \
+    python3 -m esp_idf_size --format json build-mdns/snapclient.map > /output/snapclient-mdns/size.json && \
     cp build-mdns/merged-binary.bin /output/snapclient-mdns/merged.bin && \
     cp build-mdns/snapclient.bin /output/snapclient-mdns/snapclient-mdns-ota.bin && \
     printf '{"name":"Snapclient mdns","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
@@ -110,7 +110,7 @@ RUN source /opt/esp/idf/export.sh && \
       build && \
     idf.py -B build-mdns-nopull merge-bin && \
     mkdir -p /output/snapclient-mdns-nopull && \
-    python3 ${IDF_PATH}/tools/idf_size.py --format json build-mdns-nopull/snapclient.map > /output/snapclient-mdns-nopull/size.json && \
+    python3 -m esp_idf_size --format json build-mdns-nopull/snapclient.map > /output/snapclient-mdns-nopull/size.json && \
     cp build-mdns-nopull/merged-binary.bin /output/snapclient-mdns-nopull/merged.bin && \
     cp build-mdns-nopull/snapclient.bin /output/snapclient-mdns-nopull/snapclient-mdns-nopull-ota.bin && \
     printf '{"name":"Snapclient mdns nopull","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
