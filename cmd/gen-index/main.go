@@ -143,13 +143,13 @@ func renderDocs(docsDir string) []doc {
 	return docs
 }
 
-// copyDocAssets copies non-.md files from docsDir into outDir/docs/.
+// copyDocAssets copies non-.md files from docsDir into outDir.
+// favicon.svg lands at the output root; everything else goes into outDir/docs/.
 func copyDocAssets(docsDir, outDir string) error {
 	entries, err := os.ReadDir(docsDir)
 	if err != nil {
 		return nil // no docs dir — not an error
 	}
-	dest := filepath.Join(outDir, "docs")
 	for _, e := range entries {
 		if e.IsDir() || strings.HasSuffix(e.Name(), ".md") {
 			continue
@@ -157,6 +157,10 @@ func copyDocAssets(docsDir, outDir string) error {
 		data, err := os.ReadFile(filepath.Join(docsDir, e.Name()))
 		if err != nil {
 			return err
+		}
+		dest := filepath.Join(outDir, "docs")
+		if e.Name() == "favicon.svg" {
+			dest = outDir
 		}
 		if err := os.MkdirAll(dest, 0755); err != nil {
 			return err
