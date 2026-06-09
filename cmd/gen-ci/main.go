@@ -88,6 +88,7 @@ jobs:
         run: |
           source /opt/esp/idf/export.sh
           cd snapclient
+          echo "$(git -C "${GITHUB_WORKSPACE}" rev-parse --short HEAD)" > version.txt
           idf.py \
             -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${{ matrix.variant }}" \
             -B "build-${{ matrix.variant }}" \
@@ -111,7 +112,7 @@ jobs:
             _ota="${out}/snapclient-${variant}-ota.bin"
             file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1)
             sc_sha=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')")
-            sc_ver=${sc_sha:0:8}
+            sc_ver=$(python3 -c "import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);v=d[i+16:i+48];print(v.split(b'\\x00')[0].decode(),end='')")
             pages_base="https://w-floyd.github.io/speakeasy"
             printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
               "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
@@ -260,7 +261,9 @@ COPY speakeasy-*.yaml ./
 		sb.WriteString("SHELL [\"/bin/bash\", \"-c\"]\n")
 		sb.WriteString("WORKDIR /snapclient\n")
 		sb.WriteString("COPY snapclient/ .\n")
-		sb.WriteString("COPY snapclient-kconfig/ /snapclient-kconfig/\n\n")
+		sb.WriteString("COPY snapclient-kconfig/ /snapclient-kconfig/\n")
+		sb.WriteString("ARG SPEAKEASY_VERSION\n")
+		sb.WriteString("RUN echo \"${SPEAKEASY_VERSION}\" > version.txt\n\n")
 
 		for _, variant := range snapclientVariants {
 			stage := "snapclient-" + variant
@@ -283,7 +286,7 @@ COPY speakeasy-*.yaml ./
 				fmt.Fprintf(&sb, "    _ota=/output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant)
 				fmt.Fprintf(&sb, "    file_sha=$(sha256sum \"${_ota}\" | cut -d' ' -f1) && \\\n")
 				fmt.Fprintf(&sb, "    sc_sha=$(python3 -c \"import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);print(d[i+144:i+176].hex(),end='')\") && \\\n")
-				fmt.Fprintf(&sb, "    sc_ver=${sc_sha:0:8} && \\\n")
+				fmt.Fprintf(&sb, "    sc_ver=$(python3 -c \"import struct,sys;d=open('${_ota}','rb').read();i=next(i for i in range(0,len(d)-176,4)if struct.unpack_from('<I',d,i)[0]==0xABCD5432);v=d[i+16:i+48];print(v.split(b'\\x00')[0].decode(),end='')\") && \\\n")
 				fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")
 				fmt.Fprintf(&sb, "    printf '{\"version\":\"%%s\",\"url\":\"%%s/snapclient-%s/snapclient-%s-ota.bin\",\"sha256\":\"%%s\",\"file_sha256\":\"%%s\",\"release_notes\":\"snapclient@%%s\"}' \\\n", variant, variant)
 				fmt.Fprintf(&sb, "      \"${sc_ver}\" \"${pages_base}\" \"${sc_sha}\" \"${file_sha}\" \"${sc_ver}\" \\\n")
