@@ -129,13 +129,16 @@ COPY --from=snapclient-mdns-nopull /output/snapclient-mdns-nopull /output/snapcl
 FROM golang:1.22-alpine AS web
 
 WORKDIR /src
-COPY go.mod ./
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
 COPY cmd/ cmd/
 RUN --mount=type=cache,target=/root/.cache/go-build \
     go build -o /gen-index ./cmd/gen-index
 
 COPY --from=collect /output /output
-RUN /gen-index -dir /output -out /output/index.html
+COPY docs/ docs/
+RUN /gen-index -dir /output -docs docs -out /output/index.html
 
 # ── Server ────────────────────────────────────────────────────────────────────
 FROM caddy:alpine
