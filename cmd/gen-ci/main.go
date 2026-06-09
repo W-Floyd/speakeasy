@@ -95,31 +95,32 @@ jobs:
             build
           idf.py -B "build-${{ matrix.variant }}" merge-bin
           python3 -m esp_idf_size --format json "build-${{ matrix.variant }}/snapclient.map" > "build-${{ matrix.variant }}/size.json"
+          if ! grep -q "CONFIG_SNAPCLIENT_WEB_OTA_PULL=n" "${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${{ matrix.variant }}"; then
+            _ota="build-${{ matrix.variant }}/snapclient.bin"
+            file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1)
+            _info=$(esptool.py image-info "${_ota}" 2>/dev/null)
+            sc_sha=$(echo "${_info}" | awk '/^ELF file SHA256:/{print $4}')
+            sc_ver=$(echo "${_info}" | awk '/^App version:/{print $3}')
+            pages_base="https://w-floyd.github.io/speakeasy"
+            printf '{"version":"%s","url":"%s/snapclient-${{ matrix.variant }}/snapclient-${{ matrix.variant }}-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
+              "${sc_ver}" "${pages_base}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
+              > "build-${{ matrix.variant }}/ota-manifest.json"
+          fi
 
       - name: Stage firmware
         shell: bash
         run: |
-          source /opt/esp/idf/export.sh > /dev/null || true
           variant="${{ matrix.variant }}"
           out="output/snapclient-${variant}"
           mkdir -p "${out}"
           cp "snapclient/build-${variant}/merged-binary.bin" "${out}/merged.bin"
           cp "snapclient/build-${variant}/snapclient.bin" "${out}/snapclient-${variant}-ota.bin"
           cp "snapclient/build-${variant}/size.json" "${out}/size.json"
+          [ -f "snapclient/build-${variant}/ota-manifest.json" ] && \
+            cp "snapclient/build-${variant}/ota-manifest.json" "${out}/ota-manifest.json"
           label="${variant//-/ }"
           printf '{"name":"Snapclient %s","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
             "${label}" > "${out}/manifest.json"
-          if ! grep -q "CONFIG_SNAPCLIENT_WEB_OTA_PULL=n" "${GITHUB_WORKSPACE}/snapclient-kconfig/sdkconfig.${variant}"; then
-            _ota="${out}/snapclient-${variant}-ota.bin"
-            file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1)
-            _info=$(python3 -m esptool image-info "${_ota}" 2>/dev/null)
-            sc_sha=$(echo "${_info}" | awk '/^ELF file SHA256:/{print $4}')
-            sc_ver=$(echo "${_info}" | awk '/^App version:/{print $3}')
-            pages_base="https://w-floyd.github.io/speakeasy"
-            printf '{"version":"%s","url":"%s/snapclient-%s/snapclient-%s-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
-              "${sc_ver}" "${pages_base}" "${variant}" "${variant}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
-              > "${out}/ota-manifest.json"
-          fi
 
       - name: Upload firmware
         uses: actions/upload-artifact@v4
@@ -287,7 +288,7 @@ COPY speakeasy-*.yaml ./
 				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json && \\\n", variant)
 				fmt.Fprintf(&sb, "    _ota=/output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant)
 				fmt.Fprintf(&sb, "    file_sha=$(sha256sum \"${_ota}\" | cut -d' ' -f1) && \\\n")
-				fmt.Fprintf(&sb, "    _info=$(python3 -m esptool image-info \"${_ota}\" 2>/dev/null) && \\\n")
+				fmt.Fprintf(&sb, "    _info=$(esptool.py image-info \"${_ota}\" 2>/dev/null) && \\\n")
 				fmt.Fprintf(&sb, "    sc_sha=$(echo \"${_info}\" | awk '/^ELF file SHA256:/{print $4}') && \\\n")
 				fmt.Fprintf(&sb, "    sc_ver=$(echo \"${_info}\" | awk '/^App version:/{print $3}') && \\\n")
 				fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")

@@ -96,7 +96,7 @@ RUN source /opt/esp/idf/export.sh && \
       > /output/snapclient-mdns/manifest.json && \
     _ota=/output/snapclient-mdns/snapclient-mdns-ota.bin && \
     file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1) && \
-    _info=$(python3 -m esptool image-info "${_ota}" 2>/dev/null) && \
+    _info=$(esptool.py image-info "${_ota}" 2>/dev/null) && \
     sc_sha=$(echo "${_info}" | awk '/^ELF file SHA256:/{print $4}') && \
     sc_ver=$(echo "${_info}" | awk '/^App version:/{print $3}') && \
     pages_base="https://w-floyd.github.io/speakeasy" && \

@@ -55,7 +55,7 @@ IMAGE_TAG="speakeasy-${STAGE}-extract"
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 parse_app_desc() {
-    python3 -m esptool image-info "$1" 2>/dev/null
+    esptool image-info "$1" 2>/dev/null
 }
 
 dev_status_json() {
