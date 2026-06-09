@@ -71,7 +71,7 @@ RUN --mount=type=cache,target=/root/.ccache,id=ccache \
     rm -rf "${build_dir}"
 
 # ── Snapclient base ──────────────────────────────────────────────────────────
-FROM espressif/idf:v5.5.1 AS snapclient-base
+FROM espressif/idf:v5.5.4 AS snapclient-base
 
 SHELL ["/bin/bash", "-c"]
 WORKDIR /snapclient

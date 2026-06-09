@@ -66,7 +66,7 @@ jobs:
   build-snapclient:
     runs-on: ubuntu-latest
     container:
-      image: espressif/idf:v5.5.1
+      image: espressif/idf:v5.5.4
     strategy:
       fail-fast: false
       matrix:
@@ -254,7 +254,7 @@ COPY speakeasy-*.yaml ./
 
 	if len(snapclientVariants) > 0 {
 		sb.WriteString("# ── Snapclient base ──────────────────────────────────────────────────────────\n")
-		sb.WriteString("FROM espressif/idf:v5.5.1 AS snapclient-base\n\n")
+		sb.WriteString("FROM espressif/idf:v5.5.4 AS snapclient-base\n\n")
 		sb.WriteString("SHELL [\"/bin/bash\", \"-c\"]\n")
 		sb.WriteString("WORKDIR /snapclient\n")
 		sb.WriteString("COPY snapclient/ .\n")
