@@ -87,6 +87,7 @@ jobs:
       - name: Stage firmware
         shell: bash
         run: |
+          source /opt/esp/idf/export.sh > /dev/null
           variant="${{ matrix.variant }}"
           out="output/snapclient-${variant}"
           mkdir -p "${out}"
