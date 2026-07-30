@@ -1,14 +1,10 @@
 # Generated from cmd/gen-snapclient — do not edit directly.
 # Run: go run ./cmd/gen-snapclient
-# Variant: mdns-nopull
+# Variant: pcb-nopull
 
 # ── Essential: hardware identity ────────────────────────────────────────────
-# SD_MODE is tied to a L+R/2 voltage divider for hardware mono mix — no mute GPIO needed.
 CONFIG_AUDIO_BOARD_CUSTOM=y
 CONFIG_DAC_MAX98357=y
-CONFIG_MASTER_I2S_BCK_PIN=11
-CONFIG_MASTER_I2S_LRCK_PIN=10
-CONFIG_MASTER_I2S_DATAOUT_PIN=12
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
 CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 
@@ -96,6 +92,11 @@ CONFIG_LWIP_TCP_SACK_OUT=y
 # Zero logging overhead at runtime; level can be raised at runtime for debugging.
 CONFIG_LOG_DEFAULT_LEVEL_NONE=y
 CONFIG_LOG_MAXIMUM_LEVEL_INFO=y
+
+# Hardware: custom Speakeasy PCB (ESP32-S3-MINI-1U-N4R2) — SD_MODE driven via IO7/IO8 resistor network (see board_def.py)
+CONFIG_MASTER_I2S_BCK_PIN=5
+CONFIG_MASTER_I2S_LRCK_PIN=6
+CONFIG_MASTER_I2S_DATAOUT_PIN=4
 
 # Discovery: mDNS — server located automatically on the local network
 CONFIG_SNAPSERVER_USE_MDNS=y

@@ -11,13 +11,10 @@ import (
 // base is the overlay applied on top of sdkconfig.defaults + sdkconfig.defaults.esp32s3.
 // Only includes settings that differ from or extend those upstream defaults.
 // Non-essential tuning is commented out — enable incrementally to prove each change.
+// Hardware-specific I2S pin assignments are injected per-hardware variant (see hardware type below).
 const base = `# ── Essential: hardware identity ────────────────────────────────────────────
-# SD_MODE is tied to a L+R/2 voltage divider for hardware mono mix — no mute GPIO needed.
 CONFIG_AUDIO_BOARD_CUSTOM=y
 CONFIG_DAC_MAX98357=y
-CONFIG_MASTER_I2S_BCK_PIN=11
-CONFIG_MASTER_I2S_LRCK_PIN=10
-CONFIG_MASTER_I2S_DATAOUT_PIN=12
 CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
 CONFIG_ESPTOOLPY_FLASHFREQ_80M=y
 
@@ -123,6 +120,40 @@ var discoveries = []discovery{
 	},
 }
 
+type hardware struct {
+	name    string
+	comment string
+	// i2sPins is the hardware-specific I2S pin block injected after the base identity section.
+	i2sPins []string
+}
+
+// hardwares lists supported hardware targets.
+// "ots" = off-the-shelf ESP32-S3 Supermini (pins match the generic supermini board).
+// "pcb" = custom Speakeasy PCB (ESP32-S3-MINI-1U-N4R2; I2S pins from board_def.py).
+var hardwares = []hardware{
+	{
+		name:    "ots",
+		comment: "Hardware: off-the-shelf ESP32-S3 Supermini / Speakeasy Lowcost PCB — SD_MODE tied to L+R/2 voltage divider (hardware mono, no mute GPIO)",
+		i2sPins: []string{
+			// Matches circuit-synth-lowcost/board_def.py; LRCK/DATAOUT are
+			// swapped relative to the custom PCB below.
+			"CONFIG_MASTER_I2S_BCK_PIN=5",
+			"CONFIG_MASTER_I2S_LRCK_PIN=4",
+			"CONFIG_MASTER_I2S_DATAOUT_PIN=6",
+		},
+	},
+	{
+		name:    "pcb",
+		comment: "Hardware: custom Speakeasy PCB (ESP32-S3-MINI-1U-N4R2) — SD_MODE driven via IO7/IO8 resistor network (see board_def.py)",
+		i2sPins: []string{
+			"CONFIG_MASTER_I2S_BCK_PIN=5",
+			"CONFIG_MASTER_I2S_LRCK_PIN=6",
+			"CONFIG_MASTER_I2S_DATAOUT_PIN=4",
+			// "CONFIG_MAX98357_MUTE_PIN=8",
+		},
+	},
+}
+
 type otaPullMode struct {
 	suffix  string
 	enabled bool
@@ -133,17 +164,27 @@ var otaPullModes = []otaPullMode{
 	{suffix: "nopull", enabled: false},
 }
 
-func generate(d discovery, p otaPullMode) string {
-	variantName := d.name
-	if p.suffix != "" {
-		variantName = d.name + "-" + p.suffix
+func variantNameFor(h hardware, d discovery, p otaPullMode) string {
+	name := h.name
+	if len(discoveries) > 1 {
+		name = name + "-" + d.name
 	}
+	if p.suffix != "" {
+		name = name + "-" + p.suffix
+	}
+	return name
+}
+
+func generate(h hardware, d discovery, p otaPullMode) string {
+	variantName := variantNameFor(h, d, p)
 
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "# Generated from cmd/gen-snapclient — do not edit directly.\n")
 	fmt.Fprintf(&sb, "# Run: go run ./cmd/gen-snapclient\n")
 	fmt.Fprintf(&sb, "# Variant: %s\n\n", variantName)
 	sb.WriteString(base)
+	fmt.Fprintf(&sb, "\n# %s\n", h.comment)
+	sb.WriteString(strings.Join(h.i2sPins, "\n") + "\n")
 	sb.WriteString("\n# ")
 	sb.WriteString(d.comment)
 	sb.WriteString("\n")
@@ -172,21 +213,20 @@ func main() {
 		}
 	}
 
-	for _, d := range discoveries {
-		for _, p := range otaPullModes {
-			variantName := d.name
-			if p.suffix != "" {
-				variantName = d.name + "-" + p.suffix
-			}
-			filename := "sdkconfig." + variantName
-			fmt.Println(filename)
-			if *dryRun {
-				continue
-			}
-			path := filepath.Join(*dir, filename)
-			if err := os.WriteFile(path, []byte(generate(d, p)), 0644); err != nil {
-				fmt.Fprintf(os.Stderr, "error writing %s: %v\n", path, err)
-				os.Exit(1)
+	for _, h := range hardwares {
+		for _, d := range discoveries {
+			for _, p := range otaPullModes {
+				variantName := variantNameFor(h, d, p)
+				filename := "sdkconfig." + variantName
+				fmt.Println(filename)
+				if *dryRun {
+					continue
+				}
+				path := filepath.Join(*dir, filename)
+				if err := os.WriteFile(path, []byte(generate(h, d, p)), 0644); err != nil {
+					fmt.Fprintf(os.Stderr, "error writing %s: %v\n", path, err)
+					os.Exit(1)
+				}
 			}
 		}
 	}

@@ -28,8 +28,11 @@ Each variant is further configurable along these axes (ESPHome builds):
 
 | Component | Detail |
 |-----------|--------|
-| Board | ESP32-S3 Supermini (`ESP32-S3FH4R2`) — 4MB flash, 2MB quad PSRAM |
-| DAC + Amplifier | MAX98357A I2S DAC + Class D amplifier — LRCLK: GPIO10, BCLK: GPIO11, DOUT: GPIO12 |
+| Board (`ots`) | ESP32-S3 Supermini (`ESP32-S3FH4R2`) — 4MB flash, 2MB quad PSRAM. Hand-wired, or on the Speakeasy Lowcost PCB |
+| Board (`pcb`) | Custom Speakeasy PCB — ESP32-S3-MINI-1U-N4R2 |
+| DAC + Amplifier | MAX98357A I2S DAC + Class D amplifier |
+| I2S pins (`ots`) | LRCLK: GPIO4, BCLK: GPIO5, DOUT: GPIO6 |
+| I2S pins (`pcb`) | DOUT: GPIO4, BCLK: GPIO5, LRCLK: GPIO6 |
 
 ## Architecture
 

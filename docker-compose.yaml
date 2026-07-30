@@ -3,3 +3,21 @@ services:
     build: .
     ports:
       - "8081:80"
+
+  # Partial builds — distinct host ports so they can run alongside the full
+  # image above (which is what `docker compose up` builds by default).
+  speakeasy-esphome:
+    profiles: [esphome]
+    build:
+      context: .
+      dockerfile: Dockerfile.esphome
+    ports:
+      - "8082:80"
+
+  speakeasy-snapclient:
+    profiles: [snapclient]
+    build:
+      context: .
+      dockerfile: Dockerfile.snapclient
+    ports:
+      - "8083:80"

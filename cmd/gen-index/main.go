@@ -43,7 +43,27 @@ type pageData struct {
 	Docs   []doc
 }
 
-var groupOrder = []string{"Sendspin", "Snapcast", "Snapcast (standalone)"}
+type hardwareSpec struct {
+	id    string
+	label string
+}
+
+// Ordered — drives group ordering on the page and the match order in hwOf.
+var hardwares = []hardwareSpec{
+	{id: "ots", label: "OTS"},
+	{id: "pcb", label: "PCB"},
+}
+
+var groupOrder = func() []string {
+	protos := []string{"Sendspin", "Snapcast", "Snapcast (standalone)"}
+	var out []string
+	for _, p := range protos {
+		for _, hw := range hardwares {
+			out = append(out, p+" — "+hw.label)
+		}
+	}
+	return out
+}()
 
 var known = buildKnown()
 
@@ -57,33 +77,51 @@ func buildKnown() map[string]firmware {
 		{id: "ss", label: "Sendspin", desc: "Music Assistant via Sendspin"},
 		{id: "sc", label: "Snapcast", desc: "Snapcast client (mDNS discovery)"},
 	}
-	m := map[string]firmware{
-		"snapclient-mdns":        {Label: "mDNS", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery"},
-		"snapclient-mdns-nopull": {Label: "mDNS (no pull OTA)", Desc: "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery, pull OTA disabled"},
-	}
-	for _, p := range protos {
-		for _, bt := range []bool{false, true} {
-			key := "speakeasy-" + p.id
-			label := p.label
-			desc := p.desc
-			if bt {
-				key += "-bt"
-				label += " Bluetooth"
+	m := map[string]firmware{}
+	for _, hw := range hardwares {
+		m["snapclient-"+hw.id] = firmware{
+			Label: hw.label,
+			Desc:  "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery",
+		}
+		m["snapclient-"+hw.id+"-nopull"] = firmware{
+			Label: hw.label + " (no pull OTA)",
+			Desc:  "CarlosDerSeher/snapclient — bare ESP-IDF, mDNS discovery, pull OTA disabled",
+		}
+		for _, p := range protos {
+			for _, bt := range []bool{false, true} {
+				key := "speakeasy-" + hw.id + "-" + p.id
+				label := p.label
+				desc := p.desc
+				if bt {
+					key += "-bt"
+					label += " Bluetooth"
+				}
+				m[key] = firmware{Label: label, Desc: desc}
 			}
-			m[key] = firmware{Label: label, Desc: desc}
 		}
 	}
 	return m
 }
 
+func hwOf(dir string) string {
+	for _, hw := range hardwares {
+		// match speakeasy-{hw}-* and snapclient-{hw}*
+		if strings.Contains(dir, "-"+hw.id+"-") || strings.HasSuffix(dir, "-"+hw.id) {
+			return hw.label
+		}
+	}
+	return "OTS" // fallback for legacy dirs without a hardware prefix
+}
+
 func groupOf(dir string) string {
+	hw := hwOf(dir)
 	if strings.HasPrefix(dir, "snapclient-") {
-		return "Snapcast (standalone)"
+		return "Snapcast (standalone) — " + hw
 	}
-	if strings.HasPrefix(dir, "speakeasy-sc") {
-		return "Snapcast"
+	if strings.Contains(dir, "-sc") {
+		return "Snapcast — " + hw
 	}
-	return "Sendspin"
+	return "Sendspin — " + hw
 }
 
 func derive(dir string) firmware {
@@ -91,6 +129,10 @@ func derive(dir string) firmware {
 	parts := strings.Split(name, "-")
 	for i, p := range parts {
 		switch p {
+		case "ots":
+			parts[i] = "OTS"
+		case "pcb":
+			parts[i] = "PCB"
 		case "ss":
 			parts[i] = "Sendspin"
 		case "sc":

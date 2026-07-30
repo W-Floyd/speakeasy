@@ -15,10 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         yaml-file:
-          - speakeasy-ss.yaml
-          - speakeasy-ss-bt.yaml
-          - speakeasy-sc.yaml
-          - speakeasy-sc-bt.yaml
+          - speakeasy-ots-ss.yaml
+          - speakeasy-ots-ss-bt.yaml
+          - speakeasy-ots-sc.yaml
+          - speakeasy-ots-sc-bt.yaml
+          - speakeasy-pcb-ss.yaml
+          - speakeasy-pcb-ss-bt.yaml
+          - speakeasy-pcb-sc.yaml
+          - speakeasy-pcb-sc-bt.yaml
 
     steps:
       - uses: actions/checkout@v4
@@ -60,8 +64,10 @@ jobs:
       fail-fast: false
       matrix:
         variant:
-          - mdns
-          - mdns-nopull
+          - ots
+          - ots-nopull
+          - pcb
+          - pcb-nopull
 
     steps:
       - uses: actions/checkout@v4

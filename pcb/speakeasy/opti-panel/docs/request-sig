@@ -1,0 +1,148 @@
+API Request Signature
+
+To ensure authenticity and integrity of requests, all API requests to the Open Platform must be signed with the application's API Key.
+
+Each application will be assigned a unique API Key. When making a request, the client must sign the request with the Key. The Open Platform will verify this signature with the same key on the server side. Only requests with valid signatures will be processed.
+
+
+1. Preparation
+
+Before making signed requests, generate an API key pair for your application.
+
+2. Construct the String to Sign
+
+Developers must follow the rules below to build the signature string. The platform uses the same method. Any deviation will cause validation failure.
+
+
+Signature String Format
+
+The signature string consists of five lines, each ending with a newline character \n (ASCII 0x0A), including the last line.
+
+<HTTP Method>\n
+<Request Path>\n
+<Timestamp>\n
+<Nonce>\n
+<Request Body>\n
+
+
+Step-by-Step Construction
+
+Step 1：HTTP Method Uppercase method (e.g., GET, POST).Example:
+
+POST
+
+
+Step 2：Request Path   Absolute URL path without the domain. Include query parameters if present.   Example:
+
+ /order/v1/createOrder
+
+Step 3：Timestamp Unix timestamp (seconds since 1970-01-01 00:00:00 UTC).⚠️ The platform rejects expired requests. Ensure system time accuracy.Example:
+
+1625208260
+
+Step 4：Nonce 32-character random string (letters A-Z, a-z, digits 0-9).Example:
+
+IZHEJYNIHYZIE8S0LLC0VWTPJVRRTO50
+
+Step 5：Request Body
+
+    For GET: Leave empty.
+    For POST: Use the raw JSON payload.
+    For file uploads: Use the meta JSON.
+
+Example:  
+
+{"goodsId":100,"quantity":52,"createdTime":"2024-03-21 10:03:20"}
+
+Final Signature String
+
+Example:  
+
+POST\n
+/order/v1/createOrder\n
+1625208260\n
+IZHEJYNIHYZIE8S0LLC0VWTPJVRRTO50\n
+{"goodsId":100,"quantity":52,"createdTime":"2024-03-21 10:03:20"}\n
+
+
+3. Generate the Signature
+Use HMAC-SHA256 to sign the string with your SecretKey.Then encode the result with Base64 to get the final signature.
+Sample Keys
+
+AccessKey: b6713a535d56412f805afadd7e818455 (identifier)
+SecretKey: z0BWlikshimuyiwBsH1i2qwnzMb3j3kA (used for signing)
+
+Example Signature Output
+Signature: sygwKhKBkLwHVv0c7D+a/A7JTEJjGH/kLugFKh16918=
+
+
+4. Set HTTP Authorization Headers
+
+The final signature is passed the signature via the Authorization header as follows:
+
+Authorization: JOP
+
+appid="<APP_ID>",
+
+accesskey="<ACCESS_KEY>",
+
+nonce="<NONCE>",
+
+timestamp="<TIMESTAMP>",
+
+signature="<SIGNATURE>"
+
+Example
+
+Authorization: JOP 
+appid="293992070061998081",accesskey="b6713a535d56412f805afadd7e818455",nonce="IZHEJYNIHYZIE8S0LLC0VWTPJVRRTO50",timestamp="1625208260",signature="sygwKhKBkLwHVv0c7D+a/A7JTEJjGH/kLugFKh16918="
+
+The entire header value must be on a single line.
+
+
+5.Code Sample (Java)
+
+import okhttp3.HttpUrl;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.util.Base64;
+
+
+public class SigningDemo {
+    // Generate Authorization header
+    public static String getAuthHeader(String method, HttpUrl url, String body,
+                                      String appId, String accessKey, String secretKey) {
+        String nonce = generate32CharNonce(); // Implement nonce generation
+        long timestamp = System.currentTimeMillis() / 1000L;
+        String stringToSign = buildStringToSign(method, url, timestamp, nonce, body);
+        String signature = sign(stringToSign, secretKey);
+        return String.format(
+            "JOP appid=\"%s\",accesskey=\"%s\",nonce=\"%s\",timestamp=\"%d\",signature=\"%s\"",
+            appId, accessKey, nonce, timestamp, signature
+        );
+    }
+
+
+    // Sign using HMAC-SHA256
+    private static String sign(String data, String secretKey) {
+        try {
+            Mac mac = Mac.getInstance("HmacSHA256");
+            mac.init(new SecretKeySpec(secretKey.getBytes("UTF-8"), "HmacSHA256"));
+            byte[] hash = mac.doFinal(data.getBytes("UTF-8"));
+            return Base64.getEncoder().encodeToString(hash);
+        } catch (Exception e) {
+            throw new RuntimeException("Signing failed", e);
+        }
+    }
+
+
+    // Build the signature string
+    private static String buildStringToSign(String method, HttpUrl url,
+                                           long timestamp, String nonce, String body) {
+        String path = url.encodedPath();
+        if (url.encodedQuery() != null) {
+            path += "?" + url.encodedQuery();
+        }
+        return String.format("%s\n%s\n%d\n%s\n%s\n", method, path, timestamp, nonce, body);
+    }
+}

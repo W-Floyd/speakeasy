@@ -4,22 +4,33 @@ set -euo pipefail
 usage() {
     cat <<EOF
 Usage: $(basename "$0") [-v variant] [-p] <device> [device...]
+       $(basename "$0") [-v variant] --usb [--port <port>] [--ssid <ssid> --password <password>] [--log]
 
-Flash a snapclient OTA binary extracted from the Docker image to one or more
-devices.
+Flash a snapclient binary extracted from the Docker image.
+
+OTA mode (default):
+  Flash OTA binary over HTTP to one or more network devices.
+
+USB mode (--usb):
+  Flash the full merged binary via esptool to a USB-connected device, then
+  optionally provision WiFi credentials via the serial improv protocol.
 
 Options:
-  -v variant      sdkconfig variant to flash (default: mdns)
-                    available variants match snapclient-kconfig/sdkconfig.<variant>
-  -p, --parallel  flash all devices concurrently (default: sequential)
-  -h, --help      show this help
+  -v variant          sdkconfig variant to flash (default: ots)
+                        ots  — ESP32-S3 Supermini / Speakeasy Lowcost PCB
+                               (LRCLK/BCLK/DOUT on GPIO 4/5/6)
+                        pcb  — custom Speakeasy PCB
+                               (DOUT/BCLK/LRCLK on GPIO 4/5/6)
+                        append -nopull to disable automatic OTA pull from GitHub Pages
+  -p, --parallel      flash all devices concurrently — OTA mode only
+  --usb               USB flash mode using esptool
+  --port <port>       serial port for USB flash / improv (auto-detected if omitted)
+  --ssid <ssid>       WiFi SSID for serial improv provisioning
+  --password <pass>   WiFi password for serial improv provisioning
+  --log               stream serial output after flash/provision (Ctrl+C to exit)
+  -h, --help          show this help
 
-Arguments:
-  device      IP address or hostname of the target device(s)
-                e.g. snapclient.local  or  192.168.1.50
-                HTTP server is expected on port 8000
-
-The script will:
+OTA steps:
   1. Build the Docker stage for the variant (uses cache if already built)
   2. Extract the OTA binary from the image
   3. Parse the firmware binary and display version/SHA256 details
@@ -28,29 +39,54 @@ The script will:
      b. Skip if already running the same firmware (SHA256 match)
      c. Upload via HTTP POST /api/ota/upload
      d. Poll /api/ota/status until the device reboots and SHA256 is confirmed
+
+USB steps:
+  1. Build the Docker stage for the variant (uses cache if already built)
+  2. Extract merged.bin from the image
+  3. Auto-detect ESP32-S3 USB port (VID 0x303A) or use --port
+  4. Flash via esptool.py (chip: esp32s3, baud: 921600)
+  5. If --ssid is given: provision WiFi via serial improv protocol
+  6. If --log is given: stream serial output until Ctrl+C
 EOF
     exit 1
 }
 
 # ── Arg parsing ───────────────────────────────────────────────────────────────
 
-VARIANT="mdns"
+VARIANT="ots"
 PARALLEL=0
+USB=0
+PORT=""
+SSID=""
+PASSWORD=""
+LOG=0
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         -v) VARIANT="${2:?-v requires a variant argument}"; shift 2 ;;
         -p|--parallel) PARALLEL=1; shift ;;
+        --usb) USB=1; shift ;;
+        --port) PORT="${2:?--port requires an argument}"; shift 2 ;;
+        --ssid) SSID="${2:?--ssid requires an argument}"; shift 2 ;;
+        --password) PASSWORD="${2:?--password requires an argument}"; shift 2 ;;
+        --log) LOG=1; shift ;;
         -h|--help) usage ;;
         *) break ;;
     esac
 done
 
-[[ $# -lt 1 ]] && usage
-
-DEVICES=("$@")
 STAGE="snapclient-${VARIANT}"
 OTA_BIN="${STAGE}-ota.bin"
 IMAGE_TAG="speakeasy-${STAGE}-extract"
+REPO_ROOT="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
+
+if [[ "${USB}" -eq 1 ]]; then
+    [[ -n "${SSID}" && -z "${PASSWORD}" ]] && { echo "ERROR: --ssid requires --password" >&2; usage; }
+    [[ -z "${SSID}" && -n "${PASSWORD}" ]] && { echo "ERROR: --password requires --ssid" >&2; usage; }
+else
+    [[ $# -lt 1 ]] && usage
+    DEVICES=("$@")
+fi
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -66,7 +102,109 @@ json_field() {
     echo "$1" | jq -r --arg k "$2" '.[$k] // empty'
 }
 
-# ── Flash one device; returns 0 on success, 1 on failure ─────────────────────
+# Detect the first ESP32-S3 USB serial port by Espressif VID (0x303A).
+detect_port() {
+    python3 - <<'PYEOF'
+import sys
+try:
+    import serial.tools.list_ports
+except ImportError:
+    sys.exit("ERROR: pyserial not installed — run: pip install pyserial")
+ports = [p for p in serial.tools.list_ports.comports() if p.vid == 0x303A]
+if not ports:
+    sys.exit("ERROR: no ESP32 device found (VID 0x303A) — connect via USB or use --port")
+if len(ports) > 1:
+    names = ', '.join(p.device for p in ports)
+    print(f"WARNING: multiple ESP32 devices found ({names}), using first", file=sys.stderr)
+print(ports[0].device)
+PYEOF
+}
+
+# ── Build + extract ───────────────────────────────────────────────────────────
+
+echo "==> Building stage ${STAGE} (uses cache if already built)..."
+docker build \
+    -f "${REPO_ROOT}/Dockerfile.snapclient" \
+    --target "${STAGE}" \
+    -t "${IMAGE_TAG}" \
+    "${REPO_ROOT}"
+
+TMP=$(mktemp)
+TMP_MERGED=""
+trap 'rm -f "${TMP}" "${TMP_MERGED}"' EXIT
+
+CONTAINER=$(docker create "${IMAGE_TAG}")
+
+echo "==> Extracting ${OTA_BIN}..."
+docker cp "${CONTAINER}:/output/${STAGE}/${OTA_BIN}" "${TMP}"
+
+if [[ "${USB}" -eq 1 ]]; then
+    echo "==> Extracting merged.bin..."
+    TMP_MERGED=$(mktemp)
+    docker cp "${CONTAINER}:/output/${STAGE}/merged.bin" "${TMP_MERGED}"
+fi
+
+docker rm "${CONTAINER}" > /dev/null
+
+echo "==> Parsing firmware binary..."
+APP_DESC=$(parse_app_desc "${TMP}")
+BIN_SHA=$(echo "${APP_DESC}"  | awk '/^ELF file SHA256:/{print $4}')
+BIN_VER=$(echo "${APP_DESC}"  | awk '/^App version:/{print $3}')
+BIN_NAME=$(echo "${APP_DESC}" | awk '/^Project name:/{print $3}')
+BIN_DATE=$(echo "${APP_DESC}" | awk '/^Compile time:/{$1=$2=""; sub(/^  */,""); print}')
+BIN_IDF=$(echo "${APP_DESC}"  | awk '/^ESP-IDF:/{print $2}')
+
+echo ""
+echo "  Binary to flash:"
+echo "    project : ${BIN_NAME}"
+echo "    version : ${BIN_VER}"
+echo "    built   : ${BIN_DATE}"
+echo "    IDF     : ${BIN_IDF}"
+echo "    sha256  : ${BIN_SHA}"
+
+# ── USB flash ─────────────────────────────────────────────────────────────────
+
+if [[ "${USB}" -eq 1 ]]; then
+    if [[ -z "${PORT}" ]]; then
+        echo "==> Auto-detecting ESP32-S3 USB port..."
+        PORT=$(detect_port)
+        echo "    found: ${PORT}"
+    fi
+
+    echo ""
+    echo "══ ${PORT} ════════════════════════════════════════════"
+    echo "==> Flashing merged binary via esptool..."
+    esptool.py --chip esp32s3 --port "${PORT}" --baud 921600 \
+        write_flash 0x0 "${TMP_MERGED}"
+
+    if [[ -n "${SSID}" ]]; then
+        if ! command -v improv-setup &>/dev/null; then
+            echo "ERROR: improv-setup not found — install with:" >&2
+            echo "  cargo install --git https://git.clerie.de/clerie/improv-setup" >&2
+            exit 1
+        fi
+        echo ""
+        echo "==> Waiting for device to boot..."
+        sleep 5
+        echo "==> Provisioning WiFi via serial improv (SSID: ${SSID})..."
+        improv-setup device "${PORT}" connect "${SSID}" "${PASSWORD}"
+    else
+        echo "==> Flash complete. No --ssid given; skipping WiFi provisioning."
+        echo "    Connect via serial improv to provision WiFi (baud: 115200)."
+    fi
+
+    if [[ "${LOG}" -eq 1 ]]; then
+        echo ""
+        echo "==> Streaming serial log from ${PORT} (Ctrl+C to exit)..."
+        python3 -m serial.tools.miniterm --quiet "${PORT}" 115200
+    fi
+
+    echo ""
+    echo "==> Done."
+    exit 0
+fi
+
+# ── OTA: flash one device; returns 0 on success, 1 on failure ─────────────────
 
 flash_device() {
     local device="$1"
@@ -132,37 +270,7 @@ flash_device() {
     return 1
 }
 
-# ── Build + extract ───────────────────────────────────────────────────────────
-
-echo "==> Building stage ${STAGE} (uses cache if already built)..."
-docker build --target "${STAGE}" -t "${IMAGE_TAG}" \
-    "$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
-
-echo "==> Extracting ${OTA_BIN}..."
-TMP=$(mktemp)
-trap 'rm -f "${TMP}"' EXIT
-
-CONTAINER=$(docker create "${IMAGE_TAG}")
-docker cp "${CONTAINER}:/output/${STAGE}/${OTA_BIN}" "${TMP}"
-docker rm "${CONTAINER}" > /dev/null
-
-echo "==> Parsing firmware binary..."
-APP_DESC=$(parse_app_desc "${TMP}")
-BIN_SHA=$(echo "${APP_DESC}"  | awk '/^ELF file SHA256:/{print $4}')
-BIN_VER=$(echo "${APP_DESC}"  | awk '/^App version:/{print $3}')
-BIN_NAME=$(echo "${APP_DESC}" | awk '/^Project name:/{print $3}')
-BIN_DATE=$(echo "${APP_DESC}" | awk '/^Compile time:/{$1=$2=""; sub(/^  */,""); print}')
-BIN_IDF=$(echo "${APP_DESC}"  | awk '/^ESP-IDF:/{print $2}')
-
-echo ""
-echo "  Binary to flash:"
-echo "    project : ${BIN_NAME}"
-echo "    version : ${BIN_VER}"
-echo "    built   : ${BIN_DATE}"
-echo "    IDF     : ${BIN_IDF}"
-echo "    sha256  : ${BIN_SHA}"
-
-# ── Flash each device ────────────────────────────────────────────────────────
+# ── OTA: flash each device ────────────────────────────────────────────────────
 
 FAILED=()
 

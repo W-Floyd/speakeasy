@@ -1,0 +1,21 @@
+API List
+Type of API	Interface Name	Description	Purpose
+PCB	Create order	Submit product process details, Gerber file ID and shipping address to create a PCB order, return order ID, batch number and order type.	Create PCB Orders
+	Query order details by batch number	Query order information, shipping address and cost details by the batch number	Query order information
+	Get PCB production process information	Submit order ID,track the production process (only available after the order enters production).	Track order production progress
+	Get PCB pre-reviw information	Submit Gerber file ID and language type, obtain Gerber file parsing information (PCB length and width, preview image)	Get Gerber file parsing information and use it with the order interface
+	Get Stack-up information	Enter the PCB layer, PCB thickness,inner/outer copper thickness and PCB material to query the impedance information that meets the specified conditions.	Obtain impedance information and use it with the order interface
+	Upload gerber files	Upload the Gerber file, return the Gerber file ID	Upload Gerber files
+	Upload blind slot picture	Upload a blind slot image, return the blind slot image ID	Upload the blind slot picture and use it with the order interface
+	Online quote	Submit product process information and Gerber file ID, return process cost information	Get quote
+3D Printing	Create 3D printing Order interface	Submit product model ID, material ID and related attributes to create a 3D printing order.	Create 3D printing Order
+	Get 3D printing order progress interface	Query the order production progress based on  the order number from the order list	Track order production progress
+	Get 3D printing order list interface	Order list, view the batch orders that have been successfully created	Query order list
+	Get 3D printing order details interface	Query detailed information of the batch order by the batch number from the order list.	Query order details
+	Get 3D printing File Parsing Result (Polling)	After parsing the file, return the model data including length, width and height as well as the selectable materials, processes and reasons for unavailability.	Get file parsing result and use it with the order interface
+	Calculate 3D printing Product Price interface	Calculate the price by the process parameters of a single product	Get Quote
+	Upload 3D printing File
+interface	After parsing the file, return the model data including length, width and height attributes as well as the selectable materials, processes and reasons for unavailability.	Upload 3D printing files
+Components	Component information interface	Pagination query for foreign trade listed component data, supporting pagination query of large data volumes.	Get all component information from JLCPCB's public library
+	Query Private Component Library Interface	Query the private inventory of authenticated customers.	Batch retrieve the component information in the private library.
+	Query Component Detail Data Interface	Query the detailed information of components by C-number.	Retrieve component information from the JLCPCB public library individually.

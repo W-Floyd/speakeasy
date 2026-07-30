@@ -1,0 +1,143 @@
+SDK Usage Guide
+
+The JLC Open Platform SDK is a client-side development kit provided by JLC to help developers seamlessly integrate with the Open Platform APIs.
+
+By integrating the SDK into your website, you can benefit from the following advantages:
+
+    Quick Integration The SDK abstracts away low-level details such as request signing, signature verification, and network communication. Developers only need to invoke the provided methods and classes to interact with the platform.
+    Improved Code Quality The SDK is designed with usability, security, and extensibility in mind. It has been optimized through multiple iterations and thoroughly tested to help developers avoid common mistakes and security pitfalls, ultimately improving code reliability.
+    Easy Upgrades and Maintenance When the Open Platform API is updated, developers can simply upgrade the SDK without modifying their business logic, making it easier to keep up with platform changes.
+
+    Currently, the SDK is only available in Java. All examples below are based on the Java client SDK.
+
+Environment Requirements
+
+    Java 1.8 or higher
+
+SDK Structure
+
+The SDK consists of two main components:
+
+    Core Package 
+
+This is the foundational library required by all applications using the SDK. It handles core features like request signing and HTTP communication. It must be included in your website to make API calls.
+
+    Business Packages 
+
+These are modular SDKs for specific business capabilities. You can selectively include the ones that match your use case.
+
+    Note:
+    1.SDK packages must be downloaded manually. It's strongly recommended to use a package manager to handle dependencies automatically. If not feasible, you may manually include the .jar files.
+    2.Always check the result of an API call using the isSuccessful() method from the corresponding Result class. A return value of true indicates success; false indicates failure.
+
+SDK Dependencies
+
+Your website should include the following dependencies:
+
+<dependencies>
+  <dependency>
+    <groupId>org.slf4j</groupId>
+    <artifactId>slf4j-api</artifactId>
+    <version>1.7.36</version>
+  </dependency>
+  <dependency>
+    <groupId>com.squareup.okhttp3</groupId>
+    <artifactId>okhttp</artifactId>
+    <version>3.14.9</version>
+  </dependency>
+  <dependency>
+    <groupId>com.google.code.gson</groupId>
+    <artifactId>gson</artifactId>
+    <version>2.10.1</version>
+  </dependency>
+</dependencies>
+
+Usage Instructions
+
+SDK Initialization (Singleton Pattern)
+
+To prevent redundant client creation, it's recommended to use a singleton pattern when initializing the SDK for each business module:
+
+private static final Object LOCK = new Object();
+private static volatile DemoApiClient demoApiClient = null;
+public static DemoApiClient getDemoApiClient() {
+  if (demoApiClient == null) {
+    synchronized (LOCK) {
+      if (demoApiClient == null) {
+        demoApiClient = createDemoApiClient();
+      }
+    }
+  }
+  return demoApiClient;
+}
+protected static DemoApiClient createDemoApiClient() {
+  AuthProfile authConfig = new AuthProfile.Builder()
+    .appId(YOUR_APP_ID)
+    .accessKey(YOUR_APP_ACCESS_KEY)
+    .secretKey(YOUR_APP_SECRET_KEY)
+    .build();
+  HttpProfile httpConfig = new HttpProfile.Builder()
+    .endpoint("https://open.jlcpcb.com")
+    .build();
+  JopApiConfiguration apiConfiguration = new JopApiConfiguration.Builder()
+    .auth(authConfig)
+    .http(httpConfig)
+    .build();
+  return new DemoApiClient(apiConfiguration);
+}
+
+API Usage Examples
+
+    Standard API Call
+
+// Get the client instance
+DemoApiClient demoApiClient = getDemoApiClient();
+// Build the request
+CreateOrderRequest createOrderRequest = new CreateOrderRequest();
+createOrderRequest.setOrderType("PCB");
+createOrderRequest.setGoodId(300);
+createOrderRequest.setQuantity(35);
+createOrderRequest.setUnitPrice(23.24);
+createOrderRequest.setAmount(813.75);
+createOrderRequest.setCreatedDate("2024-03-28 10:26:02");
+// Send the request
+CreateOrderResult result = demoApiClient.createOrder(createOrderRequest);
+// Handle response
+if (result.isSuccessful()) {
+  // Business logic here
+}
+
+    File/Image Upload
+
+// Get the client instance
+DemoApiClient demoApiClient = getDemoApiClient();
+// Build the request
+UploadFileRequest uploadRequest = new UploadFileRequest();
+uploadRequest.setOrderNo("2235663234642A12");
+uploadRequest.setFile(new File("E:/DemoProjectFiles/xxxxx.zip"));
+// Send the request
+UploadFileResult result = demoApiClient.uploadFile(uploadRequest);
+// Handle response
+if (result.isSuccessful()) {
+  // Business logic here
+}
+
+    File/Image Download
+
+// Get the client instance
+DemoApiClient demoApiClient = getDemoApiClient();
+// Build the request
+DownloadFileRequest downloadRequest = new DownloadFileRequest();
+downloadRequest.setFileId("f57e70707b254102bcfbee6416741620");
+// Send the request
+demoApiClient.downloadFile(downloadRequest, new FileCallback() {
+  @Override
+  public void handle(FileResult result) {
+    if (result.isSuccessful()) {
+      FileResult.FileData data = result.getData();
+      String filename = data.getFileName();
+      InputStream ins = data.getInputStream();
+      // Business logic here
+    }
+  }
+});

@@ -198,12 +198,35 @@ func loadConfig(path string) (config, error) {
 	return cfg, nil
 }
 
-func generateDockerfile(variants []string, snapclientVariants []string) string {
-	var sb strings.Builder
+const dockerfileHeader = `# syntax=docker/dockerfile:1
+# Generated from speakeasy-*.yaml — do not edit directly.
+# Run: go run ./cmd/gen-ci
+`
 
-	sb.WriteString("# syntax=docker/dockerfile:1\n")
-	sb.WriteString("# Generated from speakeasy-*.yaml — do not edit directly.\n")
-	sb.WriteString("# Run: go run ./cmd/gen-ci\n")
+const webAndServer = `
+# ── Web ───────────────────────────────────────────────────────────────────────
+FROM golang:1.22-alpine AS web
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
+COPY cmd/ cmd/
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -o /gen-index ./cmd/gen-index
+
+COPY --from=collect /output /output
+COPY docs/ docs/
+RUN /gen-index -dir /output -docs docs -out /output/index.html
+
+# ── Server ────────────────────────────────────────────────────────────────────
+FROM caddy:alpine
+COPY --from=web /output /srv
+COPY Caddyfile /etc/caddy/Caddyfile
+`
+
+func esphomeStages(variants []string) (string, string) {
+	var sb strings.Builder
 
 	sb.WriteString(`
 # ── Setup ─────────────────────────────────────────────────────────────────────
@@ -236,6 +259,7 @@ COPY speakeasy-*.yaml ./
 	// accumulates through the chain without re-downloading. .esphome stays a
 	// separate cache mount per stage to avoid bloating image layers.
 	prevStage := "variants"
+	var lastStage string
 
 	for _, yaml := range variants {
 		stem := strings.TrimSuffix(yaml, ".yaml")
@@ -247,6 +271,7 @@ COPY speakeasy-*.yaml ./
 		fmt.Fprintf(&sb, "RUN --mount=type=cache,target=/root/.ccache,id=ccache \\\n")
 		fmt.Fprintf(&sb, "    --mount=type=cache,target=/config/.esphome,id=esphome-%s \\\n", short)
 		prevStage = stage
+		lastStage = stage
 		fmt.Fprintf(&sb, "    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest %s && \\\n", yaml)
 		fmt.Fprintf(&sb, "    name=$(yq '.substitutions.name' %s) && \\\n", yaml)
 		fmt.Fprintf(&sb, "    build_dir=$(find . -maxdepth 1 -type d -name \"${name}-*\" | head -1) && \\\n")
@@ -255,89 +280,104 @@ COPY speakeasy-*.yaml ./
 		fmt.Fprintf(&sb, "    rm -rf \"${build_dir}\"\n\n")
 	}
 
-	// All ESPHome firmware outputs have accumulated into the final stage.
-	lastESPHomeStage := "esphome-" + strings.TrimPrefix(strings.TrimSuffix(variants[len(variants)-1], ".yaml"), "speakeasy-")
+	return sb.String(), lastStage
+}
 
-	if len(snapclientVariants) > 0 {
-		sb.WriteString("# ── Snapclient base ──────────────────────────────────────────────────────────\n")
-		sb.WriteString("FROM espressif/idf:v5.5.4 AS snapclient-base\n\n")
-		sb.WriteString("SHELL [\"/bin/bash\", \"-c\"]\n")
-		sb.WriteString("WORKDIR /snapclient\n")
-		sb.WriteString("COPY snapclient/ .\n")
-		sb.WriteString("COPY snapclient-kconfig/ /snapclient-kconfig/\n")
-		sb.WriteString("ARG SPEAKEASY_VERSION\n")
-		sb.WriteString("RUN echo \"${SPEAKEASY_VERSION}\" > version.txt\n\n")
+func snapclientStages(variants []string) string {
+	var sb strings.Builder
 
-		for _, variant := range snapclientVariants {
-			stage := "snapclient-" + variant
-			fmt.Fprintf(&sb, "# ── %s\n", stage)
-			fmt.Fprintf(&sb, "FROM snapclient-base AS %s\n", stage)
-			label := strings.ReplaceAll(variant, "-", " ")
-			fmt.Fprintf(&sb, "RUN source /opt/esp/idf/export.sh && \\\n")
-			fmt.Fprintf(&sb, "    idf.py \\\n")
-			fmt.Fprintf(&sb, "      -DSDKCONFIG_DEFAULTS=\"sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.%s\" \\\n", variant)
-			fmt.Fprintf(&sb, "      -B build-%s \\\n", variant)
-			fmt.Fprintf(&sb, "      build && \\\n")
-			fmt.Fprintf(&sb, "    idf.py -B build-%s merge-bin && \\\n", variant)
-			fmt.Fprintf(&sb, "    mkdir -p /output/snapclient-%s && \\\n", variant)
-			fmt.Fprintf(&sb, "    python3 -m esp_idf_size --format json build-%s/snapclient.map > /output/snapclient-%s/size.json && \\\n", variant, variant)
-			fmt.Fprintf(&sb, "    cp build-%s/merged-binary.bin /output/snapclient-%s/merged.bin && \\\n", variant, variant)
-			fmt.Fprintf(&sb, "    cp build-%s/snapclient.bin /output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant, variant)
-			fmt.Fprintf(&sb, "    printf '{\"name\":\"Snapclient %s\",\"version\":\"1\",\"builds\":[{\"chipFamily\":\"ESP32-S3\",\"parts\":[{\"path\":\"merged.bin\",\"offset\":0}]}]}' \\\n", label)
-			if !strings.HasSuffix(variant, "nopull") {
-				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json && \\\n", variant)
-				fmt.Fprintf(&sb, "    _ota=/output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant)
-				fmt.Fprintf(&sb, "    file_sha=$(sha256sum \"${_ota}\" | cut -d' ' -f1) && \\\n")
-				fmt.Fprintf(&sb, "    _info=$(esptool.py image_info --version 2 \"${_ota}\" 2>/dev/null) && \\\n")
-				fmt.Fprintf(&sb, "    sc_sha=$(echo \"${_info}\" | awk '/^ELF file SHA256:/{print $4}') && \\\n")
-				fmt.Fprintf(&sb, "    sc_ver=$(echo \"${_info}\" | awk '/^App version:/{print $3}') && \\\n")
-				fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")
-				fmt.Fprintf(&sb, "    printf '{\"version\":\"%%s\",\"url\":\"%%s/snapclient-%s/snapclient-%s-ota.bin\",\"sha256\":\"%%s\",\"file_sha256\":\"%%s\",\"release_notes\":\"snapclient@%%s\"}' \\\n", variant, variant)
-				fmt.Fprintf(&sb, "      \"${sc_ver}\" \"${pages_base}\" \"${sc_sha}\" \"${file_sha}\" \"${sc_ver}\" \\\n")
-				fmt.Fprintf(&sb, "      > /output/snapclient-%s/ota-manifest.json\n\n", variant)
-			} else {
-				fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json\n\n", variant)
-			}
+	sb.WriteString("# ── Snapclient base ──────────────────────────────────────────────────────────\n")
+	sb.WriteString("FROM espressif/idf:v5.5.4 AS snapclient-base\n\n")
+	sb.WriteString("SHELL [\"/bin/bash\", \"-c\"]\n")
+	sb.WriteString("WORKDIR /snapclient\n")
+	sb.WriteString("COPY snapclient/ .\n")
+	sb.WriteString("COPY snapclient-kconfig/ /snapclient-kconfig/\n")
+	sb.WriteString("ARG SPEAKEASY_VERSION\n")
+	sb.WriteString("RUN echo \"${SPEAKEASY_VERSION}\" > version.txt\n\n")
+
+	for _, variant := range variants {
+		stage := "snapclient-" + variant
+		fmt.Fprintf(&sb, "# ── %s\n", stage)
+		fmt.Fprintf(&sb, "FROM snapclient-base AS %s\n", stage)
+		label := strings.ReplaceAll(variant, "-", " ")
+		fmt.Fprintf(&sb, "RUN source /opt/esp/idf/export.sh && \\\n")
+		fmt.Fprintf(&sb, "    idf.py \\\n")
+		fmt.Fprintf(&sb, "      -DSDKCONFIG_DEFAULTS=\"sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.%s\" \\\n", variant)
+		fmt.Fprintf(&sb, "      -B build-%s \\\n", variant)
+		fmt.Fprintf(&sb, "      build && \\\n")
+		fmt.Fprintf(&sb, "    idf.py -B build-%s merge-bin && \\\n", variant)
+		fmt.Fprintf(&sb, "    mkdir -p /output/snapclient-%s && \\\n", variant)
+		fmt.Fprintf(&sb, "    python3 -m esp_idf_size --format json build-%s/snapclient.map > /output/snapclient-%s/size.json && \\\n", variant, variant)
+		fmt.Fprintf(&sb, "    cp build-%s/merged-binary.bin /output/snapclient-%s/merged.bin && \\\n", variant, variant)
+		fmt.Fprintf(&sb, "    cp build-%s/snapclient.bin /output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant, variant)
+		fmt.Fprintf(&sb, "    printf '{\"name\":\"Snapclient %s\",\"version\":\"1\",\"builds\":[{\"chipFamily\":\"ESP32-S3\",\"parts\":[{\"path\":\"merged.bin\",\"offset\":0}]}]}' \\\n", label)
+		if !strings.HasSuffix(variant, "nopull") {
+			fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json && \\\n", variant)
+			fmt.Fprintf(&sb, "    _ota=/output/snapclient-%s/snapclient-%s-ota.bin && \\\n", variant, variant)
+			fmt.Fprintf(&sb, "    file_sha=$(sha256sum \"${_ota}\" | cut -d' ' -f1) && \\\n")
+			fmt.Fprintf(&sb, "    _info=$(esptool.py image_info --version 2 \"${_ota}\" 2>/dev/null) && \\\n")
+			fmt.Fprintf(&sb, "    sc_sha=$(echo \"${_info}\" | awk '/^ELF file SHA256:/{print $4}') && \\\n")
+			fmt.Fprintf(&sb, "    sc_ver=$(echo \"${_info}\" | awk '/^App version:/{print $3}') && \\\n")
+			fmt.Fprintf(&sb, "    pages_base=\"https://w-floyd.github.io/speakeasy\" && \\\n")
+			fmt.Fprintf(&sb, "    printf '{\"version\":\"%%s\",\"url\":\"%%s/snapclient-%s/snapclient-%s-ota.bin\",\"sha256\":\"%%s\",\"file_sha256\":\"%%s\",\"release_notes\":\"snapclient@%%s\"}' \\\n", variant, variant)
+			fmt.Fprintf(&sb, "      \"${sc_ver}\" \"${pages_base}\" \"${sc_sha}\" \"${file_sha}\" \"${sc_ver}\" \\\n")
+			fmt.Fprintf(&sb, "      > /output/snapclient-%s/ota-manifest.json\n\n", variant)
+		} else {
+			fmt.Fprintf(&sb, "      > /output/snapclient-%s/manifest.json\n\n", variant)
 		}
 	}
 
+	return sb.String()
+}
+
+func generateDockerfileESPHome(variants []string) string {
+	stages, lastStage := esphomeStages(variants)
+	var sb strings.Builder
+	sb.WriteString(dockerfileHeader)
+	sb.WriteString(stages)
 	sb.WriteString("# ── Collect ──────────────────────────────────────────────────────────────────\n")
 	sb.WriteString("FROM alpine AS collect\n")
-	fmt.Fprintf(&sb, "COPY --from=%s /output /output\n", lastESPHomeStage)
+	fmt.Fprintf(&sb, "COPY --from=%s /output /output\n", lastStage)
+	sb.WriteString(webAndServer)
+	return sb.String()
+}
+
+func generateDockerfileSnapclient(variants []string) string {
+	var sb strings.Builder
+	sb.WriteString(dockerfileHeader)
+	sb.WriteString("\n")
+	sb.WriteString(snapclientStages(variants))
+	sb.WriteString("# ── Collect ──────────────────────────────────────────────────────────────────\n")
+	sb.WriteString("FROM alpine AS collect\n")
+	for _, variant := range variants {
+		fmt.Fprintf(&sb, "COPY --from=snapclient-%s /output/snapclient-%s /output/snapclient-%s\n", variant, variant, variant)
+	}
+	sb.WriteString(webAndServer)
+	return sb.String()
+}
+
+func generateDockerfile(variants []string, snapclientVariants []string) string {
+	esphome, lastStage := esphomeStages(variants)
+	var sb strings.Builder
+	sb.WriteString(dockerfileHeader)
+	sb.WriteString(esphome)
+	sb.WriteString(snapclientStages(snapclientVariants))
+	sb.WriteString("# ── Collect ──────────────────────────────────────────────────────────────────\n")
+	sb.WriteString("FROM alpine AS collect\n")
+	fmt.Fprintf(&sb, "COPY --from=%s /output /output\n", lastStage)
 	for _, variant := range snapclientVariants {
 		fmt.Fprintf(&sb, "COPY --from=snapclient-%s /output/snapclient-%s /output/snapclient-%s\n", variant, variant, variant)
 	}
-
-	sb.WriteString(`
-# ── Web page ──────────────────────────────────────────────────────────────────
-FROM golang:1.22-alpine AS web
-
-WORKDIR /src
-COPY go.mod go.sum ./
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    go mod download
-COPY cmd/ cmd/
-RUN --mount=type=cache,target=/root/.cache/go-build \
-    go build -o /gen-index ./cmd/gen-index
-
-COPY --from=collect /output /output
-COPY docs/ docs/
-RUN /gen-index -dir /output -docs docs -out /output/index.html
-
-# ── Server ────────────────────────────────────────────────────────────────────
-FROM caddy:alpine
-
-COPY --from=web /output /srv
-COPY Caddyfile /etc/caddy/Caddyfile
-`)
-
+	sb.WriteString(webAndServer)
 	return sb.String()
 }
 
 func main() {
 	variantsFile := flag.String("variants", "variants.yaml", "path to variants.yaml")
 	outFile := flag.String("out", ".github/workflows/build.yaml", "output workflow file")
-	dockerFile := flag.String("dockerfile", "Dockerfile", "output Dockerfile")
+	dockerFile := flag.String("dockerfile", "Dockerfile", "output Dockerfile (both)")
+	dockerFileESPHome := flag.String("dockerfile-esphome", "Dockerfile.esphome", "output Dockerfile (esphome only)")
+	dockerFileSnapclient := flag.String("dockerfile-snapclient", "Dockerfile.snapclient", "output Dockerfile (snapclient only)")
 	flag.Parse()
 
 	cfg, err := loadConfig(*variantsFile)
@@ -372,9 +412,18 @@ func main() {
 		}
 	}
 
-	if err := os.WriteFile(*dockerFile, []byte(generateDockerfile(yamls, cfg.SnapclientCI)), 0644); err != nil {
-		fmt.Fprintf(os.Stderr, "error writing %s: %v\n", *dockerFile, err)
-		os.Exit(1)
+	for _, df := range []struct {
+		path    string
+		content string
+	}{
+		{*dockerFile, generateDockerfile(yamls, cfg.SnapclientCI)},
+		{*dockerFileESPHome, generateDockerfileESPHome(yamls)},
+		{*dockerFileSnapclient, generateDockerfileSnapclient(cfg.SnapclientCI)},
+	} {
+		if err := os.WriteFile(df.path, []byte(df.content), 0644); err != nil {
+			fmt.Fprintf(os.Stderr, "error writing %s: %v\n", df.path, err)
+			os.Exit(1)
+		}
+		fmt.Printf("wrote %s\n", df.path)
 	}
-	fmt.Printf("wrote %s (%d firmware stages)\n", *dockerFile, len(yamls))
 }

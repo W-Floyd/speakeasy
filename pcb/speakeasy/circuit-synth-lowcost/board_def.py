@@ -70,10 +70,14 @@ def speakeasy_board():
     connect(esp32, "GND", gnd)
     connect(esp32, "3.3V", v33v)
 
-    # I2S → MAX98357A (safe GPIOs: IO16, IO17, IO18)
-    # IO16 = BCLK    (bit clock)
-    # IO17 = LRCLK   (left/right clock)
-    # IO18 = DIN     (I2S data out from ESP)
+    # I2S → MAX98357A — must match the `ots` firmware variant:
+    #   common/base.yaml (ESPHome) and cmd/gen-snapclient (ESP-IDF)
+    # GPIO4 = LRCLK   (left/right clock)
+    # GPIO5 = BCLK    (bit clock)
+    # GPIO6 = DIN     (I2S data out from ESP)
+    # NOTE: the custom Speakeasy PCB (circuit-synth/board_def.py, `pcb` variant)
+    # uses these same three pins but swaps LRCLK and DIN. The two boards are not
+    # firmware-interchangeable.
     esp32["GPIO4"] += i2s_lrclk
     esp32["GPIO5"] += i2s_bclk
     esp32["GPIO6"] += i2s_dout

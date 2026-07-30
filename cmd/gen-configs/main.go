@@ -8,7 +8,32 @@ import (
 	"strings"
 )
 
+type hardware struct {
+	name         string
+	friendlyName string
+	// pinOverrides are substitution lines injected into the generated YAML.
+	// Empty for ots — common/base.yaml already carries the correct defaults.
+	pinOverrides []string
+}
+
+var hardwares = []hardware{
+	{
+		name:         "ots",
+		friendlyName: "OTS",
+	},
+	{
+		name:         "pcb",
+		friendlyName: "PCB",
+		pinOverrides: []string{
+			"i2s_bclk_pin: GPIO5",
+			"i2s_lrclk_pin: GPIO6",
+			"i2s_dout_pin: GPIO4",
+		},
+	},
+}
+
 type variant struct {
+	Hardware   hardware
 	Proto      string
 	TwoChannel bool
 	BT         bool
@@ -29,19 +54,18 @@ func (v variant) protoShort() string {
 }
 
 func (v variant) deviceName() string {
-	name := v.protoShort()
+	name := v.Hardware.name + "-" + v.protoShort()
 	if v.TwoChannel {
 		name += "-2ch"
 	}
 	if v.BT {
 		name += "-bt"
 	}
-
 	return name
 }
 
 func (v variant) friendlyName() string {
-	parts := []string{"Speakeasy"}
+	parts := []string{"Speakeasy", v.Hardware.friendlyName}
 	switch v.Proto {
 	case "sendspin":
 		parts = append(parts, "Sendspin")
@@ -83,6 +107,10 @@ func generate(v variant) string {
 	fmt.Fprintf(&sb, "  name: %s\n", v.deviceName())
 	fmt.Fprintf(&sb, "  friendly_name: %s\n", v.friendlyName())
 
+	for _, pin := range v.Hardware.pinOverrides {
+		fmt.Fprintf(&sb, "  %s\n", pin)
+	}
+
 	sb.WriteString("\npackages:\n")
 	for _, pkg := range v.packages() {
 		fmt.Fprintf(&sb, "  - !include %s\n", pkg)
@@ -111,12 +139,15 @@ func generate(v variant) string {
 
 func allVariants() []variant {
 	var variants []variant
-	for _, bt := range []bool{false, true} {
-		for _, proto := range []string{"sendspin", "snapcast"} {
-			variants = append(variants, variant{
-				Proto: proto,
-				BT:    bt,
-			})
+	for _, hw := range hardwares {
+		for _, bt := range []bool{false, true} {
+			for _, proto := range []string{"sendspin", "snapcast"} {
+				variants = append(variants, variant{
+					Hardware: hw,
+					Proto:    proto,
+					BT:       bt,
+				})
+			}
 		}
 	}
 	return variants

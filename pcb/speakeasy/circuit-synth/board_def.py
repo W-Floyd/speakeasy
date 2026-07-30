@@ -11,10 +11,12 @@ Design notes:
 - CC resistors (5.1k to GND) on PCB side identify board as 5V power sink
 - ESP32-S3 native USB used for programming — no USB-Serial bridge needed:
     IO19 (USB D-) → panel connector D-    IO20 (USB D+) → panel connector D+
-- I2S pin assignment matches speakeasy firmware (both DACs share the I2S bus):
+- I2S pin assignment matches the `pcb` firmware variant, i.e. speakeasy-pcb-*.yaml
+  and snapclient-kconfig/sdkconfig.pcb (both DACs share the I2S bus):
     IO4 → MAX98357A DIN     (I2S data out from ESP)
     IO5 → MAX98357A BCLK    (bit clock)
     IO6 → MAX98357A LRCLK   (left/right clock)
+  The Speakeasy Lowcost board (`ots` variant) swaps DIN and LRCLK on these pins.
 - U2 (DAC) SD_MODE controlled by 2-GPIO resistor network (IO7/IO8):
     IO7 Hi-Z,  IO8 Hi-Z  → Right channel
     IO7 Hi-Z,  IO8 HIGH  → Left channel   (default for Sendspin mono)
@@ -200,7 +202,11 @@ def speakeasy_board():
     esp32["IO20"] += usb_dp
     esp32["IO19"] += usb_dm
 
-    # I2S → MAX98357A (must match speakeasy.yaml GPIO assignments)
+    # I2S → MAX98357A — must match the `pcb` firmware variant:
+    #   speakeasy-pcb-*.yaml (ESPHome) and cmd/gen-snapclient (ESP-IDF)
+    # NOTE: the Speakeasy Lowcost board (circuit-synth-lowcost/board_def.py,
+    # `ots` variant) uses these same three pins but swaps LRCLK and DIN.
+    # The two boards are not firmware-interchangeable.
     esp32["IO4"] += i2s_dout
     esp32["IO5"] += i2s_bclk
     esp32["IO6"] += i2s_lrclk

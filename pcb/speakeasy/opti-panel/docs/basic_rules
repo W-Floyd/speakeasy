@@ -1,0 +1,47 @@
+Basic Rules
+General Information
+
+All API requests must be made over HTTPS and are only supported via the POST method.
+Data Format
+
+    Standard Requests: Use JSON as the data interchange format for the message body. Set the HTTP header as follows:
+
+Content-Type: application/json
+
+    File/Image Upload Requests: Use the MULTIPART data format. Set the HTTP header as follows:
+
+Content-Type: multipart/form-data
+
+Character Encoding
+
+All API requests and responses must use UTF-8 encoding
+Date Format
+
+All date fields are currently based on China Standard Time (GMT+8) and use the following format:yyyy-MM-dd HH:mm:ss
+Request Unique Identifier
+
+The platform will assign a unique identifier to each received request. This identifier is included in the response HTTP header J-Trace-ID. If you need any support, please provide this identifier to help us locate the specific request quickly.
+Error Information
+
+HTTP Status Codes
+
+    200: The platform has received the request and returned a response. This does not indicate business-level success; check the response body for business-specific result codes.
+    400: Invalid request parameters, typically related to authentication or validation.
+    401: Unauthorized request. Usually due to signature verification failure.
+    403: Forbidden. The request is not allowed.
+    500: Internal server error on the open platform.
+
+Error Codes and Messages
+
+When a request fails at the business level, the API returns an error response in the body in the following format:
+
+    code: Detailed error code.
+    message: Human-readable description of the error cause.
+
+Example:  
+
+{
+  "code": 1001,
+  "message": "Insufficient prepaid balance"
+}
+

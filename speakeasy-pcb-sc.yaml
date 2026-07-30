@@ -1,7 +1,10 @@
-## Speakeasy Snapcast - Edit the settings below.
+## Speakeasy PCB Snapcast - Edit the settings below.
 substitutions:
-  name: sc
-  friendly_name: Speakeasy Snapcast
+  name: pcb-sc
+  friendly_name: Speakeasy PCB Snapcast
+  i2s_bclk_pin: GPIO5
+  i2s_lrclk_pin: GPIO6
+  i2s_dout_pin: GPIO4
 
 packages:
   - !include common/base.yaml
@@ -9,7 +12,7 @@ packages:
   - !include common/wifi-ramp.yaml
 
 dashboard_import:
-  package_import_url: github://W-Floyd/speakeasy/speakeasy-sc.yaml@main
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-pcb-sc.yaml@main
   import_full_config: false
 
 esp32:

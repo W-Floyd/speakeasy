@@ -1,0 +1,139 @@
+# syntax=docker/dockerfile:1
+# Generated from speakeasy-*.yaml — do not edit directly.
+# Run: go run ./cmd/gen-ci
+
+# ── Setup ─────────────────────────────────────────────────────────────────────
+FROM ghcr.io/esphome/esphome:latest AS base
+
+RUN arch=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/;s/armv7l/arm/') && \
+    curl -fsSL "https://github.com/mikefarah/yq/releases/latest/download/yq_linux_${arch}" \
+    -o /usr/local/bin/yq && chmod +x /usr/local/bin/yq && \
+    curl -fsSL "https://raw.githubusercontent.com/esphome/build-action/refs/heads/main/entrypoint.py" \
+    -o /usr/local/lib/esphome-entrypoint.py && \
+    apt-get update -qq && apt-get install -y --no-install-recommends ccache
+
+WORKDIR /config
+COPY common/ common/
+COPY primer.yaml ./
+
+# ── Primed: downloads ESP-IDF toolchain independently of variant config changes ─
+FROM base AS primed
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-primer \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest primer.yaml
+
+# ── Variants base: variant yamls copied after toolchain is primed ─────────────
+FROM primed AS variants
+COPY speakeasy-*.yaml ./
+
+# ── speakeasy-ots-ss
+FROM variants AS esphome-ots-ss
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-ots-ss \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ots-ss.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-ots-ss.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-ots-ss && \
+    cp -r "${build_dir}/." /output/speakeasy-ots-ss/ && \
+    rm -rf "${build_dir}"
+
+# ── speakeasy-ots-sc
+FROM esphome-ots-ss AS esphome-ots-sc
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-ots-sc \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ots-sc.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-ots-sc.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-ots-sc && \
+    cp -r "${build_dir}/." /output/speakeasy-ots-sc/ && \
+    rm -rf "${build_dir}"
+
+# ── speakeasy-ots-ss-bt
+FROM esphome-ots-sc AS esphome-ots-ss-bt
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-ots-ss-bt \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ots-ss-bt.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-ots-ss-bt.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-ots-ss-bt && \
+    cp -r "${build_dir}/." /output/speakeasy-ots-ss-bt/ && \
+    rm -rf "${build_dir}"
+
+# ── speakeasy-ots-sc-bt
+FROM esphome-ots-ss-bt AS esphome-ots-sc-bt
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-ots-sc-bt \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-ots-sc-bt.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-ots-sc-bt.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-ots-sc-bt && \
+    cp -r "${build_dir}/." /output/speakeasy-ots-sc-bt/ && \
+    rm -rf "${build_dir}"
+
+# ── speakeasy-pcb-ss
+FROM esphome-ots-sc-bt AS esphome-pcb-ss
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-pcb-ss \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-pcb-ss.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-pcb-ss.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-pcb-ss && \
+    cp -r "${build_dir}/." /output/speakeasy-pcb-ss/ && \
+    rm -rf "${build_dir}"
+
+# ── speakeasy-pcb-sc
+FROM esphome-pcb-ss AS esphome-pcb-sc
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-pcb-sc \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-pcb-sc.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-pcb-sc.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-pcb-sc && \
+    cp -r "${build_dir}/." /output/speakeasy-pcb-sc/ && \
+    rm -rf "${build_dir}"
+
+# ── speakeasy-pcb-ss-bt
+FROM esphome-pcb-sc AS esphome-pcb-ss-bt
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-pcb-ss-bt \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-pcb-ss-bt.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-pcb-ss-bt.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-pcb-ss-bt && \
+    cp -r "${build_dir}/." /output/speakeasy-pcb-ss-bt/ && \
+    rm -rf "${build_dir}"
+
+# ── speakeasy-pcb-sc-bt
+FROM esphome-pcb-ss-bt AS esphome-pcb-sc-bt
+RUN --mount=type=cache,target=/root/.ccache,id=ccache \
+    --mount=type=cache,target=/config/.esphome,id=esphome-pcb-sc-bt \
+    IDF_CCACHE_ENABLE=1 python3 /usr/local/lib/esphome-entrypoint.py --complete-manifest speakeasy-pcb-sc-bt.yaml && \
+    name=$(yq '.substitutions.name' speakeasy-pcb-sc-bt.yaml) && \
+    build_dir=$(find . -maxdepth 1 -type d -name "${name}-*" | head -1) && \
+    mkdir -p /output/speakeasy-pcb-sc-bt && \
+    cp -r "${build_dir}/." /output/speakeasy-pcb-sc-bt/ && \
+    rm -rf "${build_dir}"
+
+# ── Collect ──────────────────────────────────────────────────────────────────
+FROM alpine AS collect
+COPY --from=esphome-pcb-sc-bt /output /output
+
+# ── Web ───────────────────────────────────────────────────────────────────────
+FROM golang:1.22-alpine AS web
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
+COPY cmd/ cmd/
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -o /gen-index ./cmd/gen-index
+
+COPY --from=collect /output /output
+COPY docs/ docs/
+RUN /gen-index -dir /output -docs docs -out /output/index.html
+
+# ── Server ────────────────────────────────────────────────────────────────────
+FROM caddy:alpine
+COPY --from=web /output /srv
+COPY Caddyfile /etc/caddy/Caddyfile

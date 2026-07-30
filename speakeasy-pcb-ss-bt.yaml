@@ -1,0 +1,24 @@
+## Speakeasy PCB Sendspin Bluetooth - Edit the settings below.
+substitutions:
+  name: pcb-ss-bt
+  friendly_name: Speakeasy PCB Sendspin Bluetooth
+  i2s_bclk_pin: GPIO5
+  i2s_lrclk_pin: GPIO6
+  i2s_dout_pin: GPIO4
+
+packages:
+  - !include common/base.yaml
+  - !include common/improv.yaml
+  - !include common/sendspin-audio.yaml
+  - !include common/wifi-ramp.yaml
+
+dashboard_import:
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-pcb-ss-bt.yaml@main
+  import_full_config: false
+
+esp32:
+  variant: esp32s3
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}

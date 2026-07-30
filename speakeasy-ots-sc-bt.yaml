@@ -1,7 +1,7 @@
-## Speakeasy Snapcast Bluetooth - Edit the settings below.
+## Speakeasy OTS Snapcast Bluetooth - Edit the settings below.
 substitutions:
-  name: sc-bt
-  friendly_name: Speakeasy Snapcast Bluetooth
+  name: ots-sc-bt
+  friendly_name: Speakeasy OTS Snapcast Bluetooth
 
 packages:
   - !include common/base.yaml
@@ -10,7 +10,7 @@ packages:
   - !include common/wifi-ramp.yaml
 
 dashboard_import:
-  package_import_url: github://W-Floyd/speakeasy/speakeasy-sc-bt.yaml@main
+  package_import_url: github://W-Floyd/speakeasy/speakeasy-ots-sc-bt.yaml@main
   import_full_config: false
 
 esp32:

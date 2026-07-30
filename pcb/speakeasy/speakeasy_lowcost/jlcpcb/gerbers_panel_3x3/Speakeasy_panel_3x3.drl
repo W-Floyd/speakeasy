@@ -1,6 +1,6 @@
 M48
 ; FORMAT={-:-/ absolute / metric / decimal}
-; #@! TF.GenerationSoftware,Kicad,Pcbnew,10.0.3
+; #@! TF.GenerationSoftware,Kicad,Pcbnew,10.0.4
 ; #@! TF.FileFunction,MixedPlating,1,2
 FMAT,2
 METRIC

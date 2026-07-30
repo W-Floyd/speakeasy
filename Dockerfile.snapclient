@@ -1,0 +1,118 @@
+# syntax=docker/dockerfile:1
+# Generated from speakeasy-*.yaml — do not edit directly.
+# Run: go run ./cmd/gen-ci
+
+# ── Snapclient base ──────────────────────────────────────────────────────────
+FROM espressif/idf:v5.5.4 AS snapclient-base
+
+SHELL ["/bin/bash", "-c"]
+WORKDIR /snapclient
+COPY snapclient/ .
+COPY snapclient-kconfig/ /snapclient-kconfig/
+ARG SPEAKEASY_VERSION
+RUN echo "${SPEAKEASY_VERSION}" > version.txt
+
+# ── snapclient-ots
+FROM snapclient-base AS snapclient-ots
+RUN source /opt/esp/idf/export.sh && \
+    idf.py \
+      -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.ots" \
+      -B build-ots \
+      build && \
+    idf.py -B build-ots merge-bin && \
+    mkdir -p /output/snapclient-ots && \
+    python3 -m esp_idf_size --format json build-ots/snapclient.map > /output/snapclient-ots/size.json && \
+    cp build-ots/merged-binary.bin /output/snapclient-ots/merged.bin && \
+    cp build-ots/snapclient.bin /output/snapclient-ots/snapclient-ots-ota.bin && \
+    printf '{"name":"Snapclient ots","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
+      > /output/snapclient-ots/manifest.json && \
+    _ota=/output/snapclient-ots/snapclient-ots-ota.bin && \
+    file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1) && \
+    _info=$(esptool.py image_info --version 2 "${_ota}" 2>/dev/null) && \
+    sc_sha=$(echo "${_info}" | awk '/^ELF file SHA256:/{print $4}') && \
+    sc_ver=$(echo "${_info}" | awk '/^App version:/{print $3}') && \
+    pages_base="https://w-floyd.github.io/speakeasy" && \
+    printf '{"version":"%s","url":"%s/snapclient-ots/snapclient-ots-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
+      "${sc_ver}" "${pages_base}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
+      > /output/snapclient-ots/ota-manifest.json
+
+# ── snapclient-ots-nopull
+FROM snapclient-base AS snapclient-ots-nopull
+RUN source /opt/esp/idf/export.sh && \
+    idf.py \
+      -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.ots-nopull" \
+      -B build-ots-nopull \
+      build && \
+    idf.py -B build-ots-nopull merge-bin && \
+    mkdir -p /output/snapclient-ots-nopull && \
+    python3 -m esp_idf_size --format json build-ots-nopull/snapclient.map > /output/snapclient-ots-nopull/size.json && \
+    cp build-ots-nopull/merged-binary.bin /output/snapclient-ots-nopull/merged.bin && \
+    cp build-ots-nopull/snapclient.bin /output/snapclient-ots-nopull/snapclient-ots-nopull-ota.bin && \
+    printf '{"name":"Snapclient ots nopull","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
+      > /output/snapclient-ots-nopull/manifest.json
+
+# ── snapclient-pcb
+FROM snapclient-base AS snapclient-pcb
+RUN source /opt/esp/idf/export.sh && \
+    idf.py \
+      -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.pcb" \
+      -B build-pcb \
+      build && \
+    idf.py -B build-pcb merge-bin && \
+    mkdir -p /output/snapclient-pcb && \
+    python3 -m esp_idf_size --format json build-pcb/snapclient.map > /output/snapclient-pcb/size.json && \
+    cp build-pcb/merged-binary.bin /output/snapclient-pcb/merged.bin && \
+    cp build-pcb/snapclient.bin /output/snapclient-pcb/snapclient-pcb-ota.bin && \
+    printf '{"name":"Snapclient pcb","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
+      > /output/snapclient-pcb/manifest.json && \
+    _ota=/output/snapclient-pcb/snapclient-pcb-ota.bin && \
+    file_sha=$(sha256sum "${_ota}" | cut -d' ' -f1) && \
+    _info=$(esptool.py image_info --version 2 "${_ota}" 2>/dev/null) && \
+    sc_sha=$(echo "${_info}" | awk '/^ELF file SHA256:/{print $4}') && \
+    sc_ver=$(echo "${_info}" | awk '/^App version:/{print $3}') && \
+    pages_base="https://w-floyd.github.io/speakeasy" && \
+    printf '{"version":"%s","url":"%s/snapclient-pcb/snapclient-pcb-ota.bin","sha256":"%s","file_sha256":"%s","release_notes":"snapclient@%s"}' \
+      "${sc_ver}" "${pages_base}" "${sc_sha}" "${file_sha}" "${sc_ver}" \
+      > /output/snapclient-pcb/ota-manifest.json
+
+# ── snapclient-pcb-nopull
+FROM snapclient-base AS snapclient-pcb-nopull
+RUN source /opt/esp/idf/export.sh && \
+    idf.py \
+      -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;sdkconfig.defaults.esp32s3;/snapclient-kconfig/sdkconfig.pcb-nopull" \
+      -B build-pcb-nopull \
+      build && \
+    idf.py -B build-pcb-nopull merge-bin && \
+    mkdir -p /output/snapclient-pcb-nopull && \
+    python3 -m esp_idf_size --format json build-pcb-nopull/snapclient.map > /output/snapclient-pcb-nopull/size.json && \
+    cp build-pcb-nopull/merged-binary.bin /output/snapclient-pcb-nopull/merged.bin && \
+    cp build-pcb-nopull/snapclient.bin /output/snapclient-pcb-nopull/snapclient-pcb-nopull-ota.bin && \
+    printf '{"name":"Snapclient pcb nopull","version":"1","builds":[{"chipFamily":"ESP32-S3","parts":[{"path":"merged.bin","offset":0}]}]}' \
+      > /output/snapclient-pcb-nopull/manifest.json
+
+# ── Collect ──────────────────────────────────────────────────────────────────
+FROM alpine AS collect
+COPY --from=snapclient-ots /output/snapclient-ots /output/snapclient-ots
+COPY --from=snapclient-ots-nopull /output/snapclient-ots-nopull /output/snapclient-ots-nopull
+COPY --from=snapclient-pcb /output/snapclient-pcb /output/snapclient-pcb
+COPY --from=snapclient-pcb-nopull /output/snapclient-pcb-nopull /output/snapclient-pcb-nopull
+
+# ── Web ───────────────────────────────────────────────────────────────────────
+FROM golang:1.22-alpine AS web
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go mod download
+COPY cmd/ cmd/
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    go build -o /gen-index ./cmd/gen-index
+
+COPY --from=collect /output /output
+COPY docs/ docs/
+RUN /gen-index -dir /output -docs docs -out /output/index.html
+
+# ── Server ────────────────────────────────────────────────────────────────────
+FROM caddy:alpine
+COPY --from=web /output /srv
+COPY Caddyfile /etc/caddy/Caddyfile

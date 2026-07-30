@@ -100,17 +100,36 @@
       <summary style="cursor:pointer;font-weight:600;color:#444;">Hardware pin mappings</summary>
       <table style="margin-top:0.6rem;border-collapse:collapse;width:100%;">
         <thead><tr style="text-align:left;font-size:0.78rem;color:#999;text-transform:uppercase;letter-spacing:0.05em;">
+          <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">Hardware</th>
           <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">Signal</th>
           <th style="padding:0.2rem 0.75rem 0.2rem 0;font-weight:600;">GPIO</th>
           <th style="padding:0.2rem 0;font-weight:600;">Component</th>
         </tr></thead>
         <tbody style="font-family:monospace;">
-          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">LRCLK</td><td style="padding:0.15rem 0.75rem 0.15rem 0;">10</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
-          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">BCLK</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">11</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
-          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">DOUT</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">12</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;font-family:sans-serif;" rowspan="3">OTS</td><td style="padding:0.15rem 0.75rem 0.15rem 0;">LRCLK</td><td style="padding:0.15rem 0.75rem 0.15rem 0;">4</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">BCLK</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">5</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">DOUT</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">6</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;font-family:sans-serif;border-top:1px solid #eee;" rowspan="3">PCB</td><td style="padding:0.15rem 0.75rem 0.15rem 0;border-top:1px solid #eee;">LRCLK</td><td style="padding:0.15rem 0.75rem 0.15rem 0;border-top:1px solid #eee;">6</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;border-top:1px solid #eee;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">BCLK</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">5</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
+          <tr><td style="padding:0.15rem 0.75rem 0.15rem 0;">DOUT</td> <td style="padding:0.15rem 0.75rem 0.15rem 0;">4</td><td style="padding:0.15rem 0;font-family:sans-serif;color:#777;">MAX98357A</td></tr>
         </tbody>
       </table>
     </details>
+
+    <div class="question" id="q-hw">
+      <div class="question-label">Hardware</div>
+      <p class="question-desc">Off-the-shelf is the generic ESP32-S3 Supermini — hand-wired or on the Speakeasy Lowcost PCB — with LRCLK/BCLK/DOUT on GPIO 4/5/6. PCB is the custom Speakeasy board (ESP32-S3-MINI-1U-N4R2), which uses the same three pins but swaps LRCLK and DOUT: DOUT/BCLK/LRCLK on GPIO 4/5/6.</p>
+      <div class="options">
+        <div class="option">
+          <input type="radio" name="hw" id="hw-ots" value="ots" checked>
+          <label for="hw-ots">OTS<small>ESP32-S3 Supermini</small></label>
+        </div>
+        <div class="option">
+          <input type="radio" name="hw" id="hw-pcb" value="pcb">
+          <label for="hw-pcb">PCB<small>Custom Speakeasy board</small></label>
+        </div>
+      </div>
+    </div>
 
     <div class="question" id="q-proto">
       <div class="question-label">Protocol</div>
@@ -258,25 +277,26 @@
 
     function manifestFrom(s) {
       if (s.proto === 'snapclient') {
-        let name = 'snapclient-mdns';
+        let name = 'snapclient-' + s.hw;
         if (s.pull === 'off') name += '-nopull';
         return name + '/manifest.json';
       }
-      let name = 'speakeasy-' + s.proto;
+      let name = 'speakeasy-' + s.hw + '-' + s.proto;
       if (s.bt === 'on') name += '-bt';
       return name + '/manifest.json';
     }
 
     function readSelections() {
       const get = name => document.querySelector(`input[name="${name}"]:checked`)?.value;
-      return { proto: get('proto'), bt: get('bt'), pull: get('pull') };
+      return { hw: get('hw'), proto: get('proto'), bt: get('bt'), pull: get('pull') };
     }
 
     const esphome = ['ss', 'sc'];
     const QUESTIONS = [
-      { name: 'proto',  el: 'q-proto',  opts: ['ss', 'sc', 'snapclient'] },
-      { name: 'bt',     el: 'q-nobt',   opts: ['off', 'on'],  onlyFor: { proto: esphome } },
-      { name: 'pull',   el: 'q-pull',   opts: ['on', 'off'],  onlyFor: { proto: 'snapclient' } },
+      { name: 'hw',    el: 'q-hw',    opts: ['ots', 'pcb'] },
+      { name: 'proto', el: 'q-proto', opts: ['ss', 'sc', 'snapclient'] },
+      { name: 'bt',    el: 'q-nobt',  opts: ['off', 'on'], onlyFor: { proto: esphome } },
+      { name: 'pull',  el: 'q-pull',  opts: ['on', 'off'], onlyFor: { proto: 'snapclient' } },
     ];
 
     function update() {
@@ -340,8 +360,8 @@
         sizeText.textContent = formatSizeReport(report);
         sizeEl.style.display = '';
 
-        const rOn  = sizeReports['snapclient-mdns/manifest.json'];
-        const rOff = sizeReports['snapclient-mdns-nopull/manifest.json'];
+        const rOn  = sizeReports[`snapclient-${sel.hw}/manifest.json`];
+        const rOff = sizeReports[`snapclient-${sel.hw}-nopull/manifest.json`];
         const elOn  = document.getElementById('pull-size-on');
         const elOff = document.getElementById('pull-size-off');
         if (rOn && rOff) {
@@ -363,13 +383,19 @@
     function seedFromAvailable() {
       if (!available.size) return;
       const first = [...available][0].replace('/manifest.json', '');
-      const s = { proto: null, bt: 'off', pull: 'on' };
+      const s = { hw: 'ots', proto: null, bt: 'off', pull: 'on' };
       if (first.startsWith('snapclient-')) {
         s.proto = 'snapclient';
+        // snapclient-{hw}[-nopull]
+        const rest = first.replace('snapclient-', '');
+        const hwMatch = rest.match(/^(ots|pcb)/);
+        if (hwMatch) s.hw = hwMatch[1];
         if (first.endsWith('-nopull')) s.pull = 'off';
       } else {
+        // speakeasy-{hw}-{proto}[-bt]
         const parts = first.replace('speakeasy-', '').split('-');
         let i = 0;
+        if (parts[i] === 'ots' || parts[i] === 'pcb') s.hw = parts[i++];
         s.proto = parts[i++];
         if (parts[i] === 'bt') { s.bt = 'on'; i++; }
       }

@@ -1,3 +1,4 @@
+# DAC: MAX98357A (I2S, no I2C). SD_MODE tied to L+R/2 voltage divider for hardware mono mix.
 substitutions:
   snapcast_server_ip: "192.168.1.1"
   snapcast_server_port: "1704"
